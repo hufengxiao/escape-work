@@ -81,3 +81,40 @@ export function getRandomModifier() {
   const rand = Math.floor(Math.random() * MODIFIERS.length);
   return MODIFIERS[rand];
 }
+
+export const CHAOS_COMBOS = [
+  {
+    id: 'combo_doomsday_friday',
+    name: '🔥 末日周五 (Doomsday Friday)',
+    modifierIds: ['mod_boss_rampage', 'mod_network_crash', 'mod_quarterly_sprint'],
+    desc: '全司断网加上暴走阎总与冲刺决战！难度登顶，通关结算获得 300% 悟性加成！'
+  },
+  {
+    id: 'combo_iron_curtain',
+    name: '🛡️ 铁幕戒严 (Iron Curtain)',
+    modifierIds: ['mod_boss_rampage', 'mod_hq_inspection'],
+    desc: '集团总部与阎总双重戒备！走廊警戒度拉满！'
+  }
+];
+
+export function applyChaosModifiers(state, modifierIds = []) {
+  if (!modifierIds || modifierIds.length === 0) return;
+  state.chaosModifiers = modifierIds;
+
+  modifierIds.forEach((modId) => {
+    const mod = MODIFIERS.find((m) => m.id === modId);
+    if (mod && mod.apply) {
+      mod.apply(state);
+    }
+  });
+
+  // Check special combos
+  const combo = CHAOS_COMBOS.find((c) =>
+    c.modifierIds.every((id) => modifierIds.includes(id))
+  );
+
+  if (combo) {
+    state.flags.activeChaosCombo = combo;
+    state.addLog(`⚡【混沌词缀激活】触发复合挑战环境【${combo.name}】！${combo.desc}`, 'alert');
+  }
+}

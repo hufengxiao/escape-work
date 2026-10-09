@@ -8,6 +8,7 @@ import { getRandomModifier, MODIFIERS } from '../data/modifiers.js';
 import { PERKS } from '../data/perks.js';
 import { MapManager } from './mapManager.js';
 import { NPCManager } from './npcManager.js';
+import { PatrolManager } from './patrolManager.js';
 
 export class GameState {
   constructor() {
@@ -50,6 +51,9 @@ export class GameState {
 
     // Initialize NPC workplace relations
     NPCManager.initRelations(this);
+
+    // Initialize Boss patrol tracking
+    PatrolManager.initPatrol(this);
 
     // Inventory starting items based on character
     this.inventory = [...(role.startingItems || ['chair_jacket', 'fake_bsod'])];

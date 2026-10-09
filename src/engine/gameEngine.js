@@ -8,6 +8,8 @@ import { ACHIEVEMENTS } from '../data/achievements.js';
 import { ITEMS } from '../data/items.js';
 import { sound } from '../audio/sound.js';
 import { MapManager } from './mapManager.js';
+import { PatrolManager } from './patrolManager.js';
+import { DailySystem } from '../data/daily.js';
 
 export class GameEngine {
   constructor(state) {
@@ -101,6 +103,9 @@ export class GameEngine {
       this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
     }
 
+    // Step Boss patrol surveillance
+    PatrolManager.stepPatrol(this.state);
+
     if (this.checkVitalConditions()) return;
 
     this.state.emit('map:update', targetNode);
@@ -153,6 +158,9 @@ export class GameEngine {
       }
     }
 
+    // Step Boss patrol surveillance
+    PatrolManager.stepPatrol(this.state);
+
     // Check life / suspicion thresholds
     if (this.checkVitalConditions()) {
       return;
@@ -198,6 +206,11 @@ export class GameEngine {
     if (this.state.flags.hasRadarPerk) chance *= 0.75;
     if (this.state.isHardcore) chance *= 1.25;
     if (this.state.flags.modHqInspection && this.state.zone === 2) chance *= 1.3;
+    if (this.state.patrolState?.threatLevel === 'danger') {
+      chance = Math.min(0.95, chance + 0.35);
+    } else if (this.state.patrolState?.threatLevel === 'warning') {
+      chance = Math.min(0.95, chance + 0.15);
+    }
 
     if (possibleEncounters.length > 0 && Math.random() < chance) {
       const selected = possibleEncounters[Math.floor(Math.random() * possibleEncounters.length)];
@@ -311,6 +324,18 @@ export class GameEngine {
         this.state.addLog(`🎉 达成成就：【${ach.title}】 - ${ach.description}`, 'achievement');
       }
     });
+
+    // Daily Challenge score tracking
+    if (this.state.dailySeed) {
+      if (!this.state.history.dailyHighScores) {
+        this.state.history.dailyHighScores = {};
+      }
+      const dailyScore = DailySystem.calculateDailyScore(this.state);
+      const prevScore = this.state.history.dailyHighScores[this.state.dailySeed] || 0;
+      if (dailyScore > prevScore) {
+        this.state.history.dailyHighScores[this.state.dailySeed] = dailyScore;
+      }
+    }
 
     this.state.savePersistentData();
     this.state.notify();

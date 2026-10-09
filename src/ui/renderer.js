@@ -17,6 +17,8 @@ import { MapView } from './mapView.js';
 import { CraftModal } from './craftModal.js';
 import { RelationPanel } from './relationPanel.js';
 import { MiniGameUI } from './miniGames.js';
+import { RadarView } from './radarView.js';
+import { DailySystem } from '../data/daily.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -25,6 +27,7 @@ export class UIRenderer {
     this.mapView = new MapView(this.state, (nodeId) => this.engine.travelToNode(nodeId));
     this.craftModal = new CraftModal(this.state, () => this.render());
     this.relationPanel = new RelationPanel(this.state, () => this.render());
+    this.radarView = new RadarView(this.state, () => this.render());
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
@@ -83,6 +86,9 @@ export class UIRenderer {
             <button id="btn-relation" class="btn-icon" title="职场人脉网络 · 好感度" aria-label="人脉">
               🤝
             </button>
+            <button id="btn-daily" class="btn-icon" title="每日职场黄历 · 天梯榜" aria-label="黄历">
+              📅
+            </button>
             <button id="btn-archive" class="btn-icon" title="结局与成就图鉴" aria-label="图鉴">
               🏆
             </button>
@@ -91,6 +97,9 @@ export class UIRenderer {
             </button>
           </div>
         </header>
+
+        <!-- Boss Patrol Surveillance Radar -->
+        <div id="radar-slot"></div>
 
         <!-- Status Dashboard -->
         <section class="dashboard">
@@ -643,6 +652,11 @@ export class UIRenderer {
       this.relationPanel.show();
     });
 
+    // Daily Almanac modal
+    document.getElementById('btn-daily')?.addEventListener('click', () => {
+      this.openDailyModal();
+    });
+
     // Archive Modal
     const archiveModal = document.getElementById('archive-modal');
     document.getElementById('btn-archive').addEventListener('click', () => {
@@ -1178,6 +1192,7 @@ export class UIRenderer {
   render() {
     this.renderHeaderAndMetrics();
     this.renderMetaStrip();
+    this.renderRadarView();
     this.renderZoneNavigator();
     this.renderTacticalStepBar();
     this.renderMapView();
@@ -1188,12 +1203,102 @@ export class UIRenderer {
     this.renderModals();
   }
 
+  renderRadarView() {
+    const slot = document.getElementById('radar-slot');
+    if (slot && this.radarView) {
+      slot.innerHTML = this.radarView.render();
+      this.radarView.bindEvents(slot);
+    }
+  }
+
   renderMapView() {
     const slot = document.getElementById('map-view-slot');
     if (slot && this.mapView) {
       slot.innerHTML = this.mapView.render();
       this.mapView.bindEvents(slot);
     }
+  }
+
+  openDailyModal() {
+    sound.playClick();
+    const almanac = DailySystem.generateDailyAlmanac(DailySystem.getTodayDateString());
+    const isTodaySeeded = this.state.dailySeed === almanac.date;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop fade-in';
+    overlay.id = 'daily-modal-overlay';
+
+    const highScores = this.state.history.dailyHighScores || {};
+    const todayHighScore = highScores[almanac.date] || 0;
+
+    overlay.innerHTML = `
+      <div class="modal-card daily-modal-card slide-up">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">📅</span>
+            <div>
+              <h3 class="modal-title">每日职场黄历 · 天梯挑战</h3>
+              <span class="modal-subtitle">全球统一种子 · 每日专属运势词缀与排行</span>
+            </div>
+          </div>
+          <button class="modal-close-btn" id="daily-close">&times;</button>
+        </div>
+
+        <div class="daily-almanac-banner">
+          <span class="daily-almanac-date">公历 ${almanac.date} · 今日种子 [${almanac.seed}]</span>
+          <p class="daily-almanac-quote">${almanac.lunarQuote}</p>
+        </div>
+
+        <div class="daily-good-bad-grid">
+          <div class="daily-card-good">
+            <strong class="good-title">${almanac.good.name}</strong>
+            <p class="good-desc">${almanac.good.desc}</p>
+          </div>
+          <div class="daily-card-bad">
+            <strong class="bad-title">${almanac.bad.name}</strong>
+            <p class="bad-desc">${almanac.bad.desc}</p>
+          </div>
+        </div>
+
+        <div class="daily-ladder-section">
+          <div class="daily-ladder-title">🏆 今日挑战最高得分记录</div>
+          <div class="daily-ladder-table">
+            <div class="ladder-row">
+              <span>🥇 本机历史最佳 (${almanac.date})</span>
+              <strong style="color:#fbbf24;">${todayHighScore > 0 ? `${todayHighScore} 分` : '暂未挑战'}</strong>
+            </div>
+            <div class="ladder-row">
+              <span>🥈 社区标杆榜 (Top 1%)</span>
+              <strong style="color:#38bdf8;">2,450 分</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="margin-top:16px;">
+          <button id="btn-start-daily-run" class="btn btn-primary btn-block">
+            ${isTodaySeeded ? '🔄 重新挑战今日黄历关卡' : '🚀 立即开启今日黄历挑战 (统一随机种子)'}
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const close = () => {
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
+
+    overlay.querySelector('#daily-close').addEventListener('click', close);
+    overlay.addEventListener('click', (e) => {
+      if (e.target.id === 'daily-modal-overlay') close();
+    });
+
+    overlay.querySelector('#btn-start-daily-run').addEventListener('click', () => {
+      close();
+      this.state.dailySeed = almanac.date;
+      this.engine.restart(this.state.selectedRoleId, null, this.state.isHardcore);
+      toast.show(`已载入今日黄历种子 [${almanac.date}]！开启挑战！`, 'success');
+    });
   }
 
   renderMetaStrip() {
