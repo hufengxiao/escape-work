@@ -5,11 +5,105 @@
 import { RANDOM_ENCOUNTERS, ZONE_ACTIONS } from '../data/events.js';
 import { ENDINGS } from '../data/endings.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
+import { ITEMS } from '../data/items.js';
 import { sound } from '../audio/sound.js';
+import { MapManager } from './mapManager.js';
 
 export class GameEngine {
   constructor(state) {
     this.state = state;
+  }
+
+  travelToNode(nodeId) {
+    if (this.state.currentEnding || this.state.activeEncounter) return;
+
+    const mapGraph = this.state.mapGraph;
+    if (!mapGraph) return;
+
+    const targetNode = MapManager.findNode(mapGraph, nodeId);
+    if (!targetNode || !targetNode.isAvailable) {
+      this.state.addLog('当前路径无法直接前往该节点！', 'warning');
+      return;
+    }
+
+    sound.playClick();
+
+    // Energy and time costs
+    let timeCost = 2;
+    let energyCost = 8;
+
+    if (this.state.flags.cyberStimulantActive > 0) {
+      this.state.flags.cyberStimulantActive--;
+      timeCost = 0;
+      energyCost = 0;
+      this.state.addLog(
+        `⚡【赛博超频】神速移动！耗时与体能消耗为 0（超频剩余 ${this.state.flags.cyberStimulantActive} 次）。`,
+        'item'
+      );
+    } else {
+      if (this.state.flags.hasSneakersPerk) {
+        energyCost = Math.max(3, Math.round(energyCost * 0.75));
+      }
+      if (this.state.isHardcore) {
+        energyCost = Math.round(energyCost * 1.3);
+      }
+    }
+
+    if (timeCost > 0) this.state.advanceTime(timeCost);
+    this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
+    this.state.turns++;
+
+    // Natural suspicion decay from architect aura
+    if (this.state.flags.hasArchitectAura) {
+      this.state.suspicion = Math.max(0, Math.round(this.state.suspicion * 0.97));
+    }
+
+    // Update node states in graph
+    targetNode.isVisited = true;
+    this.state.currentMapNodeId = targetNode.id;
+    this.state.zone = targetNode.zone || Math.min(5, targetNode.depth + 1);
+
+    // Reset all nodes availability, then activate target's children
+    mapGraph.forEach((layer) => {
+      layer.forEach((node) => {
+        node.isAvailable = false;
+      });
+    });
+    targetNode.nextNodeIds.forEach((childId) => {
+      const child = MapManager.findNode(mapGraph, childId);
+      if (child) child.isAvailable = true;
+    });
+
+    this.state.addLog(`🗺️【路线推进】你穿行抵达了【${targetNode.title}】(${targetNode.zoneName})。`, 'info');
+
+    // Handle node type bonus/events
+    if (targetNode.type === 'rest') {
+      const recovery = 20;
+      this.state.energy = Math.min(100, this.state.energy + recovery);
+      this.state.suspicion = Math.max(0, this.state.suspicion - 10);
+      this.state.addLog(`☕ 补充能量：喝了杯热饮小憩片刻，体力 +${recovery}，怀疑度 -10%！`, 'item');
+    } else if (targetNode.type === 'loot') {
+      const lootCandidates = ['warm_coffee', 'bag_snack', 'wind_oil', 'yellow_vest', 'stomach_pill', 'noise_headphones'];
+      const lootItem = lootCandidates[Math.floor(Math.random() * lootCandidates.length)];
+      if (!this.state.hasItem(lootItem)) {
+        this.state.addItem(lootItem);
+        this.state.addLog(`📦 翻找收获：在角落搜刮到了关键物资【${ITEMS[lootItem]?.name || lootItem}】！`, 'item');
+      } else {
+        this.state.energy = Math.min(100, this.state.energy + 10);
+        this.state.addLog(`📦 翻找收获：物资已被其他人取走，但你顺手捞到了一颗薄荷糖，体力 +10！`, 'info');
+      }
+    } else if (targetNode.type === 'secret') {
+      this.state.suspicion = Math.max(0, this.state.suspicion - 15);
+      this.state.addLog(`🗝️ 隐秘通道：走专用捷径避开了监控与管理层视线，怀疑度 -15%！`, 'item');
+    } else if (targetNode.type === 'event') {
+      this.evaluateRandomEncounter();
+    } else if (targetNode.type === 'boss') {
+      this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
+    }
+
+    if (this.checkVitalConditions()) return;
+
+    this.state.emit('map:update', targetNode);
   }
 
   executeAction(actionId) {

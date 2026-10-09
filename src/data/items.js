@@ -251,5 +251,177 @@ export const ITEMS = {
         message: '你把盖着草稿章的离职交接单若隐若现露出一角，主管路过看见浑身一颤，连大气都不敢喘！老板怀疑度 -30%'
       };
     }
+  },
+
+  yellow_vest: {
+    id: 'yellow_vest',
+    name: '黄色反光马甲',
+    icon: '🦺',
+    category: 'stealth',
+    description: '顺丰同城专送荧光马甲。穿上它你就是园区里速度最快的送货神仙。',
+    effectText: '大堂与安检区域伪装度大幅提升，怀疑度 -15%',
+    onUse: (state) => {
+      state.flags.hasDeliveryDisguise = true;
+      state.suspicion = Math.max(0, state.suspicion - 15);
+      return {
+        success: true,
+        message: '你套上黄色反光马甲，步伐坚定迅捷，所有安保人员都以为你是加急闪送小哥！怀疑度 -15%'
+      };
+    }
+  },
+
+  cyber_stimulant: {
+    id: 'cyber_stimulant',
+    name: '⚡ 赛博兴奋剂',
+    icon: '⚡',
+    category: 'synergy',
+    rarity: 'SSR',
+    description: '【神装】风油精与高浓咖啡因分子核聚变产物，打工人的终极体能超频药剂。',
+    effectText: '体力立即 +40，后续 4 次行动体力消耗为 0 且不计耗时！',
+    onUse: (state) => {
+      state.energy = Math.min(100, state.energy + 40);
+      state.flags.cyberStimulantActive = (state.flags.cyberStimulantActive || 0) + 4;
+      return {
+        success: true,
+        message: '【神装激活】你一饮而尽！狂暴的神经脉冲贯穿全身，体力 +40，进入超频神速状态（后4次行动0体能0耗时）！'
+      };
+    }
+  },
+
+  super_decoy_puppet: {
+    id: 'super_decoy_puppet',
+    name: '🕴️ 究极替身傀儡',
+    icon: '🕴️',
+    category: 'synergy',
+    rarity: 'SR',
+    description: '【神装】融合外套与耳机的以假乱真工位分身，散发着沉浸式赶工的专注气场。',
+    effectText: '工位查岗怀疑度增幅彻底锁定为 0，每回合转移巡查视线',
+    onUse: (state) => {
+      state.flags.hasSuperDecoy = true;
+      state.flags.hasDecoyJacket = true;
+      state.flags.hasHeadphoneShield = true;
+      state.suspicion = Math.max(0, state.suspicion - 25);
+      return {
+        success: true,
+        message: '【神装激活】你在工位组装完毕究极替身！从远处看宛如一位正在通宵重构底层架构的首席科学家！怀疑度 -25%'
+      };
+    }
+  },
+
+  labor_bomb: {
+    id: 'labor_bomb',
+    name: '💣 职场正道核弹',
+    icon: '💣',
+    category: 'synergy',
+    rarity: 'SSR',
+    description: '【神装】红色劳动法典包裹着离职清单引信，任何管理层目光触及皆魂飞魄散。',
+    effectText: '怀疑度暴降 50%，面对高管拦截强制绝对胜利降维打击！',
+    onUse: (state) => {
+      state.flags.hasLaborBomb = true;
+      state.flags.hasLaborLawArmed = true;
+      state.suspicion = Math.max(0, state.suspicion - 50);
+      return {
+        success: true,
+        message: '【神装激活】你将正道核弹端在胸前，散发金色法理光环！老板与HR刘姐见状无不退避三舍！怀疑度 -50%'
+      };
+    }
+  },
+
+  delivery_suit_pro: {
+    id: 'delivery_suit_pro',
+    name: '🛴 顺丰闪送全家桶',
+    icon: '🛴',
+    category: 'synergy',
+    rarity: 'SR',
+    description: '【神装】专业反光外袍配辣条补给包，园区安检与闸机完全无视。',
+    effectText: '大堂保安视线完全隐形，免检直接通关',
+    onUse: (state) => {
+      state.flags.hasDeliverySuitPro = true;
+      state.flags.hasBribedGuard = true;
+      state.suspicion = Math.max(0, state.suspicion - 20);
+      return {
+        success: true,
+        message: '【神装激活】你已伪装为特快骑手，大堂所有安保与前台向你致意让路，畅通无阻！'
+      };
+    }
+  },
+
+  architect_aura: {
+    id: 'architect_aura',
+    name: '☕ 架构师无敌气场',
+    icon: '🕶️',
+    category: 'synergy',
+    rarity: 'R',
+    description: '【神装】两百页技术白皮书与深邃墨镜，散发令所有同行与领导肃然起敬的气息。',
+    effectText: '全场景盘问免疫，怀疑度每回合自然衰减 3%',
+    onUse: (state) => {
+      state.flags.hasArchitectAura = true;
+      state.suspicion = Math.max(0, state.suspicion - 15);
+      return {
+        success: true,
+        message: '【神装激活】你步履从容，目光高远。路过总监纷纷驻足点头：“架构师辛苦了！” 怀疑度持续自然消退！'
+      };
+    }
+  },
+
+  privacy_shield: {
+    id: 'privacy_shield',
+    name: '🛡️ 绝对防窥屏障',
+    icon: '🛡️',
+    category: 'synergy',
+    rarity: 'SR',
+    description: '【神装】蓝屏系统与保洁工卡合体，物理与系统双重封印工位。',
+    effectText: '工位查岗绝对免疫，探索行动体力消耗 -20%',
+    onUse: (state) => {
+      state.flags.hasPrivacyShield = true;
+      state.flags.hasFakeScreen = true;
+      state.flags.hasCleanerBadge = true;
+      return {
+        success: true,
+        message: '【神装激活】工位进入绝对量子防窥态，没人能查探你留下的任何痕迹！'
+      };
+    }
+  },
+
+  tactical_smoke: {
+    id: 'tactical_smoke',
+    name: '💨 战术烟雾对讲机',
+    icon: '💨',
+    category: 'synergy',
+    rarity: 'SR',
+    description: '【神装】香烟与对讲机伪造声东击西信号，调虎离山引开老板视线。',
+    effectText: '立刻转移高管动向，锁定安全期 3 回合',
+    onUse: (state) => {
+      state.flags.hasTacticalSmoke = true;
+      if (state.patrolState) {
+        state.patrolState.distractedTurns = 3;
+        state.patrolState.behaviorState = 'distracted';
+      }
+      state.suspicion = Math.max(0, state.suspicion - 20);
+      return {
+        success: true,
+        message: '【神装激活】你制造了一起虚假的走廊异响与通话引流，高管巡视路线瞬间被诱导远离！'
+      };
+    }
+  },
+
+  p0_panic_overload: {
+    id: 'p0_panic_overload',
+    name: '🚨 P0级核聚变工单',
+    icon: '🚨',
+    category: 'synergy',
+    rarity: 'SSR',
+    description: '【神装】红头生产故障单与肠胃就医证明双核驱动，职场至高绝对豁免权。',
+    effectText: '解除任何困局与遭遇战，秒杀高管拦截',
+    onUse: (state) => {
+      state.flags.hasP0Overload = true;
+      state.flags.hasBugShield = true;
+      state.flags.hasMedicalExcuse = true;
+      state.suspicion = Math.max(0, state.suspicion - 35);
+      return {
+        success: true,
+        message: '【神装激活】“线上机房与本人身体同时发生特大紧急情况！” 领导双手合十恭送你离开！'
+      };
+    }
   }
 };

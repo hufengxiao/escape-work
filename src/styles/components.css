@@ -1907,5 +1907,530 @@
   color: #cbd5e1;
 }
 
+/* ==========================================================================
+   Sprint 1: DAG Map & Craft Modal Styles
+   ========================================================================== */
+
+/* DAG Map Styles */
+.map-view-container {
+  background: rgba(17, 24, 39, 0.85);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(10px);
+}
+
+.map-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.map-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.map-header-icon {
+  font-size: 24px;
+}
+
+.map-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.map-header-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.legend-chip {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+}
+
+.map-stage-scroll {
+  overflow-x: auto;
+  padding: 8px 4px 14px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.map-dag-grid {
+  display: flex;
+  gap: 16px;
+  min-width: 620px;
+}
+
+.map-layer-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 110px;
+}
+
+.map-layer-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.layer-depth-badge {
+  font-weight: 800;
+  color: var(--accent-primary);
+  font-size: 10px;
+}
+
+.layer-name {
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-layer-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.map-node-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  padding: 10px 8px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: default;
+}
+
+.map-node-card.locked {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+
+.map-node-card.visited {
+  opacity: 0.75;
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.map-node-card.current {
+  opacity: 1;
+  border-color: var(--accent-primary);
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.4);
+  transform: translateY(-2px);
+}
+
+.map-node-card.available {
+  opacity: 1;
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.12);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  animation: pulseNode 2s infinite ease-in-out;
+}
+
+.map-node-card.available:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: #67e8f9;
+  background: rgba(56, 189, 248, 0.2);
+}
+
+@keyframes pulseNode {
+  0%, 100% { box-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
+  50% { box-shadow: 0 0 16px rgba(56, 189, 248, 0.6); }
+}
+
+.map-node-card.boss-threat {
+  border-color: #ef4444;
+}
+
+.node-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.node-icon {
+  font-size: 20px;
+}
+
+.node-threat-badge {
+  font-size: 13px;
+  animation: shakeAlert 1.5s infinite;
+}
+
+@keyframes shakeAlert {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.node-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.node-type-tag {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+
+.badge-action { background: rgba(59, 130, 246, 0.2); color: #93c5fd; }
+.badge-loot { background: rgba(245, 158, 11, 0.2); color: #fcd34d; }
+.badge-rest { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+.badge-event { background: rgba(168, 85, 247, 0.2); color: #d8b4fe; }
+.badge-secret { background: rgba(236, 72, 153, 0.2); color: #f472b6; }
+.badge-boss { background: rgba(239, 68, 68, 0.2); color: #fca5a5; font-weight: 700; }
+
+.node-pin-badge {
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  font-size: 9px;
+  background: var(--accent-primary);
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.btn-node-enter {
+  margin-top: 4px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-node-enter:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+/* Craft Modal Styles */
+.craft-modal-card {
+  max-width: 520px;
+  width: 95%;
+  background: #0f172a;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(139, 92, 246, 0.15);
+}
+
+.craft-tab-bar {
+  display: flex;
+  gap: 8px;
+  padding: 0 4px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.craft-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.craft-tab-btn.active {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+  color: #fff;
+}
+
+.craft-forge-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 8px;
+}
+
+.craft-slots-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.craft-slot {
+  flex: 1;
+  min-height: 80px;
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.craft-slot.has-item {
+  border-style: solid;
+  border-color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.25);
+}
+
+.craft-slot-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  width: 100%;
+  padding: 8px;
+}
+
+.craft-slot-icon {
+  font-size: 28px;
+}
+
+.craft-slot-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+}
+
+.craft-slot-remove {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 16px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.craft-slot-empty-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.craft-slot-empty-text small {
+  font-size: 10px;
+  color: #475569;
+}
+
+.craft-plus-sign {
+  font-size: 20px;
+  color: #8b5cf6;
+  font-weight: 700;
+}
+
+.craft-action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.craft-trigger-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+  font-weight: 700;
+  padding: 12px;
+}
+
+.craft-trigger-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.craft-picker-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.craft-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.craft-hint {
+  font-size: 10px;
+  color: #94a3b8;
+}
+
+.craft-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.craft-picker-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.craft-picker-chip:hover:not(:disabled) {
+  background: rgba(139, 92, 246, 0.25);
+  border-color: #a78bfa;
+  transform: translateY(-1px);
+}
+
+.craft-picker-chip:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.craft-empty-inventory {
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
+  padding: 16px;
+  width: 100%;
+}
+
+/* Craft Book */
+.craft-book-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.craft-book-desc {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.craft-book-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.craft-book-card {
+  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.craft-book-card.unlocked {
+  border-color: rgba(139, 92, 246, 0.4);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.craft-book-card.locked {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.book-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.book-card-title {
+  font-size: 12px;
+  color: #fff;
+}
+
+.book-formula {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.book-synergy {
+  font-size: 10px;
+  color: #94a3b8;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.badge-ssr { background: linear-gradient(135deg, #eab308, #f97316); color: #fff; font-weight: 800; font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+.badge-sr { background: linear-gradient(135deg, #a855f7, #6366f1); color: #fff; font-weight: 700; font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+.badge-r { background: linear-gradient(135deg, #3b82f6, #06b6d4); color: #fff; font-weight: 600; font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+.badge-locked { background: rgba(255, 255, 255, 0.1); color: #94a3b8; font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+
 
 

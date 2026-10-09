@@ -6,14 +6,17 @@ import { ITEMS } from '../data/items.js';
 import { CHARACTERS } from '../data/characters.js';
 import { getRandomModifier, MODIFIERS } from '../data/modifiers.js';
 import { PERKS } from '../data/perks.js';
+import { MapManager } from './mapManager.js';
 
 export class GameState {
   constructor() {
     this.listeners = [];
+    this.channels = {};
     this.loadPersistentData();
     this.selectedRoleId = 'backend_dev';
     this.isHardcore = false;
     this.currentModifier = getRandomModifier();
+    this.dailySeed = null;
     this.reset();
   }
 
@@ -37,8 +40,12 @@ export class GameState {
     this.currentMinute = 45;
     this.energy = role.baseEnergy || 90;
     this.suspicion = role.baseSuspicion || 15;
-    this.zone = 1;
     this.turns = 0;
+
+    // Generate DAG map and sync zone
+    this.mapGraph = MapManager.generateDungeonMap(this.dailySeed || Date.now());
+    this.currentMapNodeId = this.mapGraph[0][0].id;
+    this.zone = this.mapGraph[0][0].zone || 1;
 
     // Inventory starting items based on character
     this.inventory = [...(role.startingItems || ['chair_jacket', 'fake_bsod'])];
@@ -116,7 +123,8 @@ export class GameState {
 
   loadPersistentData() {
     try {
-      const data = JSON.parse(localStorage.getItem('escape_work_save') || '{}');
+      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_save') : null;
+      const data = raw ? JSON.parse(raw) : {};
       this.history = {
         gamesPlayed: data.gamesPlayed || 0,
         victories: data.victories || 0,
@@ -124,8 +132,9 @@ export class GameState {
         unlockedAchievements: data.unlockedAchievements || [],
         slackerExp: typeof data.slackerExp === 'number' ? data.slackerExp : 50, // 50 starting exp
         unlockedPerks: data.unlockedPerks || [],
+        unlockedRecipes: data.unlockedRecipes || [],
         roleWins: data.roleWins || {},
-        hardcoreWins: data.hardcoreWins || 0
+        hardcoreWins: data.hardcoreWins || {}
       };
     } catch {
       this.history = {
@@ -135,6 +144,7 @@ export class GameState {
         unlockedAchievements: [],
         slackerExp: 50,
         unlockedPerks: [],
+        unlockedRecipes: [],
         roleWins: {},
         hardcoreWins: 0
       };
@@ -142,6 +152,7 @@ export class GameState {
   }
 
   savePersistentData() {
+    if (typeof localStorage === 'undefined') return;
     try {
       localStorage.setItem('escape_work_save', JSON.stringify(this.history));
     } catch (e) {
@@ -166,11 +177,27 @@ export class GameState {
     return { success: true, message: `成功点亮【${perk.name}】！` };
   }
 
-  subscribe(callback) {
-    this.listeners.push(callback);
+  subscribe(channelOrCallback, callback) {
+    if (typeof channelOrCallback === 'function') {
+      this.listeners.push(channelOrCallback);
+      return () => {
+        this.listeners = this.listeners.filter((cb) => cb !== channelOrCallback);
+      };
+    }
+    const channel = channelOrCallback;
+    if (!this.channels) this.channels = {};
+    if (!this.channels[channel]) this.channels[channel] = [];
+    this.channels[channel].push(callback);
     return () => {
-      this.listeners = this.listeners.filter((cb) => cb !== callback);
+      this.channels[channel] = this.channels[channel].filter((cb) => cb !== callback);
     };
+  }
+
+  emit(channel, payload) {
+    if (this.channels && this.channels[channel]) {
+      this.channels[channel].forEach((cb) => cb(payload));
+    }
+    this.notify();
   }
 
   notify() {

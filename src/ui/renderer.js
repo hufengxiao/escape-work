@@ -13,11 +13,15 @@ import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
 import { CHANGELOGS } from '../data/changelog.js';
 import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS, INTERACTIVE_TOUR_STEPS } from '../data/guide.js';
+import { MapView } from './mapView.js';
+import { CraftModal } from './craftModal.js';
 
 export class UIRenderer {
   constructor(state, engine) {
     this.state = state;
     this.engine = engine;
+    this.mapView = new MapView(this.state, (nodeId) => this.engine.travelToNode(nodeId));
+    this.craftModal = new CraftModal(this.state, () => this.render());
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
@@ -69,6 +73,9 @@ export class UIRenderer {
             </button>
             <button id="btn-bgm" class="btn-icon" title="背景紧张音效" aria-label="紧张旋律">
               🎵
+            </button>
+            <button id="btn-craft" class="btn-icon" title="职场妙手合成 · 羁绊神装" aria-label="合成">
+              🧪
             </button>
             <button id="btn-archive" class="btn-icon" title="结局与成就图鉴" aria-label="图鉴">
               🏆
@@ -153,6 +160,9 @@ export class UIRenderer {
           </button>
         </div>
 
+        <!-- DAG Workplace Exploration Map Slot -->
+        <div id="map-view-slot"></div>
+
         <!-- Main Workspace Screen -->
         <main class="main-screen">
           <!-- Zone Scene Box -->
@@ -186,8 +196,11 @@ export class UIRenderer {
           <!-- Tactical Backpack Items -->
           <section class="backpack-section">
             <h3 class="section-title">
-              <span>🎒 摸鱼背包 (<span id="backpack-count">0</span>)</span>
-              <span class="section-hint">点击道具可主动使用或查看效果</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span>🎒 摸鱼背包 (<span id="backpack-count">0</span>)</span>
+                <button id="btn-quick-craft" class="btn-craft-badge" title="合成羁绊神装">🧪 妙手合成</button>
+              </div>
+              <span class="section-hint">点击道具可主动使用或合成神装</span>
             </h3>
             <div class="item-tray" id="item-tray">
               <!-- Dynamically populated items -->
@@ -607,6 +620,16 @@ export class UIRenderer {
     document.getElementById('btn-talent').addEventListener('click', () => this.openTalentModal());
     document.getElementById('strip-exp-chip').addEventListener('click', () => this.openTalentModal());
     document.getElementById('btn-close-talent').addEventListener('click', () => talentModal.classList.add('hidden'));
+
+    // Craft modal
+    document.getElementById('btn-craft')?.addEventListener('click', () => {
+      sound.playClick();
+      this.craftModal.show();
+    });
+    document.getElementById('btn-quick-craft')?.addEventListener('click', () => {
+      sound.playClick();
+      this.craftModal.show();
+    });
 
     // Archive Modal
     const archiveModal = document.getElementById('archive-modal');
@@ -1145,11 +1168,20 @@ export class UIRenderer {
     this.renderMetaStrip();
     this.renderZoneNavigator();
     this.renderTacticalStepBar();
+    this.renderMapView();
     this.renderSceneInfo();
     this.renderActionButtons();
     this.renderBackpack();
     this.renderLogs();
     this.renderModals();
+  }
+
+  renderMapView() {
+    const slot = document.getElementById('map-view-slot');
+    if (slot && this.mapView) {
+      slot.innerHTML = this.mapView.render();
+      this.mapView.bindEvents(slot);
+    }
   }
 
   renderMetaStrip() {
