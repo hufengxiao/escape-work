@@ -3,23 +3,44 @@
  */
 
 import { ITEMS } from '../data/items.js';
+import { CHARACTERS } from '../data/characters.js';
+import { getRandomModifier, MODIFIERS } from '../data/modifiers.js';
+import { PERKS } from '../data/perks.js';
 
 export class GameState {
   constructor() {
-    this.reset();
     this.loadPersistentData();
+    this.selectedRoleId = 'backend_dev';
+    this.isHardcore = false;
+    this.currentModifier = getRandomModifier();
+    this.reset();
   }
 
-  reset() {
+  reset(roleId = null, modifierId = null, isHardcore = null) {
+    if (roleId && CHARACTERS[roleId]) {
+      this.selectedRoleId = roleId;
+    }
+    if (isHardcore !== null) {
+      this.isHardcore = Boolean(isHardcore);
+    }
+    if (modifierId) {
+      const found = MODIFIERS.find((m) => m.id === modifierId);
+      if (found) this.currentModifier = found;
+    } else {
+      this.currentModifier = getRandomModifier();
+    }
+
+    const role = CHARACTERS[this.selectedRoleId] || CHARACTERS.backend_dev;
+
     this.currentHour = 17;
     this.currentMinute = 45;
-    this.energy = 90; // 0 to 100
-    this.suspicion = 15; // 0 to 100
-    this.zone = 1; // 1 to 4
+    this.energy = role.baseEnergy || 90;
+    this.suspicion = role.baseSuspicion || 15;
+    this.zone = 1;
     this.turns = 0;
 
-    // Starting items in cubicle drawer
-    this.inventory = ['chair_jacket', 'fake_bsod'];
+    // Inventory starting items based on character
+    this.inventory = [...(role.startingItems || ['chair_jacket', 'fake_bsod'])];
 
     this.flags = {
       bagPacked: 0,
@@ -32,23 +53,66 @@ export class GameState {
       hasLaborLawArmed: false,
       hasMedicalExcuse: false,
       hasFolderCover: false,
+      hasDeliveryDisguise: false,
       talkedAhwei: false,
       toiletTurns: 0,
       toiletMaster: false,
       tookStairs: false
     };
 
+    // Apply role bonus
+    if (role.applyBonus) {
+      role.applyBonus(this);
+    }
+
+    // Apply Hardcore mode penalties
+    if (this.isHardcore) {
+      this.suspicion += 20;
+      this.energy = Math.max(40, this.energy - 10);
+      this.flags.isHardcore = true;
+    }
+
+    // Apply current workplace modifier
+    if (this.currentModifier && this.currentModifier.apply) {
+      this.currentModifier.apply(this);
+    }
+
+    // Apply unlocked perks from talent tree
+    this.applyPerks();
+
     this.activeEncounter = null;
     this.currentEnding = null;
+    this.earnedExp = 0;
+
+    const hardcoreText = this.isHardcore ? '【🔥地狱修罗场模式】' : '';
     this.logs = [
       {
         time: '17:45',
         type: 'system',
-        text: '周五 17:45，距离准点下班还有 15 分钟。办公室键盘敲得震天响，老板阎总正在巡视。目标：在老板怀疑度达到 100% 之前，安全从一楼大门撤退！'
+        text: `周五 17:45，你化身【${role.name}】(${role.title})${hardcoreText}。今日办公区环境：【${this.currentModifier.icon} ${this.currentModifier.name}】。目标：在老板怀疑度达到 100% 之前准点逃脱！`
       }
     ];
 
     this.listeners = [];
+  }
+
+  applyPerks() {
+    const unlocked = this.history?.unlockedPerks || [];
+    unlocked.forEach((perkId) => {
+      const perk = PERKS.find((p) => p.id === perkId);
+      if (perk && perk.apply) {
+        perk.apply(this);
+      }
+    });
+
+    // If extra pocket perk unlocked, randomly give 1 extra item
+    if (this.flags.hasExtraPocketPerk) {
+      const candidates = ['sunglasses', 'wind_oil', 'fake_call'];
+      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      if (!this.hasItem(chosen)) {
+        this.addItem(chosen);
+      }
+    }
   }
 
   loadPersistentData() {
@@ -58,14 +122,22 @@ export class GameState {
         gamesPlayed: data.gamesPlayed || 0,
         victories: data.victories || 0,
         unlockedEndings: data.unlockedEndings || [],
-        unlockedAchievements: data.unlockedAchievements || []
+        unlockedAchievements: data.unlockedAchievements || [],
+        slackerExp: typeof data.slackerExp === 'number' ? data.slackerExp : 50, // 50 starting exp
+        unlockedPerks: data.unlockedPerks || [],
+        roleWins: data.roleWins || {},
+        hardcoreWins: data.hardcoreWins || 0
       };
     } catch {
       this.history = {
         gamesPlayed: 0,
         victories: 0,
         unlockedEndings: [],
-        unlockedAchievements: []
+        unlockedAchievements: [],
+        slackerExp: 50,
+        unlockedPerks: [],
+        roleWins: {},
+        hardcoreWins: 0
       };
     }
   }
@@ -76,6 +148,23 @@ export class GameState {
     } catch (e) {
       console.warn('Failed to save state to localStorage', e);
     }
+  }
+
+  unlockPerk(perkId) {
+    const perk = PERKS.find((p) => p.id === perkId);
+    if (!perk) return { success: false, message: '特质不存在' };
+    if (this.history.unlockedPerks.includes(perkId)) {
+      return { success: false, message: '该特质已点亮' };
+    }
+    if (this.history.slackerExp < perk.cost) {
+      return { success: false, message: `摸鱼悟性不足（需要 ${perk.cost}，当前 ${this.history.slackerExp}）` };
+    }
+
+    this.history.slackerExp -= perk.cost;
+    this.history.unlockedPerks.push(perkId);
+    this.savePersistentData();
+    this.notify();
+    return { success: true, message: `成功点亮【${perk.name}】！` };
   }
 
   subscribe(callback) {

@@ -21,9 +21,23 @@ export class GameEngine {
 
     if (!action) return;
 
+    // Calculate energy cost with perks and difficulty
+    let energyCost = action.costEnergy || 0;
+    if (energyCost > 0) {
+      if (this.state.flags.hasSneakersPerk) {
+        energyCost = Math.max(1, Math.round(energyCost * 0.85));
+      }
+      if (this.state.isHardcore) {
+        energyCost = Math.round(energyCost * 1.25);
+      }
+      if (this.state.flags.modQuarterlySprint) {
+        energyCost = Math.round(energyCost * 1.2);
+      }
+    }
+
     // Advance time and cost energy
     this.state.advanceTime(action.costTime || 1);
-    this.state.energy = Math.max(0, Math.min(100, this.state.energy - (action.costEnergy || 0)));
+    this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
     this.state.turns++;
 
     // Execute custom action handler
@@ -80,14 +94,18 @@ export class GameEngine {
   }
 
   evaluateRandomEncounter() {
-    // 30% chance of random encounter per action if none active
     if (this.state.activeEncounter || this.state.currentEnding) return;
 
     const possibleEncounters = RANDOM_ENCOUNTERS.filter(
       (enc) => enc.zones.includes(this.state.zone) && !enc.hasOccurred
     );
 
-    if (possibleEncounters.length > 0 && Math.random() < 0.38) {
+    let chance = 0.38;
+    if (this.state.flags.hasRadarPerk) chance *= 0.75;
+    if (this.state.isHardcore) chance *= 1.25;
+    if (this.state.flags.modHqInspection && this.state.zone === 2) chance *= 1.3;
+
+    if (possibleEncounters.length > 0 && Math.random() < chance) {
       const selected = possibleEncounters[Math.floor(Math.random() * possibleEncounters.length)];
       selected.hasOccurred = true;
       this.triggerEncounter(selected);
@@ -145,9 +163,16 @@ export class GameEngine {
     const ending = ENDINGS[endingId] || ENDINGS.ending_caught_meeting;
     this.state.currentEnding = ending;
 
-    if (ending.type === 'victory') {
+    const isWin = ending.type === 'victory';
+    if (isWin) {
       sound.playSuccess();
       this.state.history.victories++;
+      this.state.history.roleWins[this.state.selectedRoleId] =
+        (this.state.history.roleWins[this.state.selectedRoleId] || 0) + 1;
+
+      if (this.state.isHardcore) {
+        this.state.history.hardcoreWins = (this.state.history.hardcoreWins || 0) + 1;
+      }
     } else {
       sound.playFail();
     }
@@ -157,6 +182,29 @@ export class GameEngine {
     if (!this.state.history.unlockedEndings.includes(endingId)) {
       this.state.history.unlockedEndings.push(endingId);
     }
+
+    // Calculate Slacker EXP reward
+    let expBase = this.state.turns * 8;
+    if (isWin) {
+      const rankBonus = {
+        'SSS+': 180,
+        SSS: 140,
+        SS: 110,
+        S: 85,
+        A: 65,
+        B: 45
+      };
+      expBase += rankBonus[ending.rank] || 50;
+    } else {
+      expBase += 25; // consolation exp
+    }
+
+    if (this.state.isHardcore) expBase *= 1.8;
+    if (this.state.flags.modBossRampage) expBase *= 1.5;
+
+    const earnedExp = Math.round(expBase);
+    this.state.earnedExp = earnedExp;
+    this.state.history.slackerExp = (this.state.history.slackerExp || 0) + earnedExp;
 
     // Check newly unlocked achievements
     ACHIEVEMENTS.forEach((ach) => {
@@ -174,10 +222,10 @@ export class GameEngine {
     this.state.notify();
   }
 
-  restart() {
+  restart(roleId = null, modifierId = null, isHardcore = null) {
     sound.playClick();
     RANDOM_ENCOUNTERS.forEach((enc) => (enc.hasOccurred = false));
-    this.state.reset();
+    this.state.reset(roleId, modifierId, isHardcore);
     this.state.notify();
   }
 }

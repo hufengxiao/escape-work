@@ -167,5 +167,89 @@ export const ITEMS = {
         message: '你偷偷嚼了一口辣条，甜辣浓郁，干瘪的灵魂得到了升华！体力 +10'
       };
     }
+  },
+
+  fake_call: {
+    id: 'fake_call',
+    name: '模拟大客户来电',
+    icon: '📱',
+    category: 'stealth',
+    description: '手机定时播放高保真商务对话：“喂？张总您好！下轮十亿战略框架协议我们已经拟定……”',
+    effectText: '老板怀疑度 -20%，可用于遭遇战强行打断领导盘问',
+    onUse: (state) => {
+      state.flags.hasFakeCall = true;
+      state.suspicion = Math.max(0, state.suspicion - 20);
+      return {
+        success: true,
+        message: '你将手机贴在耳边，高声说出百亿投融资黑话，周围领导纷纷驻足侧目不敢打扰！老板怀疑度 -20%'
+      };
+    }
+  },
+
+  sunglasses: {
+    id: 'sunglasses',
+    name: '防蓝光深色墨镜',
+    icon: '🕶️',
+    category: 'stealth',
+    description: '工位极客装备，戴上后眼神深邃莫测，谁也看不出你到底在看代码还是在看打卡机。',
+    effectText: '老板怀疑度 -15%，走廊行动更安全',
+    onUse: (state) => {
+      state.flags.hasSunglasses = true;
+      state.suspicion = Math.max(0, state.suspicion - 15);
+      return {
+        success: true,
+        message: '你推了推墨镜，自带特工风范，任何人的审视目光都被镜面无情反弹！老板怀疑度 -15%'
+      };
+    }
+  },
+
+  wind_oil: {
+    id: 'wind_oil',
+    name: '提神风油精',
+    icon: '🧴',
+    category: 'recovery',
+    description: '绿色小玻璃瓶，抹在太阳穴如醍醐灌顶，双眼瞬间清亮如铜铃。',
+    effectText: '精神体力瞬间恢复 +25！',
+    onUse: (state) => {
+      state.energy = Math.min(100, state.energy + 25);
+      return {
+        success: true,
+        message: '清凉刺激的气味直冲天灵盖！脑子瞬间无比清醒，精神体力 +25！'
+      };
+    }
+  },
+
+  cleaner_badge: {
+    id: 'cleaner_badge',
+    name: '保洁主管工卡',
+    icon: '🪪',
+    category: 'escape',
+    description: '拾到的全楼保洁主管通行挂牌，可自由刷开消防侧门与员工货梯。',
+    effectText: '避开主要安检口，解锁隐秘撤退通道',
+    onUse: (state) => {
+      state.flags.hasCleanerBadge = true;
+      state.suspicion = Math.max(0, state.suspicion - 10);
+      return {
+        success: true,
+        message: '你把工卡揣进内衬兜里，整栋大厦的暗门和货梯向你敞开！老板怀疑度 -10%'
+      };
+    }
+  },
+
+  resign_draft: {
+    id: 'resign_draft',
+    name: '离职交接清单草稿',
+    icon: '📋',
+    category: 'holy',
+    description: '打印着“个人发展原因辞去职务及交接明细”的清单。打工人至高威慑级核武器。',
+    effectText: '老板怀疑度骤降 30%，终极对峙时让领导当场慌神挽留',
+    onUse: (state) => {
+      state.flags.hasResignDraft = true;
+      state.suspicion = Math.max(0, state.suspicion - 30);
+      return {
+        success: true,
+        message: '你把盖着草稿章的离职交接单若隐若现露出一角，主管路过看见浑身一颤，连大气都不敢喘！老板怀疑度 -30%'
+      };
+    }
   }
 };

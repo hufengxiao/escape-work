@@ -83,9 +83,10 @@ export const ZONE_ACTIONS = {
           return state.useItem('fake_bsod');
         }
         // Fallback default decoy
-        state.suspicion = Math.max(0, state.suspicion - 8);
+        const reduce = state.flags.isDev ? 12 : 8;
+        state.suspicion = Math.max(0, state.suspicion - reduce);
         return {
-          msg: '你把半截铅笔扔在记事本上，把显示器亮度调到最亮，桌上倒扣一本技术书。老板怀疑度 -8%',
+          msg: `你把半截铅笔扔在记事本上，把显示器亮度调到最亮，桌上倒扣一本技术书。老板怀疑度 -${reduce}%`,
           type: 'success'
         };
       }
@@ -127,6 +128,35 @@ export const ZONE_ACTIONS = {
       }
     },
     {
+      id: 'search_drawer',
+      name: '翻查工位深层暗格',
+      icon: '🗄️',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '翻找抽屉深处遗留的摸鱼宝藏与应急物资。',
+      handler: (state) => {
+        if (!state.hasItem('wind_oil')) {
+          state.addItem('wind_oil');
+          return {
+            msg: '在抽屉角落摸出了一瓶【提神风油精】！涂在太阳穴有奇效。',
+            type: 'item'
+          };
+        } else if (!state.hasItem('sunglasses')) {
+          state.addItem('sunglasses');
+          return {
+            msg: '找到了同事送的【防蓝光深色墨镜】！戴上后眼神莫测。',
+            type: 'item'
+          };
+        } else {
+          state.energy = Math.min(100, state.energy + 8);
+          return {
+            msg: '翻出两颗薄荷润喉糖吃了下去，精神微微振奋，体力 +8！',
+            type: 'success'
+          };
+        }
+      }
+    },
+    {
       id: 'talk_ahwei',
       name: '联系摸鱼盟友阿伟',
       icon: '🤝',
@@ -161,6 +191,7 @@ export const ZONE_ACTIONS = {
         let suspJump = 10;
         if (state.flags.hasDecoyJacket) suspJump -= 8;
         if (state.flags.hasCoffeeShield) suspJump -= 5;
+        if (state.flags.isDesigner) suspJump -= 3;
         state.suspicion += Math.max(0, suspJump);
         state.zone = 2;
         return {
@@ -198,8 +229,12 @@ export const ZONE_ACTIONS = {
         state.toiletTurns = (state.toiletTurns || 0) + 1;
         state.suspicion = Math.max(0, state.suspicion - 15);
 
+        // Slacker or perk bonus
+        if (state.flags.isSlacker || state.flags.hasToiletSpaPerk) {
+          state.energy = Math.min(100, state.energy + 12);
+        }
+
         if (state.toiletTurns >= 3) {
-          // Can lead to toilet philosopher ending
           state.flags.toiletMaster = true;
           return {
             msg: '你在马桶上坐得双腿发麻……隔壁单间传来了短视频的欢快笑声，看来摸鱼的不止你一个！',
@@ -233,12 +268,35 @@ export const ZONE_ACTIONS = {
             msg: '天哪！你在资料架缝隙里发现了一本落灰的【便携版《劳动法》】！这可是终极神器！',
             type: 'item'
           };
+        } else if (!state.hasItem('resign_draft')) {
+          state.addItem('resign_draft');
+          return {
+            msg: '你在碎纸机旁捡到了前人遗留的【离职交接清单草稿】！上面还赫然盖着红章！',
+            type: 'item'
+          };
         } else {
           return {
             msg: '打印机滋滋作响吐着废纸，没什么新鲜东西了。',
             type: 'info'
           };
         }
+      }
+    },
+    {
+      id: 'visit_tea_table',
+      name: '打卡茶水间点心台',
+      icon: '🍰',
+      costTime: 1,
+      costEnergy: -12,
+      desc: '补充能量，顺带偷听行政和运营部门的风吹草动。',
+      handler: (state) => {
+        const bonus = state.flags.modFridayTea ? 18 : 12;
+        state.energy = Math.min(100, state.energy + bonus);
+        state.suspicion = Math.max(0, state.suspicion - 4);
+        return {
+          msg: `你顺走了一块提拉米苏和一罐无糖红茶，能量瞬间恢复 +${bonus}！`,
+          type: 'success'
+        };
       }
     },
     {
@@ -270,7 +328,6 @@ export const ZONE_ACTIONS = {
         state.flags.elevatorTarget = 'main';
         const rand = Math.random();
         if (rand < 0.45 && !state.flags.hasEncounteredBossInElevator) {
-          // Trigger special encounter: Boss inside elevator!
           return {
             triggerEncounter: 'encounter_boss_in_elevator',
             msg: '叮的一声！电梯门开了，里面竟然站着……！'
@@ -292,6 +349,12 @@ export const ZONE_ACTIONS = {
       costEnergy: 5,
       desc: '通常堆满废纸箱和保洁推车，虽然速度慢，但极其安全。',
       handler: (state) => {
+        if (state.hasItem('cleaner_badge') || state.flags.hasCleanerBadge) {
+          return {
+            triggerEnding: 'ending_cleaner_disciple',
+            msg: '你刷亮保洁主管工卡，保洁阿姨热情相迎，直接送你走专用后勤通道！'
+          };
+        }
         state.zone = 4;
         state.suspicion = Math.max(0, state.suspicion - 10);
         return {
@@ -310,11 +373,35 @@ export const ZONE_ACTIONS = {
       handler: (state) => {
         state.flags.tookStairs = true;
         state.zone = 4;
-        state.suspicion = 0; // 0% boss alert in stairs
+        state.suspicion = 0;
+        const actualCost = state.flags.isIntern ? 12 : 25;
+        state.energy = Math.max(0, state.energy - actualCost);
         return {
-          msg: '你撞开常闭防火门，两步并作一步狂奔下楼！18、16、10、3、1！大汗淋漓推开一楼侧门，直达大堂！(消耗25体力，老板怀疑度归零！)',
+          msg: `你撞开常闭防火门，两步并作一步狂奔下楼！18、16、10、3、1！大汗淋漓推开一楼侧门直达大堂！(消耗${actualCost}体力，怀疑度归零！)`,
           type: 'warning'
         };
+      }
+    },
+    {
+      id: 'crawl_ventilation',
+      name: '潜行设备层排风道',
+      icon: '🔦',
+      costTime: 2,
+      costEnergy: 18,
+      desc: '从3楼设备层检修口潜入，直达B2地库排风井。',
+      handler: (state) => {
+        if (state.energy >= 18) {
+          return {
+            triggerEnding: 'ending_vent_crawl',
+            msg: '你灵活如灵猫，顺着排风管道一路滑降至地库，神不知鬼不觉逃出生天！'
+          };
+        } else {
+          state.suspicion += 15;
+          return {
+            msg: '管道口太窄加上体力不支，你卡在百叶窗前，赶紧狼狈退了出来！(怀疑度 +15%)',
+            type: 'warning'
+          };
+        }
       }
     },
     {
@@ -322,7 +409,7 @@ export const ZONE_ACTIONS = {
       name: '自动贩卖机前喘口气',
       icon: '🥤',
       costTime: 1,
-      costEnergy: -15, // restores energy
+      costEnergy: -15,
       desc: '在角落贩卖机投币买一罐冰阔落，回口气。',
       handler: (state) => {
         state.energy = Math.min(100, state.energy + 15);
@@ -343,7 +430,6 @@ export const ZONE_ACTIONS = {
       costEnergy: 4,
       desc: '走到发着蓝光的面部识别闸机前刷脸。注意看当前时间！',
       handler: (state) => {
-        // Evaluate time!
         if (state.currentHour < 18) {
           state.suspicion += 25;
           return {
@@ -351,7 +437,13 @@ export const ZONE_ACTIONS = {
             type: 'warning'
           };
         } else {
-          // Win condition!
+          // Special cyber borg check
+          if (state.flags.hasCoffeeShield && state.energy >= 70 && state.hasItem('wind_oil')) {
+            return {
+              triggerEnding: 'ending_cyber_borg',
+              msg: '双重提神神光附体，你化身没有感情的准点机械姬光速刷脸飞出大门！'
+            };
+          }
           return {
             triggerEnding: 'ending_perfect_clockout',
             msg: '闸机发出清脆的“滴——打卡成功！”'
@@ -378,6 +470,48 @@ export const ZONE_ACTIONS = {
           return {
             msg: '老王打量了你一眼：“小伙子，没到下班点在门口晃悠啥呢？”你尴尬地陪笑两声，假装看天花板。',
             type: 'info'
+          };
+        }
+      }
+    },
+    {
+      id: 'present_resignation',
+      name: '霸气亮出离职清单',
+      icon: '📋',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '拿出已签字的离职交接清单，终极掀桌威慑！',
+      handler: (state) => {
+        if (state.hasItem('resign_draft') || state.flags.hasResignDraft) {
+          return {
+            triggerEnding: 'ending_resign_shock',
+            msg: '离职清单一出，领导吓得面如土色当场加薪求你放过！'
+          };
+        } else {
+          return {
+            msg: '你两手空空，没有离职草稿在手，不敢贸然掀桌。',
+            type: 'info'
+          };
+        }
+      }
+    },
+    {
+      id: 'disguise_delivery',
+      name: '套上外卖马甲闪现出门',
+      icon: '🛵',
+      costTime: 1,
+      costEnergy: 4,
+      desc: '化身骑手小哥，利用大件货运通道直通户外。',
+      handler: (state) => {
+        if (state.flags.hasDeliveryDisguise) {
+          return {
+            triggerEnding: 'ending_delivery_disguise',
+            msg: '你提着奶茶袋大步流星跨出旋转门，深藏功与名！'
+          };
+        } else {
+          return {
+            msg: '你身上没有外卖装备，大摇大摆走货运通道会被老王盘问。',
+            type: 'warning'
           };
         }
       }
@@ -427,8 +561,15 @@ export const RANDOM_ENCOUNTERS = [
         }
       },
       {
-        text: '搬出技术架构黑话：“这改动影响高并发分库分表一致性，必须提全员架构评审！”',
+        text: '【技术黑客威慑】搬出架构黑话：“这改动影响分布式一致性，必须提全员架构评审！”',
         outcome: (state) => {
+          if (state.flags.isDev) {
+            state.suspicion = Math.max(0, state.suspicion - 10);
+            return {
+              msg: '后端专属压制！你信手拈来一串底层高并发协议名词，阿强听得大脑宕机连连道歉跑开！',
+              type: 'success'
+            };
+          }
           state.suspicion += 5;
           state.energy -= 8;
           return {
@@ -449,7 +590,7 @@ export const RANDOM_ENCOUNTERS = [
       },
       {
         text: '妥协：“行吧，我看看是哪两个字……”',
-        outcome: (state) => {
+        outcome: () => {
           return {
             triggerEnding: 'ending_pm_sacrifice',
             msg: '你跟着阿强回了工位，一改改出了毁灭级的大事故……'
@@ -469,7 +610,7 @@ export const RANDOM_ENCOUNTERS = [
     choices: [
       {
         text: '【手速惊人】抢他丫的！不抢白不抢！',
-        outcome: (state) => {
+        outcome: () => {
           return {
             triggerEnding: 'ending_red_packet_trap',
             msg: '你抢了0.28元，成了群里第一个领包的幸运儿……'
@@ -519,8 +660,15 @@ export const RANDOM_ENCOUNTERS = [
         }
       },
       {
-        text: '反向画饼：“刘姐，我正在思考如何将咱们企业价值观深度融入敏捷交付闭环！”',
+        text: '【反向画饼】“刘姐，我正在思考如何将企业价值观深度融入敏捷交付闭环！”',
         outcome: (state) => {
+          if (state.flags.isPM) {
+            state.suspicion = Math.max(0, state.suspicion - 20);
+            return {
+              msg: '产品经理专属口才！你一顿敏捷生态闭环黑话直接把刘姐听懵了，当场在笔记本上记笔记！',
+              type: 'success'
+            };
+          }
           state.energy -= 6;
           state.suspicion = Math.max(0, state.suspicion - 10);
           return {
@@ -531,10 +679,222 @@ export const RANDOM_ENCOUNTERS = [
       },
       {
         text: '甩锅阿伟：“刘姐，刚才阿伟在工位说有关于年假的严肃政策想向您请教！”',
-        outcome: (state) => {
+        outcome: () => {
           return {
             msg: '刘姐眼睛一亮：“是吗？我这就去关怀阿伟！”阿伟，好兄弟对不住了！',
             type: 'warning'
+          };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_pantry_gossip',
+    zones: [2],
+    title: '🗣️ 茶水间八卦密谈组局',
+    character: '财务小敏 & 行政阿花',
+    avatar: '🧋',
+    description: '两位行政核心成员正一边手冲咖啡一边咬耳朵：“听说阎总刚在7楼巡场发飙，现在正准备坐专梯上楼，今晚谁在工位谁倒霉……”',
+    choices: [
+      {
+        text: '【凑近搭话】“真的吗？太吓人了，大家辛苦啦！”顺手拿块蛋糕',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          state.energy = Math.min(100, state.energy + 10);
+          return {
+            msg: '妹子们热情地分给你一块芝士蛋糕，并提醒你快从侧门避开阎总！老板怀疑度 -10%，体力 +10！',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '【精准情报】迅速锁定老板行踪，规划反向逃脱路线',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 15);
+          return {
+            msg: '得知阎总动向，你精准避开了高危区域，从容前行！老板怀疑度 -15%',
+            type: 'info'
+          };
+        }
+      },
+      {
+        text: '非礼勿听，快步从背后静悄悄滑走',
+        outcome: () => {
+          return {
+            msg: '你脚步轻盈如风，毫不起眼地绕过了茶水间视线。',
+            type: 'info'
+          };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_printer_jam',
+    zones: [1, 2],
+    title: '📄 激光打印机喷涌大卡纸！',
+    character: '暴走的复合式打印机',
+    avatar: '🖨️',
+    description: '走廊打印机忽然发出一阵拖拉机般的轰鸣，红灯疯闪，几十张空白与草稿纸漫天喷射，引来走廊同事惊呼！',
+    choices: [
+      {
+        text: '【趁乱搜寻】假装帮忙捡纸，顺手牵走地上的【离职交接清单草稿】！',
+        outcome: (state) => {
+          state.addItem('resign_draft');
+          return {
+            msg: '你在满地乱纸中捡到了核武器级别的【离职交接清单草稿】！已收入背包。',
+            type: 'item'
+          };
+        }
+      },
+      {
+        text: '【浑水摸鱼】借着满天飞舞的纸张掩护快步前插',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return {
+            msg: '全场视线都被卡纸吸引，你从容穿过走廊，老板怀疑度 -10%',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '【技术硬核修理】一脚踢中主板电源复位孔',
+        outcome: (state) => {
+          state.energy -= 4;
+          return {
+            msg: '打印机瞬间安静下来，周围同事投来敬仰目光，你深藏功与名迅速离开。',
+            type: 'info'
+          };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_delivery_guy',
+    zones: [2, 3],
+    title: '🛵 迷路的外卖闪送小哥',
+    character: '外卖小哥小张',
+    avatar: '🛵',
+    description: '一位穿着黄马甲的小哥提着保温袋满头大汗：“哥！阎总订的特急生椰拿铁，302会议室到底在哪啊？马上要超时了！”',
+    choices: [
+      {
+        text: '【绝妙伪装】热情指路，顺便借用小哥备用的【黄色反光马甲】！',
+        outcome: (state) => {
+          state.flags.hasDeliveryDisguise = true;
+          return {
+            msg: '小哥千恩万谢：“哥，我车筐里多一件旧背心送你了，谢谢指路！”解锁【外卖骑手伪装】！',
+            type: 'item'
+          };
+        }
+      },
+      {
+        text: '【半路截胡】“阎总让我来接应这杯超大冰美式！”大口吨吨吨',
+        outcome: (state) => {
+          state.energy = Math.min(100, state.energy + 25);
+          return {
+            msg: '浓缩冰美式直冲大脑，整个人直接进入亢奋模式！体力 +25！',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '指向走廊最深处的反方向：“在那边！”转身溜走',
+        outcome: () => {
+          return {
+            msg: '小哥朝反方向跑去，顺带吸引了走廊保安的目光。',
+            type: 'info'
+          };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_mock_interview',
+    zones: [1, 2],
+    title: '📋 突遭抓壮丁当面试官！',
+    character: 'HR专员小周',
+    avatar: '📑',
+    description: '小周拿着简历小跑过来拉住你：“小李！应聘高级架构师的候选人在小会议室等了半小时了，主面老王临时拉肚子，您帮我顶上聊十分钟呗！”',
+    choices: [
+      {
+        text: '出示【模拟大客户来电】：“喂？张总您到楼下了吗？我马上下来接您！”',
+        requireItem: 'fake_call',
+        outcome: (state) => {
+          state.removeItem('fake_call');
+          return {
+            msg: '小周听到百亿大客户的声音连连道歉：“对不起对不起李哥，您快去！”迅速放你离开。',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '【实习生萌新光环】“周姐，其实我也是刚来的实习生，我不会面呀……”',
+        outcome: (state) => {
+          if (state.flags.isIntern) {
+            return {
+              msg: '小周看了一眼你清澈的眼神，恍然大悟：“哎呀抓错人了！”一溜烟找别人去了。',
+              type: 'success'
+            };
+          }
+          state.suspicion += 8;
+          return {
+            msg: '小周白了你一眼：“李哥你别装嫩了！”，但还是被你推脱掉了。(怀疑度 +8%)',
+            type: 'warning'
+          };
+        }
+      },
+      {
+        text: '【三问速通法】“你对高可用分布式架构怎么看？回去等二面通知吧！”',
+        outcome: (state) => {
+          state.energy -= 8;
+          return {
+            msg: '三分钟速通面试！候选人被你的高深莫测折服，小周赞不绝口，你借机顺步撤离。',
+            type: 'info'
+          };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_security_camera',
+    zones: [2, 3],
+    title: '📹 360度高清天眼转头！',
+    character: '走廊智能安防摄像头',
+    avatar: '👁️',
+    description: '天花板上倒挂的黑色球形探头突然发出“滋滋”声响，红外光点猛地转向了你的背包与背影！',
+    choices: [
+      {
+        text: '戴上【防蓝光深色墨镜】若无其事大步走过',
+        requireItem: 'sunglasses',
+        outcome: () => {
+          return {
+            msg: '墨镜反射出自信冷酷的光芒，天眼AI人脸比对系统直接报错放弃！无懈可击！',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '怀抱【厚重的项目策划书】昂首挺胸目视前方',
+        requireItem: 'thick_folder',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 8);
+          return {
+            msg: '策划书挡住大半个身子，监控室老王只当你是赶去开会的奋斗之星！怀疑度 -8%',
+            type: 'success'
+          };
+        }
+      },
+      {
+        text: '假装低头系鞋带滑入柱子阴影死角',
+        outcome: (state) => {
+          state.energy -= 4;
+          return {
+            msg: '你灵活闪进消防栓死角，探头缓缓移开。好险！消耗 4 体力。',
+            type: 'info'
           };
         }
       }
@@ -552,6 +912,13 @@ export const RANDOM_ENCOUNTERS = [
       {
         text: '【反向画饼】“阎总！红杉投资人约我今晚密谈下轮融资架构，我正赶去赴约！”',
         outcome: (state) => {
+          // If PM or has fake_call, can trigger SSS+ true partner ending!
+          if (state.flags.isPM || state.hasItem('fake_call')) {
+            return {
+              triggerEnding: 'ending_true_partner',
+              msg: '红杉合伙人正好在楼下！你顺势成了阎总的大股东！'
+            };
+          }
           return {
             triggerEnding: 'ending_reverse_pie',
             msg: '阎总整个人震住了，拉住你的手热泪盈眶！'
@@ -571,7 +938,7 @@ export const RANDOM_ENCOUNTERS = [
       },
       {
         text: '【硬着头皮走进去】“阎总好，正好跟您汇报下今天的工作……”',
-        outcome: (state) => {
+        outcome: () => {
           return {
             triggerEnding: 'ending_caught_meeting',
             msg: '阎总高兴坏了，直接把你拉进小会议室秉烛夜谈……'
@@ -592,10 +959,20 @@ export const RANDOM_ENCOUNTERS = [
       {
         text: '【亮出底牌】转身从容举起《劳动法》！',
         requireItem: 'labor_law',
-        outcome: (state) => {
+        outcome: () => {
           return {
             triggerEnding: 'ending_labor_law',
             msg: '浩然正气横扫大堂！'
+          };
+        }
+      },
+      {
+        text: '【终极掀桌】甩出【离职交接清单草稿】：“阎总，我自愿辞职！”',
+        requireItem: 'resign_draft',
+        outcome: () => {
+          return {
+            triggerEnding: 'ending_resign_shock',
+            msg: '阎总当场面色惨白，求你留步并当场加薪20%！'
           };
         }
       },

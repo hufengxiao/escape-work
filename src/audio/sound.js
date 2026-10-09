@@ -6,14 +6,14 @@
 class SoundEngine {
   constructor() {
     this.ctx = null;
-    this.isMuted = localStorage.getItem('escape_work_muted') === 'true';
+    this.isMuted = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_muted') === 'true' : false;
     this.bgmPlaying = false;
     this.bgmInterval = null;
     this.bgmStep = 0;
   }
 
   init() {
-    if (!this.ctx) {
+    if (!this.ctx && typeof window !== 'undefined') {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (AudioContext) {
         this.ctx = new AudioContext();
@@ -26,7 +26,9 @@ class SoundEngine {
 
   toggleMute() {
     this.isMuted = !this.isMuted;
-    localStorage.setItem('escape_work_muted', this.isMuted);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('escape_work_muted', this.isMuted);
+    }
     if (this.isMuted) {
       this.stopBgm();
     }

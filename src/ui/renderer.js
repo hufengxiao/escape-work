@@ -6,6 +6,8 @@ import { ZONES, ZONE_ACTIONS } from '../data/events.js';
 import { ITEMS } from '../data/items.js';
 import { ENDINGS } from '../data/endings.js';
 import { ACHIEVEMENTS } from '../data/achievements.js';
+import { CHARACTERS } from '../data/characters.js';
+import { PERKS } from '../data/perks.js';
 import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
@@ -38,6 +40,15 @@ export class UIRenderer {
             </div>
           </div>
           <div class="header-actions">
+            <button id="btn-changelog" class="btn-icon" title="版本更新说明" aria-label="更新说明">
+              📢
+            </button>
+            <button id="btn-role" class="btn-icon" title="选择职场角色" aria-label="角色">
+              🎭
+            </button>
+            <button id="btn-talent" class="btn-icon" title="摸鱼天赋树" aria-label="天赋">
+              🧬
+            </button>
             <button id="btn-sound" class="btn-icon" title="音效开关" aria-label="音效开关">
               ${this.state.history && sound.isMuted ? '🔇' : '🔊'}
             </button>
@@ -90,6 +101,23 @@ export class UIRenderer {
             </div>
           </div>
         </section>
+
+        <!-- Role & Workplace Environment Meta Bar -->
+        <div class="meta-strip">
+          <button id="strip-role-chip" class="meta-chip chip-role" title="点击切换职场角色">
+            <span id="meta-role-avatar">👨‍💻</span>
+            <span id="meta-role-name">后端攻城狮</span>
+          </button>
+          <div id="strip-mod-chip" class="meta-chip chip-weather" title="今日办公区环境词条">
+            <span id="meta-mod-icon">☀️</span>
+            <span id="meta-mod-name">平静周五</span>
+          </div>
+          <button id="strip-exp-chip" class="meta-chip chip-exp" title="点击打开摸鱼天赋树">
+            <span>🧬</span>
+            <span id="meta-exp-val">0 悟性</span>
+          </button>
+          <span id="strip-hardcore-tag" class="meta-chip chip-hardcore hidden">🔥 修罗场</span>
+        </div>
 
         <!-- Escape Path Radar (Zone Navigator) -->
         <nav class="zone-stepper" id="zone-stepper" aria-label="逃脱进度">
@@ -173,6 +201,7 @@ export class UIRenderer {
             <div class="ending-icon" id="end-badge">🏆</div>
             <h2 class="ending-title" id="end-title">神仙准点打卡</h2>
             <div class="ending-summary" id="end-summary">分秒不差，完美隐匿！</div>
+            <div class="ending-exp-badge" id="end-exp-badge">✨ 摸鱼悟性 +0 EXP</div>
             <div class="ending-story" id="end-desc">结局详细故事</div>
             <div class="ending-quote" id="end-quote">“准点下班不是逃避……”</div>
 
@@ -180,8 +209,11 @@ export class UIRenderer {
               <button id="btn-share-poster" class="btn btn-primary">
                 📜 生成逃脱战绩海报
               </button>
+              <button id="btn-ending-role" class="btn btn-secondary">
+                🎭 换个职业再来
+              </button>
               <button id="btn-ending-restart" class="btn btn-secondary">
-                🔄 再来一把
+                🔄 直接再来一把
               </button>
             </div>
           </div>
@@ -208,6 +240,108 @@ export class UIRenderer {
           </div>
         </div>
 
+        <!-- Role Selection Modal -->
+        <div id="role-modal" class="modal-backdrop hidden">
+          <div class="modal-box role-box">
+            <div class="modal-custom-header">
+              <div>
+                <h3>🎭 职场角色特质选择</h3>
+                <span class="sub-hint">不同工种拥有独特被动特质、初始属性与对白分支</span>
+              </div>
+              <button id="btn-close-role" class="btn-icon" aria-label="关闭">&times;</button>
+            </div>
+
+            <div class="role-grid" id="role-grid">
+              <!-- Dynamically rendered role cards -->
+            </div>
+
+            <div class="hardcore-toggle-bar">
+              <label class="hardcore-label">
+                <input type="checkbox" id="check-hardcore" />
+                <span class="hardcore-text">🔥 开启【地狱加班修罗场】模式</span>
+              </label>
+              <span class="hardcore-tip">阎总提前查岗，初始怀疑度增高，全结算悟性 +80%！</span>
+            </div>
+
+            <div class="modal-footer">
+              <button id="btn-confirm-role" class="btn btn-primary btn-block">
+                🚀 以所选角色开始逃脱
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Talent Tree (Perks) Modal -->
+        <div id="talent-modal" class="modal-backdrop hidden">
+          <div class="modal-box talent-box">
+            <div class="modal-custom-header">
+              <div>
+                <h3>🧬 摸鱼悟性与永久天赋树</h3>
+                <span class="sub-hint">局内结算获得悟性，跨局永久点亮被动神技</span>
+              </div>
+              <button id="btn-close-talent" class="btn-icon" aria-label="关闭">&times;</button>
+            </div>
+
+            <div class="talent-balance-bar">
+              <span>当前可用摸鱼悟性：</span>
+              <span class="exp-counter" id="talent-exp-count">0 EXP</span>
+            </div>
+
+            <div class="talent-grid" id="talent-grid">
+              <!-- Dynamically rendered perks -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Changelog / Version Update Notice Modal -->
+        <div id="changelog-modal" class="modal-backdrop hidden">
+          <div class="modal-box changelog-box">
+            <div class="changelog-header">
+              <div class="changelog-title-group">
+                <span class="changelog-icon">🎉</span>
+                <div>
+                  <h3 class="changelog-title">版本更新说明</h3>
+                  <span class="changelog-badge">v2.0.0 重磅大更新 · 职场大进化</span>
+                </div>
+              </div>
+              <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
+            </div>
+
+            <div class="changelog-body">
+              <div class="changelog-item">
+                <div class="changelog-item-title">🎭 五大职场特色角色上线</div>
+                <div class="changelog-item-desc">后端攻城狮、交互UI、觉醒产品人、佛系老油条、清澈实习生全新参战！各具专属被动技能、初始道具与特定对白反杀手段。</div>
+              </div>
+
+              <div class="changelog-item">
+                <div class="changelog-item-title">🧬 摸鱼悟性与局外永久天赋树</div>
+                <div class="changelog-item-desc">存活回合与结局通关结算转化为【摸鱼悟性 EXP】，跨局永久点亮【消音气垫鞋】、【天生扑克脸】、【危机雷达】等 6 大核心特质！</div>
+              </div>
+
+              <div class="changelog-item">
+                <div class="changelog-item-title">🌦️ 每日随机办公区词条 (Rogue-lite)</div>
+                <div class="changelog-item-desc">办公区随机突发天气：阎总暴走日、全司内网宕机、高层突击视察、下午茶投喂狂欢、季度冲刺决战，局局充满未知与惊喜！</div>
+              </div>
+
+              <div class="changelog-item">
+                <div class="changelog-item-title">🔥 【地狱加班修罗场】高难挑战模式</div>
+                <div class="changelog-item-desc">自选开启极限难度！老板提前查岗，初始怀疑度暴涨，体力消耗剧增，通关立享 +80% 悟性结算加成与专属修罗场荣誉印戳！</div>
+              </div>
+
+              <div class="changelog-item">
+                <div class="changelog-item-title">🎒 全新摸鱼神器与 18 大多元结局</div>
+                <div class="changelog-item-desc">新增防蓝光深色墨镜、模拟大客户来电、提神风油精、保洁工卡、离职清单草稿！结局与成就全面扩充至 18 个，解锁外卖伪装、保洁弟子、掀桌加薪、假戏真做红杉合伙人等爆笑结局！</div>
+              </div>
+            </div>
+
+            <div class="changelog-footer">
+              <button id="btn-confirm-changelog" class="btn btn-primary btn-block">
+                🚀 我知道了，立刻体验！
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Archive & Achievements Modal -->
         <div id="archive-modal" class="modal-backdrop hidden">
           <div class="modal-box archive-box">
@@ -216,8 +350,9 @@ export class UIRenderer {
               <button id="btn-close-archive" class="btn-icon" aria-label="关闭">&times;</button>
             </div>
             <div class="archive-tabs">
-              <button id="tab-endings" class="tab-btn active">结局图鉴 (<span id="unlocked-endings-count">0</span>/12)</button>
+              <button id="tab-endings" class="tab-btn active">结局图鉴 (<span id="unlocked-endings-count">0</span>/${Object.keys(ENDINGS).length})</button>
               <button id="tab-achievements" class="tab-btn">勋章成就 (<span id="unlocked-achievements-count">0</span>/${ACHIEVEMENTS.length})</button>
+              <button id="tab-career" class="tab-btn">职场档案</button>
             </div>
             <div class="archive-content" id="archive-content">
               <!-- Populated by tab selection -->
@@ -229,6 +364,28 @@ export class UIRenderer {
   }
 
   bindGlobalEvents() {
+    // Changelog Notice (v2.0.0)
+    const CURRENT_VERSION = '2.0.0';
+    const changelogModal = document.getElementById('changelog-modal');
+    const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
+    if (savedVer !== CURRENT_VERSION) {
+      changelogModal.classList.remove('hidden');
+    }
+
+    const closeChangelog = () => {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
+      }
+      changelogModal.classList.add('hidden');
+    };
+
+    document.getElementById('btn-close-changelog').addEventListener('click', closeChangelog);
+    document.getElementById('btn-confirm-changelog').addEventListener('click', closeChangelog);
+    document.getElementById('btn-changelog').addEventListener('click', () => {
+      sound.playClick();
+      changelogModal.classList.remove('hidden');
+    });
+
     // Sound toggle
     const btnSound = document.getElementById('btn-sound');
     btnSound.addEventListener('click', () => {
@@ -251,7 +408,7 @@ export class UIRenderer {
       }
     });
 
-    // Restart buttons
+    // Restart button
     document.getElementById('btn-restart').addEventListener('click', () => {
       if (confirm('确定要放弃当前进度重新开始吗？')) {
         this.engine.restart();
@@ -263,6 +420,33 @@ export class UIRenderer {
       document.getElementById('ending-modal').classList.add('hidden');
       this.engine.restart();
     });
+
+    // Ending modal change role button
+    document.getElementById('btn-ending-role').addEventListener('click', () => {
+      document.getElementById('ending-modal').classList.add('hidden');
+      this.openRoleModal();
+    });
+
+    // Role modal
+    const roleModal = document.getElementById('role-modal');
+    document.getElementById('btn-role').addEventListener('click', () => this.openRoleModal());
+    document.getElementById('strip-role-chip').addEventListener('click', () => this.openRoleModal());
+    document.getElementById('btn-close-role').addEventListener('click', () => roleModal.classList.add('hidden'));
+
+    document.getElementById('btn-confirm-role').addEventListener('click', () => {
+      const selectedRadio = document.querySelector('input[name="role-select"]:checked');
+      const roleId = selectedRadio ? selectedRadio.value : this.state.selectedRoleId;
+      const isHardcore = document.getElementById('check-hardcore').checked;
+      this.engine.restart(roleId, null, isHardcore);
+      roleModal.classList.add('hidden');
+      toast.show(`已化身【${CHARACTERS[roleId].name}】开启逃脱！`, 'success');
+    });
+
+    // Talent modal
+    const talentModal = document.getElementById('talent-modal');
+    document.getElementById('btn-talent').addEventListener('click', () => this.openTalentModal());
+    document.getElementById('strip-exp-chip').addEventListener('click', () => this.openTalentModal());
+    document.getElementById('btn-close-talent').addEventListener('click', () => talentModal.classList.add('hidden'));
 
     // Archive Modal
     const archiveModal = document.getElementById('archive-modal');
@@ -276,13 +460,9 @@ export class UIRenderer {
       archiveModal.classList.add('hidden');
     });
 
-    document.getElementById('tab-endings').addEventListener('click', () => {
-      this.renderArchiveModal('endings');
-    });
-
-    document.getElementById('tab-achievements').addEventListener('click', () => {
-      this.renderArchiveModal('achievements');
-    });
+    document.getElementById('tab-endings').addEventListener('click', () => this.renderArchiveModal('endings'));
+    document.getElementById('tab-achievements').addEventListener('click', () => this.renderArchiveModal('achievements'));
+    document.getElementById('tab-career').addEventListener('click', () => this.renderArchiveModal('career'));
 
     // Poster Modal
     const posterModal = document.getElementById('poster-modal');
@@ -313,7 +493,8 @@ export class UIRenderer {
       // Copy text button
       document.getElementById('btn-copy-report').onclick = () => {
         const ending = this.state.currentEnding;
-        const text = `【准点下班大作战】我达成了【${ending.title}】(${ending.rank}级评价)！\n打卡时刻：${this.state.getTimeString()}\n老板怀疑度：${this.state.suspicion}%\n剩余精气神：${this.state.energy}%\n“${ending.quote}”\n快来挑战不被老板发现的准点逃脱！`;
+        const role = CHARACTERS[this.state.selectedRoleId];
+        const text = `【准点下班大作战】我使用【${role.name}】达成了【${ending.title}】(${ending.rank}级评价)！\n办公区环境：${this.state.currentModifier?.name || '平静周五'}\n打卡时刻：${this.state.getTimeString()}\n老板怀疑度：${this.state.suspicion}%\n剩余精气神：${this.state.energy}%\n获得摸鱼悟性：+${this.state.earnedExp || 0} EXP\n“${ending.quote}”\n快来挑战不被老板发现的准点逃脱！`;
         navigator.clipboard.writeText(text).then(() => {
           toast.show('战绩文字已成功复制到剪贴板！', 'success');
         }).catch(() => {
@@ -323,14 +504,135 @@ export class UIRenderer {
     });
   }
 
+  openRoleModal() {
+    sound.playClick();
+    const grid = document.getElementById('role-grid');
+    const roles = Object.values(CHARACTERS);
+
+    document.getElementById('check-hardcore').checked = this.state.isHardcore;
+
+    grid.innerHTML = roles.map((role) => {
+      const isSelected = role.id === this.state.selectedRoleId;
+      return `
+        <label class="role-card ${isSelected ? 'selected' : ''}" style="--role-accent: ${role.color}">
+          <input type="radio" name="role-select" value="${role.id}" ${isSelected ? 'checked' : ''} class="role-radio" />
+          <div class="role-top">
+            <span class="role-avatar">${role.avatar}</span>
+            <div class="role-name-box">
+              <span class="role-name">${role.name}</span>
+              <span class="role-title">${role.title}</span>
+            </div>
+          </div>
+          <div class="role-desc">${role.description}</div>
+          <div class="role-passive">
+            <span class="passive-badge">${role.passiveTitle}</span>
+            <span>${role.passiveDesc}</span>
+          </div>
+          <div class="role-stats">
+            <span>⚡ 初始体力: ${role.baseEnergy}%</span>
+            <span>👁️ 初始怀疑: ${role.baseSuspicion}%</span>
+          </div>
+        </label>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.role-card').forEach((card) => {
+      card.addEventListener('click', () => {
+        grid.querySelectorAll('.role-card').forEach((c) => c.classList.remove('selected'));
+        card.classList.add('selected');
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    document.getElementById('role-modal').classList.remove('hidden');
+  }
+
+  openTalentModal() {
+    sound.playClick();
+    this.renderTalentModal();
+    document.getElementById('talent-modal').classList.remove('hidden');
+  }
+
+  renderTalentModal() {
+    const expCountEl = document.getElementById('talent-exp-count');
+    expCountEl.textContent = `${this.state.history.slackerExp || 0} EXP`;
+
+    const grid = document.getElementById('talent-grid');
+    const unlocked = this.state.history.unlockedPerks || [];
+    const currentExp = this.state.history.slackerExp || 0;
+
+    grid.innerHTML = PERKS.map((perk) => {
+      const isUnlocked = unlocked.includes(perk.id);
+      const canAfford = currentExp >= perk.cost;
+
+      let btnHtml = '';
+      if (isUnlocked) {
+        btnHtml = '<span class="perk-badge-unlocked">✅ 已永久领悟</span>';
+      } else if (canAfford) {
+        btnHtml = `<button class="btn-unlock-perk" data-perk="${perk.id}">点亮 (${perk.cost} EXP)</button>`;
+      } else {
+        btnHtml = `<span class="perk-badge-locked">需 ${perk.cost} EXP</span>`;
+      }
+
+      return `
+        <div class="perk-card ${isUnlocked ? 'perk-active' : ''}">
+          <div class="perk-top">
+            <span class="perk-icon">${perk.icon}</span>
+            <div class="perk-info">
+              <span class="perk-name">${perk.name}</span>
+              <span class="perk-effect">${perk.effectText}</span>
+            </div>
+          </div>
+          <div class="perk-desc">${perk.description}</div>
+          <div class="perk-action">${btnHtml}</div>
+        </div>
+      `;
+    }).join('');
+
+    grid.querySelectorAll('.btn-unlock-perk').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const perkId = btn.getAttribute('data-perk');
+        sound.playItem();
+        const res = this.state.unlockPerk(perkId);
+        if (res.success) {
+          toast.show(res.message, 'success');
+          this.renderTalentModal();
+        } else {
+          toast.show(res.message, 'warning');
+        }
+      });
+    });
+  }
+
   render() {
     this.renderHeaderAndMetrics();
+    this.renderMetaStrip();
     this.renderZoneNavigator();
     this.renderSceneInfo();
     this.renderActionButtons();
     this.renderBackpack();
     this.renderLogs();
     this.renderModals();
+  }
+
+  renderMetaStrip() {
+    const role = CHARACTERS[this.state.selectedRoleId] || CHARACTERS.backend_dev;
+    document.getElementById('meta-role-avatar').textContent = role.avatar;
+    document.getElementById('meta-role-name').textContent = role.name;
+
+    const mod = this.state.currentModifier;
+    document.getElementById('meta-mod-icon').textContent = mod?.icon || '☀️';
+    document.getElementById('meta-mod-name').textContent = mod?.name || '平静周五';
+
+    document.getElementById('meta-exp-val').textContent = `${this.state.history.slackerExp || 0} 悟性`;
+
+    const hcTag = document.getElementById('strip-hardcore-tag');
+    if (this.state.isHardcore) {
+      hcTag.classList.remove('hidden');
+    } else {
+      hcTag.classList.add('hidden');
+    }
   }
 
   renderHeaderAndMetrics() {
@@ -545,6 +847,9 @@ export class UIRenderer {
       document.getElementById('end-desc').textContent = ending.description;
       document.getElementById('end-quote').textContent = `“${ending.quote}”`;
 
+      const expBadge = document.getElementById('end-exp-badge');
+      expBadge.textContent = `✨ 本局摸鱼悟性结算 +${this.state.earnedExp || 0} EXP (总持: ${this.state.history.slackerExp})`;
+
       endingModal.classList.remove('hidden');
     } else {
       endingModal.classList.add('hidden');
@@ -554,6 +859,7 @@ export class UIRenderer {
   renderArchiveModal(activeTab = 'endings') {
     const tabEndings = document.getElementById('tab-endings');
     const tabAchievements = document.getElementById('tab-achievements');
+    const tabCareer = document.getElementById('tab-career');
     const content = document.getElementById('archive-content');
 
     const unlockedEndings = this.state.history.unlockedEndings || [];
@@ -562,10 +868,11 @@ export class UIRenderer {
     document.getElementById('unlocked-endings-count').textContent = unlockedEndings.length;
     document.getElementById('unlocked-achievements-count').textContent = unlockedAchievements.length;
 
-    if (activeTab === 'endings') {
-      tabEndings.classList.add('active');
-      tabAchievements.classList.remove('active');
+    tabEndings.classList.toggle('active', activeTab === 'endings');
+    tabAchievements.classList.toggle('active', activeTab === 'achievements');
+    tabCareer.classList.toggle('active', activeTab === 'career');
 
+    if (activeTab === 'endings') {
       content.innerHTML = `
         <div class="archive-grid">
           ${Object.values(ENDINGS).map((end) => {
@@ -585,10 +892,7 @@ export class UIRenderer {
           }).join('')}
         </div>
       `;
-    } else {
-      tabEndings.classList.remove('active');
-      tabAchievements.classList.add('active');
-
+    } else if (activeTab === 'achievements') {
       content.innerHTML = `
         <div class="archive-grid">
           ${ACHIEVEMENTS.map((ach) => {
@@ -603,6 +907,45 @@ export class UIRenderer {
               </div>
             `;
           }).join('')}
+        </div>
+      `;
+    } else {
+      // Career stats
+      const h = this.state.history;
+      const roleWins = h.roleWins || {};
+      content.innerHTML = `
+        <div class="career-stats-box">
+          <div class="career-metric-grid">
+            <div class="career-stat-card">
+              <span class="c-val">${h.gamesPlayed || 0}</span>
+              <span class="c-lbl">总对局数</span>
+            </div>
+            <div class="career-stat-card">
+              <span class="c-val text-success">${h.victories || 0}</span>
+              <span class="c-lbl">准点胜利</span>
+            </div>
+            <div class="career-stat-card">
+              <span class="c-val text-fire">${h.hardcoreWins || 0}</span>
+              <span class="c-lbl">修罗场胜利</span>
+            </div>
+            <div class="career-stat-card">
+              <span class="c-val text-exp">${h.slackerExp || 0}</span>
+              <span class="c-lbl">当前悟性EXP</span>
+            </div>
+          </div>
+
+          <h4 class="career-subhead">🎭 各职业胜场档案</h4>
+          <div class="role-wins-list">
+            ${Object.values(CHARACTERS).map((r) => {
+              const wins = roleWins[r.id] || 0;
+              return `
+                <div class="role-win-item">
+                  <span class="r-win-name">${r.avatar} ${r.name}</span>
+                  <span class="r-win-count">${wins} 次成功脱逃</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
         </div>
       `;
     }

@@ -661,3 +661,486 @@
 .toast-alert { border-color: rgba(244, 63, 94, 0.6); }
 .toast-item { border-color: rgba(56, 189, 248, 0.5); }
 .toast-achievement { border-color: rgba(168, 85, 247, 0.6); }
+
+/* Meta Strip (Role, Weather, EXP, Mode) */
+.meta-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 10px;
+  flex-wrap: wrap;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--border-subtle);
+  background: rgba(30, 41, 59, 0.6);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.meta-chip:hover {
+  background: rgba(49, 65, 96, 0.8);
+  border-color: var(--accent-primary);
+  transform: translateY(-1px);
+}
+
+.chip-role {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
+
+.chip-weather {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+  cursor: default;
+}
+
+.chip-exp {
+  background: rgba(168, 85, 247, 0.12);
+  border-color: rgba(168, 85, 247, 0.35);
+  color: #c084fc;
+}
+
+.chip-hardcore {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  animation: pulseDanger 1.2s infinite alternate;
+}
+
+/* Modal Custom Header */
+.modal-custom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.modal-custom-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.modal-custom-header .sub-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Role Selection Grid */
+.role-box {
+  max-width: 480px;
+}
+
+.role-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.role-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(30, 41, 59, 0.5);
+  border: 2px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.role-card:hover {
+  background: rgba(30, 41, 59, 0.85);
+  border-color: var(--role-accent, #6366f1);
+}
+
+.role-card.selected {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: var(--role-accent, #6366f1);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.25);
+}
+
+.role-radio {
+  display: none;
+}
+
+.role-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-avatar {
+  font-size: 26px;
+}
+
+.role-name-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.role-title {
+  font-size: 11px;
+  color: var(--role-accent, #94a3b8);
+  font-weight: 600;
+}
+
+.role-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.role-passive {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.passive-badge {
+  font-weight: 700;
+  color: var(--role-accent, #38bdf8);
+  white-space: nowrap;
+}
+
+.role-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Hardcore Mode Toggle Bar */
+.hardcore-toggle-bar {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px dashed rgba(239, 68, 68, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hardcore-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f87171;
+}
+
+.hardcore-tip {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding-left: 22px;
+}
+
+/* Talent Tree Modal */
+.talent-box {
+  max-width: 480px;
+}
+
+.talent-balance-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(168, 85, 247, 0.12);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  font-size: 13px;
+  color: #e2e8f0;
+  margin-bottom: 12px;
+}
+
+.exp-counter {
+  font-size: 16px;
+  font-weight: 800;
+  color: #c084fc;
+}
+
+.talent-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.perk-card {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.perk-card.perk-active {
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.perk-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.perk-icon {
+  font-size: 24px;
+}
+
+.perk-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.perk-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.perk-effect {
+  font-size: 11px;
+  color: #38bdf8;
+}
+
+.perk-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.perk-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-unlock-perk {
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  border: none;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unlock-perk:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+}
+
+.perk-badge-unlocked {
+  font-size: 11px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.perk-badge-locked {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Ending EXP Badge */
+.ending-exp-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  margin-top: 4px;
+  display: inline-block;
+}
+
+/* Career Stats View */
+.career-stats-box {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.career-metric-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.career-stat-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.c-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.c-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.text-success { color: #34d399; }
+.text-fire { color: #f87171; }
+.text-exp { color: #c084fc; }
+
+.career-subhead {
+  font-size: 13px;
+  color: #cbd5e1;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.role-wins-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.role-win-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--border-subtle);
+  font-size: 12px;
+}
+
+.r-win-name {
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.r-win-count {
+  color: var(--text-muted);
+}
+
+.btn-block {
+  width: 100%;
+}
+
+/* Changelog Notice Modal */
+.changelog-box {
+  max-width: 480px;
+}
+
+.changelog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+
+.changelog-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.changelog-icon {
+  font-size: 28px;
+}
+
+.changelog-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.changelog-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.15);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.changelog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-bottom: 14px;
+}
+
+.changelog-item {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.changelog-item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fbbf24;
+}
+
+.changelog-item-desc {
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.changelog-footer {
+  margin-top: 4px;
+}
+
+

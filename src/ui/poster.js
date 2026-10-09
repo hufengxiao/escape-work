@@ -3,15 +3,24 @@
  * Generates an official "Office Escape Certificate / Workplace Freedom Report"
  */
 
-export function generatePoster(state, ending, playerName = '打工人小李') {
+import { CHARACTERS } from '../data/characters.js';
+
+export function generatePoster(state, ending, playerName = null) {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
 
     const width = 800;
-    const height = 1120;
+    const height = 1140;
     canvas.width = width;
     canvas.height = height;
+
+    const role = CHARACTERS[state.selectedRoleId] || {
+      name: '打工人小李',
+      title: '摸鱼特工',
+      avatar: '🏃‍♂️'
+    };
+    const displayName = playerName || `${role.avatar} ${role.name}`;
 
     // 1. Background gradient
     const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
@@ -74,24 +83,25 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
     ctx.fillStyle = 'rgba(30, 41, 59, 0.7)';
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 2;
-    roundRect(ctx, 60, 195, width - 120, 95, 12);
+    roundRect(ctx, 60, 195, width - 120, 105, 12);
     ctx.fill();
     ctx.stroke();
 
     ctx.textAlign = 'left';
-    ctx.font = 'bold 22px sans-serif';
+    ctx.font = 'bold 20px sans-serif';
     ctx.fillStyle = '#94a3b8';
     ctx.fillText('行动特工：', 90, 235);
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText(playerName, 205, 235);
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(`${displayName} · ${role.title}`, 200, 235);
 
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 22px sans-serif';
-    ctx.fillText('行动代码：', 90, 270);
+    ctx.font = 'bold 20px sans-serif';
+    ctx.fillText('战役环境：', 90, 275);
     ctx.fillStyle = '#a78bfa';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText(`FRIDAY-${state.getTimeString().replace(':', '')}-ESCAPE`, 205, 270);
+    ctx.font = 'bold 20px sans-serif';
+    const envText = `${state.currentModifier?.icon || '☀️'} ${state.currentModifier?.name || '平静周五'} ${state.isHardcore ? '🔥 [地狱修罗场]' : ''}`;
+    ctx.fillText(envText, 200, 275);
 
     // Rank Badge Circle
     const isWin = ending.type === 'victory';
@@ -99,7 +109,7 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
 
     ctx.save();
     ctx.beginPath();
-    ctx.arc(670, 242, 38, 0, Math.PI * 2);
+    ctx.arc(670, 247, 40, 0, Math.PI * 2);
     ctx.fillStyle = isWin ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)';
     ctx.fill();
     ctx.lineWidth = 3;
@@ -107,24 +117,24 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
     ctx.stroke();
 
     ctx.textAlign = 'center';
-    ctx.font = '900 32px sans-serif';
+    ctx.font = '900 28px sans-serif';
     ctx.fillStyle = badgeColor;
-    ctx.fillText(ending.rank, 670, 253);
+    ctx.fillText(ending.rank, 670, 257);
     ctx.restore();
 
     // Ending Main Title Card
     ctx.fillStyle = isWin ? 'rgba(6, 78, 59, 0.4)' : 'rgba(136, 19, 55, 0.4)';
     ctx.strokeStyle = badgeColor;
     ctx.lineWidth = 2;
-    roundRect(ctx, 60, 315, width - 120, 120, 16);
+    roundRect(ctx, 60, 320, width - 120, 115, 16);
     ctx.fill();
     ctx.stroke();
 
     ctx.textAlign = 'center';
-    ctx.font = '40px sans-serif';
+    ctx.font = '36px sans-serif';
     ctx.fillText(ending.badge, width / 2, 365);
 
-    ctx.font = 'bold 32px sans-serif';
+    ctx.font = 'bold 30px sans-serif';
     ctx.fillStyle = '#ffffff';
     ctx.fillText(`【${ending.title}】`, width / 2, 410);
 
@@ -158,7 +168,7 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
       { label: '打卡/结束时刻', val: state.getTimeString(), icon: '🕒' },
       { label: '老板怀疑度', val: `${state.suspicion}%`, icon: '👁️' },
       { label: '剩余精气神', val: `${state.energy}%`, icon: '⚡' },
-      { label: '周旋回合数', val: `${state.turns} 回合`, icon: '🔄' }
+      { label: '摸鱼悟性结算', val: `+${state.earnedExp || 0} EXP`, icon: '🧬' }
     ];
 
     stats.forEach((item, idx) => {
@@ -182,7 +192,7 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
 
     // Official Red Seal Stamp (Rotated)
     ctx.save();
-    ctx.translate(640, 960);
+    ctx.translate(640, 970);
     ctx.rotate((-12 * Math.PI) / 180);
 
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.85)';
@@ -213,7 +223,7 @@ export function generatePoster(state, ending, playerName = '打工人小李') {
     ctx.textAlign = 'center';
     ctx.font = '16px monospace';
     ctx.fillStyle = '#64748b';
-    ctx.fillText('《准点下班大作战：逃离老板视线》· Cloudflare Pages 全球发布', width / 2, 1060);
+    ctx.fillText('《准点下班大作战：逃离老板视线》· 职场逃脱生存记', width / 2, 1080);
 
     resolve(canvas.toDataURL('image/png'));
   });

@@ -74,10 +74,52 @@ export const ACHIEVEMENTS = [
     condition: (history, state) => state && state.inventory && state.inventory.length >= 4
   },
   {
+    id: 'ach_delivery',
+    title: '美团特约特工',
+    icon: '🛵',
+    description: '达成【外卖骑手伪装大师】结局，绝妙伪装。',
+    condition: (history) => history.unlockedEndings.includes('ending_delivery_disguise')
+  },
+  {
+    id: 'ach_cleaner',
+    title: '后勤隐士',
+    icon: '🧹',
+    description: '达成【保洁阿姨的关门弟子】结局，掌控大厦命脉。',
+    condition: (history) => history.unlockedEndings.includes('ending_cleaner_disciple')
+  },
+  {
+    id: 'ach_resign',
+    title: '掀桌第一人',
+    icon: '💥',
+    description: '达成【离职威慑·当场加薪】结局，职场正道之光。',
+    condition: (history) => history.unlockedEndings.includes('ending_resign_shock')
+  },
+  {
+    id: 'ach_true_partner',
+    title: '反客为主大股东',
+    icon: '👑',
+    description: '达成【假戏真做·红杉合伙人】结局，下班顺手当老板。',
+    condition: (history) => history.unlockedEndings.includes('ending_true_partner')
+  },
+  {
+    id: 'ach_hardcore_win',
+    title: '修罗场幸存者',
+    icon: '🔥',
+    description: '在地狱加班修罗场模式下成功胜利出逃！',
+    condition: (history, state) => state && state.isHardcore && state.currentEnding && state.currentEnding.type === 'victory'
+  },
+  {
+    id: 'ach_perk_master',
+    title: '职场得道飞升',
+    icon: '🧬',
+    description: '在摸鱼天赋树中累计点亮至少 3 个永久特质。',
+    condition: (history) => history.unlockedPerks && history.unlockedPerks.length >= 3
+  },
+  {
     id: 'ach_master',
     title: '逃跑大满贯',
     icon: '🌟',
-    description: '累计解锁全部 12 个结局！',
-    condition: (history) => history.unlockedEndings.length >= 12
+    description: '累计解锁全部 18 个不同结局！',
+    condition: (history) => history.unlockedEndings.length >= 18
   }
 ];
