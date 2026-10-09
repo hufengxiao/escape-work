@@ -12,13 +12,20 @@ import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
 import { CHANGELOGS } from '../data/changelog.js';
-import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS } from '../data/guide.js';
+import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS, INTERACTIVE_TOUR_STEPS } from '../data/guide.js';
 
 export class UIRenderer {
   constructor(state, engine) {
     this.state = state;
     this.engine = engine;
     this.guideCurrentStep = 0;
+    this.tourActive = false;
+    this.currentTourStep = 0;
+    this.onTourWindowUpdate = () => {
+      if (this.tourActive) {
+        this.updateTourPositions();
+      }
+    };
     this.appEl = document.getElementById('app');
     this.init();
   }
@@ -45,7 +52,7 @@ export class UIRenderer {
             </div>
           </div>
           <div class="header-actions">
-            <button id="btn-guide" class="btn-icon" title="分步玩法向导与保姆级攻略" aria-label="玩法向导">
+            <button id="btn-guide" class="btn-icon" title="全屏高亮新手指引与界面教学" aria-label="新手指引">
               📖
             </button>
             <button id="btn-changelog" class="btn-icon" title="版本更新说明" aria-label="更新说明">
@@ -323,7 +330,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新日志</h3>
-                  <span class="changelog-badge">当前最新 v2.2.0 · 历史版本全览</span>
+                  <span class="changelog-badge">当前最新 v2.3.0 · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -402,41 +409,91 @@ export class UIRenderer {
             </div>
           </div>
         </div>
+
+        <!-- Interactive UI Spotlight Tour Overlay -->
+        <div id="tour-overlay" class="tour-overlay hidden" aria-modal="true" role="dialog">
+          <div class="tour-backdrop" id="tour-backdrop"></div>
+          <div id="tour-spotlight" class="tour-spotlight">
+            <div class="tour-spotlight-pulse"></div>
+          </div>
+          <div id="tour-card" class="tour-card">
+            <div class="tour-card-header">
+              <div class="tour-step-badge">
+                <span class="tour-step-icon" id="tour-card-icon">🕒</span>
+                <span id="tour-card-step">步骤 1 / 7</span>
+              </div>
+              <button id="btn-tour-close" class="tour-btn-close" aria-label="关闭指引">&times;</button>
+            </div>
+            <div class="tour-card-body">
+              <h3 class="tour-card-title" id="tour-card-title">当前时刻与下班倒计时</h3>
+              <p class="tour-card-desc" id="tour-card-desc">描述内容</p>
+              <div class="tour-card-tip" id="tour-card-tip">
+                <span class="tour-tip-badge">💡 避坑秘诀</span>
+                <span class="tour-tip-text" id="tour-tip-text">秘诀文本</span>
+              </div>
+            </div>
+            <div class="tour-card-footer">
+              <button id="btn-tour-prev" class="tour-btn tour-btn-secondary">上一步</button>
+              <div class="tour-dots" id="tour-dots"></div>
+              <button id="btn-tour-next" class="tour-btn tour-btn-primary">下一步 ➔</button>
+            </div>
+            <div class="tour-skip-bar">
+              <button id="btn-tour-skip" class="tour-skip-link">跳过新手引导</button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
 
   bindGlobalEvents() {
-    // Gameplay Step-by-Step Guide Modal
-    const guideModal = document.getElementById('guide-modal');
-    const closeGuide = () => {
-      guideModal.classList.add('hidden');
-    };
-    document.getElementById('btn-close-guide').addEventListener('click', closeGuide);
-    document.getElementById('btn-guide-skip').addEventListener('click', closeGuide);
-    document.getElementById('btn-guide-prev').addEventListener('click', () => {
-      this.prevGuideStep();
+    // Interactive UI Spotlight Tour Events
+    document.getElementById('btn-tour-close')?.addEventListener('click', () => {
+      this.closeTour();
     });
-    document.getElementById('btn-guide-next').addEventListener('click', () => {
-      this.nextGuideStep();
+    document.getElementById('btn-tour-skip')?.addEventListener('click', () => {
+      this.closeTour();
     });
-    document.getElementById('btn-guide').addEventListener('click', () => {
+    document.getElementById('btn-tour-prev')?.addEventListener('click', () => {
+      this.prevTourStep();
+    });
+    document.getElementById('btn-tour-next')?.addEventListener('click', () => {
+      this.nextTourStep();
+    });
+    document.getElementById('tour-backdrop')?.addEventListener('click', () => {
+      this.nextTourStep();
+    });
+
+    // Header 📖 and quick buttons start the UI Tour!
+    document.getElementById('btn-guide')?.addEventListener('click', () => {
       sound.playClick();
-      this.openGuideModal(0);
+      this.startTour(0);
     });
     document.getElementById('btn-quick-guide')?.addEventListener('click', () => {
       sound.playClick();
-      this.openGuideModal(0);
+      this.startTour(0);
     });
     document.getElementById('btn-step-guide-link')?.addEventListener('click', () => {
       sound.playClick();
-      const tipData = ZONE_STEP_TIPS[this.state.zone] || ZONE_STEP_TIPS[1];
-      const target = tipData?.targetStep !== undefined ? tipData.targetStep : 0;
-      this.openGuideModal(target);
+      this.startTour(0);
     });
 
-    // Keyboard navigation for guide wizard
+    // Keyboard navigation (Tour has priority, fallback to guide modal)
     window.addEventListener('keydown', (e) => {
+      if (this.tourActive) {
+        if (e.key === 'ArrowRight' || e.key === 'Enter') {
+          e.preventDefault();
+          this.nextTourStep();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          this.prevTourStep();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          this.closeTour();
+        }
+        return;
+      }
+
       if (guideModal && !guideModal.classList.contains('hidden')) {
         if (e.key === 'ArrowRight' || e.key === 'Enter') {
           e.preventDefault();
@@ -451,16 +508,18 @@ export class UIRenderer {
       }
     });
 
-    // Changelog Notice (v2.2.0) & First-time onboarding check
-    const CURRENT_VERSION = '2.2.0';
+    // Changelog Notice (v2.3.0) & First-time onboarding check
+    const CURRENT_VERSION = '2.3.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
-    const hasSeenGuide = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_guide') : null;
+    const hasSeenTour = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_tour') : null;
 
-    if (!hasSeenGuide) {
-      this.openGuideModal(0);
+    if (!hasSeenTour) {
+      setTimeout(() => {
+        this.startTour(0);
+      }, 350);
       if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('escape_work_has_seen_guide', 'true');
+        localStorage.setItem('escape_work_has_seen_tour', 'true');
         localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
       }
     } else if (savedVer !== CURRENT_VERSION) {
@@ -728,6 +787,186 @@ export class UIRenderer {
         `).join('')}
       </section>
     `).join('');
+  }
+
+  startTour(initialStep = 0) {
+    sound.playClick();
+    this.tourActive = true;
+    this.currentTourStep = initialStep;
+    const overlay = document.getElementById('tour-overlay');
+    if (!overlay) return;
+    overlay.classList.remove('hidden');
+
+    window.removeEventListener('resize', this.onTourWindowUpdate);
+    window.removeEventListener('scroll', this.onTourWindowUpdate);
+    window.addEventListener('resize', this.onTourWindowUpdate);
+    window.addEventListener('scroll', this.onTourWindowUpdate, { passive: true });
+
+    this.renderTourStep(initialStep);
+  }
+
+  closeTour() {
+    if (!this.tourActive) return;
+    this.tourActive = false;
+    const overlay = document.getElementById('tour-overlay');
+    if (overlay) overlay.classList.add('hidden');
+
+    window.removeEventListener('resize', this.onTourWindowUpdate);
+    window.removeEventListener('scroll', this.onTourWindowUpdate);
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('escape_work_has_seen_tour', 'true');
+    }
+  }
+
+  nextTourStep() {
+    if (this.currentTourStep < INTERACTIVE_TOUR_STEPS.length - 1) {
+      this.goToTourStep(this.currentTourStep + 1);
+    } else {
+      this.closeTour();
+      sound.playClick();
+      toast.show('🎉 新手全流程指引完成，祝你准点逃脱！', 'success');
+    }
+  }
+
+  prevTourStep() {
+    if (this.currentTourStep > 0) {
+      this.goToTourStep(this.currentTourStep - 1);
+    }
+  }
+
+  goToTourStep(index) {
+    if (index < 0 || index >= INTERACTIVE_TOUR_STEPS.length) return;
+    sound.playClick();
+    this.currentTourStep = index;
+    this.renderTourStep(index);
+  }
+
+  renderTourStep(index) {
+    const step = INTERACTIVE_TOUR_STEPS[index];
+    if (!step) return;
+
+    // 1. Update text & metadata
+    const iconEl = document.getElementById('tour-card-icon');
+    const stepEl = document.getElementById('tour-card-step');
+    const titleEl = document.getElementById('tour-card-title');
+    const descEl = document.getElementById('tour-card-desc');
+    const tipEl = document.getElementById('tour-tip-text');
+
+    if (iconEl) iconEl.textContent = step.icon;
+    if (stepEl) stepEl.textContent = step.badge;
+    if (titleEl) titleEl.textContent = step.title;
+    if (descEl) descEl.textContent = step.desc;
+    if (tipEl) tipEl.textContent = step.tip;
+
+    // 2. Update prev/next buttons
+    const prevBtn = document.getElementById('btn-tour-prev');
+    if (prevBtn) {
+      if (index === 0) {
+        prevBtn.classList.add('disabled');
+        prevBtn.disabled = true;
+      } else {
+        prevBtn.classList.remove('disabled');
+        prevBtn.disabled = false;
+      }
+    }
+
+    const nextBtn = document.getElementById('btn-tour-next');
+    if (nextBtn) {
+      if (index === INTERACTIVE_TOUR_STEPS.length - 1) {
+        nextBtn.textContent = '🎉 开启下班逃脱！';
+        nextBtn.className = 'tour-btn tour-btn-primary tour-btn-finish';
+      } else {
+        nextBtn.textContent = '下一步 ➔';
+        nextBtn.className = 'tour-btn tour-btn-primary';
+      }
+    }
+
+    // 3. Update step dots
+    const dotsEl = document.getElementById('tour-dots');
+    if (dotsEl) {
+      dotsEl.innerHTML = INTERACTIVE_TOUR_STEPS.map((_, i) => `
+        <button class="tour-dot ${i === index ? 'active' : ''}" data-tdot="${i}" aria-label="第 ${i + 1} 步"></button>
+      `).join('');
+
+      dotsEl.querySelectorAll('.tour-dot').forEach((dot) => {
+        dot.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const targetIdx = parseInt(dot.getAttribute('data-tdot'), 10);
+          this.goToTourStep(targetIdx);
+        });
+      });
+    }
+
+    // 4. Scroll target into view & update spotlight box & card
+    const targetEl = document.querySelector(step.selector);
+    if (targetEl) {
+      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    this.updateTourPositions();
+    setTimeout(() => this.updateTourPositions(), 80);
+    setTimeout(() => this.updateTourPositions(), 220);
+    setTimeout(() => this.updateTourPositions(), 360);
+  }
+
+  updateTourPositions() {
+    if (!this.tourActive) return;
+    const step = INTERACTIVE_TOUR_STEPS[this.currentTourStep];
+    if (!step) return;
+
+    const targetEl = document.querySelector(step.selector);
+    const spotlight = document.getElementById('tour-spotlight');
+    const cardEl = document.getElementById('tour-card');
+    if (!spotlight || !cardEl) return;
+
+    if (!targetEl) {
+      spotlight.style.opacity = '0';
+      return;
+    }
+
+    const rect = targetEl.getBoundingClientRect();
+    const padding = step.padding || 8;
+
+    const top = Math.max(2, rect.top - padding);
+    const left = Math.max(2, rect.left - padding);
+    const width = Math.min(window.innerWidth - left - 4, rect.width + padding * 2);
+    const height = Math.min(window.innerHeight - top - 4, rect.height + padding * 2);
+
+    spotlight.style.opacity = '1';
+    spotlight.style.top = `${Math.round(top)}px`;
+    spotlight.style.left = `${Math.round(left)}px`;
+    spotlight.style.width = `${Math.round(width)}px`;
+    spotlight.style.height = `${Math.round(height)}px`;
+
+    // Position floating card
+    const cardRect = cardEl.getBoundingClientRect();
+    const cardHeight = cardRect.height || 260;
+    const cardWidth = cardRect.width || Math.min(390, window.innerWidth - 28);
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    let cardTop;
+    const spaceBelow = viewportHeight - (top + height);
+    const spaceAbove = top;
+
+    if (spaceBelow >= cardHeight + 16) {
+      cardTop = top + height + 10;
+    } else if (spaceAbove >= cardHeight + 16) {
+      cardTop = top - cardHeight - 10;
+    } else {
+      if (spaceBelow > spaceAbove) {
+        cardTop = Math.max(10, viewportHeight - cardHeight - 14);
+      } else {
+        cardTop = 14;
+      }
+    }
+
+    let cardLeft = left + width / 2 - cardWidth / 2;
+    cardLeft = Math.max(12, Math.min(viewportWidth - cardWidth - 12, cardLeft));
+
+    cardEl.style.top = `${Math.round(cardTop)}px`;
+    cardEl.style.left = `${Math.round(cardLeft)}px`;
   }
 
   openGuideModal(stepOrId = 0) {
