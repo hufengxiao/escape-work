@@ -12,12 +12,13 @@ import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
 import { CHANGELOGS } from '../data/changelog.js';
-import { GUIDE_SECTIONS } from '../data/guide.js';
+import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS } from '../data/guide.js';
 
 export class UIRenderer {
   constructor(state, engine) {
     this.state = state;
     this.engine = engine;
+    this.guideCurrentStep = 0;
     this.appEl = document.getElementById('app');
     this.init();
   }
@@ -44,7 +45,7 @@ export class UIRenderer {
             </div>
           </div>
           <div class="header-actions">
-            <button id="btn-guide" class="btn-icon" title="玩法介绍与新手指南" aria-label="玩法介绍">
+            <button id="btn-guide" class="btn-icon" title="分步玩法向导与保姆级攻略" aria-label="玩法向导">
               📖
             </button>
             <button id="btn-changelog" class="btn-icon" title="版本更新说明" aria-label="更新说明">
@@ -133,6 +134,17 @@ export class UIRenderer {
         <nav class="zone-stepper" id="zone-stepper" aria-label="逃脱进度">
           <!-- Dynamically populated zones -->
         </nav>
+
+        <!-- Tactical Step Guidance Bar -->
+        <div class="tactical-step-bar" id="tactical-step-bar">
+          <div class="tactical-step-left">
+            <span class="tactical-step-badge" id="tactical-step-badge">第 1 阶段 / 工位潜行</span>
+            <span class="tactical-step-text" id="tactical-step-text">加载提示中...</span>
+          </div>
+          <button id="btn-step-guide-link" class="tactical-step-link" title="点击打开本阶段详细向导">
+            📖 玩法向导
+          </button>
+        </div>
 
         <!-- Main Workspace Screen -->
         <main class="main-screen">
@@ -311,7 +323,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新日志</h3>
-                  <span class="changelog-badge">当前最新 v2.1.0 · 历史版本全览</span>
+                  <span class="changelog-badge">当前最新 v2.2.0 · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -329,33 +341,45 @@ export class UIRenderer {
           </div>
         </div>
 
-        <!-- Gameplay Guide Modal -->
+        <!-- Gameplay Step-by-Step Guide Modal -->
         <div id="guide-modal" class="modal-backdrop hidden">
           <div class="modal-box guide-box">
             <div class="guide-header">
               <div class="guide-title-group">
                 <span class="guide-icon">📖</span>
                 <div>
-                  <h3 class="guide-title">准点下班 · 逃脱行动指南</h3>
-                  <span class="guide-badge">新特工必读 · 职场生存防抓保姆级攻略</span>
+                  <h3 class="guide-title">准点下班 · 逃脱行动向导</h3>
+                  <span id="guide-step-counter-badge" class="guide-badge">步骤 1 / 5 · 终极目标</span>
                 </div>
               </div>
               <button id="btn-close-guide" class="btn-icon" aria-label="关闭">&times;</button>
             </div>
 
-            <!-- Guide Navigation Tabs -->
-            <div class="guide-nav-tabs" id="guide-nav-tabs">
+            <!-- Stepper Tab Bar -->
+            <div class="guide-stepper" id="guide-stepper">
+              <!-- 5 step buttons rendered dynamically -->
+            </div>
+
+            <!-- Step Content Body -->
+            <div class="guide-step-body" id="guide-step-body">
               <!-- Rendered dynamically -->
             </div>
 
-            <div class="guide-body" id="guide-body-content">
-              <!-- Rendered dynamically -->
-            </div>
-
-            <div class="guide-footer">
-              <button id="btn-confirm-guide" class="btn btn-primary btn-block">
-                🚀 我懂了，立即开启准点逃脱！
+            <!-- Step Navigation Controls -->
+            <div class="guide-step-controls">
+              <button id="btn-guide-prev" class="btn btn-secondary guide-nav-btn">
+                ⬅️ 上一步
               </button>
+              <div class="guide-step-dots" id="guide-step-dots">
+                <!-- Dots rendered dynamically -->
+              </div>
+              <button id="btn-guide-next" class="btn btn-primary guide-nav-btn">
+                下一步 ➡️
+              </button>
+            </div>
+
+            <div class="guide-skip-bar">
+              <button id="btn-guide-skip" class="guide-skip-link">跳过指引，直接开启逃脱</button>
             </div>
           </div>
         </div>
@@ -383,30 +407,58 @@ export class UIRenderer {
   }
 
   bindGlobalEvents() {
-    // Gameplay Guide Modal
+    // Gameplay Step-by-Step Guide Modal
     const guideModal = document.getElementById('guide-modal');
     const closeGuide = () => {
       guideModal.classList.add('hidden');
     };
     document.getElementById('btn-close-guide').addEventListener('click', closeGuide);
-    document.getElementById('btn-confirm-guide').addEventListener('click', closeGuide);
+    document.getElementById('btn-guide-skip').addEventListener('click', closeGuide);
+    document.getElementById('btn-guide-prev').addEventListener('click', () => {
+      this.prevGuideStep();
+    });
+    document.getElementById('btn-guide-next').addEventListener('click', () => {
+      this.nextGuideStep();
+    });
     document.getElementById('btn-guide').addEventListener('click', () => {
       sound.playClick();
-      this.openGuideModal();
+      this.openGuideModal(0);
     });
     document.getElementById('btn-quick-guide')?.addEventListener('click', () => {
       sound.playClick();
-      this.openGuideModal();
+      this.openGuideModal(0);
+    });
+    document.getElementById('btn-step-guide-link')?.addEventListener('click', () => {
+      sound.playClick();
+      const tipData = ZONE_STEP_TIPS[this.state.zone] || ZONE_STEP_TIPS[1];
+      const target = tipData?.targetStep !== undefined ? tipData.targetStep : 0;
+      this.openGuideModal(target);
     });
 
-    // Changelog Notice (v2.1.0) & First-time onboarding check
-    const CURRENT_VERSION = '2.1.0';
+    // Keyboard navigation for guide wizard
+    window.addEventListener('keydown', (e) => {
+      if (guideModal && !guideModal.classList.contains('hidden')) {
+        if (e.key === 'ArrowRight' || e.key === 'Enter') {
+          e.preventDefault();
+          this.nextGuideStep();
+        } else if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          this.prevGuideStep();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeGuide();
+        }
+      }
+    });
+
+    // Changelog Notice (v2.2.0) & First-time onboarding check
+    const CURRENT_VERSION = '2.2.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
     const hasSeenGuide = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_guide') : null;
 
     if (!hasSeenGuide) {
-      this.openGuideModal('goal');
+      this.openGuideModal(0);
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('escape_work_has_seen_guide', 'true');
         localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
@@ -678,54 +730,182 @@ export class UIRenderer {
     `).join('');
   }
 
-  openGuideModal(tabId = 'goal') {
+  openGuideModal(stepOrId = 0) {
     sound.playClick();
-    this.renderGuideModal(tabId);
+    let index = 0;
+    if (typeof stepOrId === 'number') {
+      index = Math.max(0, Math.min(TUTORIAL_STEPS.length - 1, stepOrId));
+    } else if (typeof stepOrId === 'string') {
+      const foundIdx = TUTORIAL_STEPS.findIndex((s) => s.id === stepOrId);
+      if (foundIdx !== -1) index = foundIdx;
+    }
+    this.guideCurrentStep = index;
+    this.renderGuideModal(index);
     document.getElementById('guide-modal').classList.remove('hidden');
   }
 
-  renderGuideCardsHtml(sectionId) {
-    const sec = GUIDE_SECTIONS.find((s) => s.id === sectionId) || GUIDE_SECTIONS[0];
-    return `
-      <div class="guide-sec-summary">💡 ${sec.summary}</div>
-      ${sec.cards.map((c) => `
-        <div class="guide-card">
-          <div class="guide-card-head">
-            <span class="guide-card-title">${c.title}</span>
-            <span class="guide-card-badge">${c.badge}</span>
-          </div>
-          <div class="guide-card-desc">${c.desc}</div>
-        </div>
-      `).join('')}
-    `;
+  goToGuideStep(index) {
+    if (index < 0 || index >= TUTORIAL_STEPS.length) return;
+    sound.playClick();
+    this.guideCurrentStep = index;
+    this.renderGuideModal(index);
   }
 
-  renderGuideModal(activeTabId = 'goal') {
-    const tabsContainer = document.getElementById('guide-nav-tabs');
-    const bodyContainer = document.getElementById('guide-body-content');
-    if (!tabsContainer || !bodyContainer) return;
+  nextGuideStep() {
+    if (this.guideCurrentStep < TUTORIAL_STEPS.length - 1) {
+      this.goToGuideStep(this.guideCurrentStep + 1);
+    } else {
+      sound.playClick();
+      document.getElementById('guide-modal').classList.add('hidden');
+      toast.show('已掌握准点下班秘诀，祝你顺利出逃！', 'success');
+    }
+  }
 
-    tabsContainer.innerHTML = GUIDE_SECTIONS.map((sec) => `
-      <button class="guide-tab-btn ${sec.id === activeTabId ? 'active' : ''}" data-tab="${sec.id}">
-        ${sec.icon} ${sec.title.split(' ')[1] || sec.title}
-      </button>
-    `).join('');
+  prevGuideStep() {
+    if (this.guideCurrentStep > 0) {
+      this.goToGuideStep(this.guideCurrentStep - 1);
+    }
+  }
 
-    bodyContainer.innerHTML = this.renderGuideCardsHtml(activeTabId);
+  renderGuideModal(stepIndex = 0) {
+    const step = TUTORIAL_STEPS[stepIndex] || TUTORIAL_STEPS[0];
+    const counterBadge = document.getElementById('guide-step-counter-badge');
+    if (counterBadge) {
+      counterBadge.textContent = `步骤 ${step.step} / ${TUTORIAL_STEPS.length} · ${step.shortTitle}`;
+    }
 
-    tabsContainer.querySelectorAll('.guide-tab-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        sound.playClick();
-        const tabId = btn.getAttribute('data-tab');
-        this.renderGuideModal(tabId);
+    // Stepper Pills
+    const stepperEl = document.getElementById('guide-stepper');
+    if (stepperEl) {
+      stepperEl.innerHTML = TUTORIAL_STEPS.map((s, i) => `
+        <button class="guide-step-pill ${i === stepIndex ? 'active' : ''} ${i < stepIndex ? 'completed' : ''}" data-gstep="${i}">
+          <span class="pill-num">${i + 1}</span>
+          <span class="pill-name">${s.shortTitle}</span>
+        </button>
+      `).join('');
+
+      stepperEl.querySelectorAll('.guide-step-pill').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const targetIdx = parseInt(btn.getAttribute('data-gstep'), 10);
+          this.goToGuideStep(targetIdx);
+        });
       });
-    });
+    }
+
+    // Step Card Content
+    const bodyEl = document.getElementById('guide-step-body');
+    if (bodyEl) {
+      bodyEl.innerHTML = `
+        <div class="guide-step-hero">
+          <span class="guide-step-icon">${step.icon}</span>
+          <div class="guide-step-headings">
+            <span class="guide-step-tag">${step.tag}</span>
+            <h4 class="guide-step-title">${step.title}</h4>
+            <div class="guide-step-subtitle">${step.subtitle}</div>
+          </div>
+        </div>
+
+        <div class="guide-step-highlights">
+          ${step.highlights.map((h) => `
+            <div class="guide-highlight-card">
+              <span class="hl-card-icon">${h.icon}</span>
+              <div class="hl-card-text">
+                <span class="hl-card-title">${h.title}</span>
+                <span class="hl-card-desc">${h.desc}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="guide-step-protip">
+          <span class="protip-badge">💡 避坑指南</span>
+          <span class="protip-text">${step.proTip}</span>
+        </div>
+      `;
+    }
+
+    // Dots
+    const dotsEl = document.getElementById('guide-step-dots');
+    if (dotsEl) {
+      dotsEl.innerHTML = TUTORIAL_STEPS.map((_, i) => `
+        <button class="guide-dot ${i === stepIndex ? 'active' : ''}" data-gdot="${i}" aria-label="第 ${i + 1} 步"></button>
+      `).join('');
+
+      dotsEl.querySelectorAll('.guide-dot').forEach((dot) => {
+        dot.addEventListener('click', () => {
+          const targetIdx = parseInt(dot.getAttribute('data-gdot'), 10);
+          this.goToGuideStep(targetIdx);
+        });
+      });
+    }
+
+    // Prev & Next Buttons
+    const prevBtn = document.getElementById('btn-guide-prev');
+    if (prevBtn) {
+      if (stepIndex === 0) {
+        prevBtn.classList.add('disabled');
+        prevBtn.disabled = true;
+      } else {
+        prevBtn.classList.remove('disabled');
+        prevBtn.disabled = false;
+      }
+    }
+
+    const nextBtn = document.getElementById('btn-guide-next');
+    if (nextBtn) {
+      if (stepIndex === TUTORIAL_STEPS.length - 1) {
+        nextBtn.innerHTML = '🚀 我懂了，立即出发！';
+        nextBtn.className = 'btn btn-primary guide-nav-btn guide-nav-finish';
+      } else {
+        nextBtn.innerHTML = '下一步 ➡️';
+        nextBtn.className = 'btn btn-primary guide-nav-btn';
+      }
+    }
+  }
+
+  renderTacticalStepBar() {
+    const barEl = document.getElementById('tactical-step-bar');
+    const badgeEl = document.getElementById('tactical-step-badge');
+    const textEl = document.getElementById('tactical-step-text');
+    if (!barEl || !badgeEl || !textEl) return;
+
+    let badgeText = '';
+    let hintText = '';
+    let isUrgent = false;
+
+    if (this.state.suspicion >= 75) {
+      badgeText = '🚨 怀疑警报';
+      hintText = `阎总怀疑度已达 ${this.state.suspicion}%！建议立即使用防监控道具或转入隐蔽通道！`;
+      isUrgent = true;
+    } else if (this.state.energy <= 20) {
+      badgeText = '🪫 体力虚脱';
+      hintText = `剩余体力仅 ${this.state.energy}%！务必去茶水间或洗手间回血，严防工位瘫倒！`;
+      isUrgent = true;
+    } else if (this.state.zone === 4 && (this.state.currentHour < 18 || (this.state.currentHour === 17 && this.state.currentMinute < 60))) {
+      badgeText = '🛑 考勤铁律';
+      hintText = '未满 18:00 切勿早退冲卡！点击【⏱️ 闸机旁掐表读秒】稳到 18:00 整再刷脸！';
+      isUrgent = true;
+    } else {
+      const tipData = ZONE_STEP_TIPS[this.state.zone] || ZONE_STEP_TIPS[1];
+      badgeText = tipData.stepNum;
+      hintText = tipData.tip;
+    }
+
+    badgeEl.textContent = badgeText;
+    textEl.textContent = hintText;
+
+    if (isUrgent) {
+      barEl.classList.add('tactical-urgent');
+    } else {
+      barEl.classList.remove('tactical-urgent');
+    }
   }
 
   render() {
     this.renderHeaderAndMetrics();
     this.renderMetaStrip();
     this.renderZoneNavigator();
+    this.renderTacticalStepBar();
     this.renderSceneInfo();
     this.renderActionButtons();
     this.renderBackpack();
@@ -1070,23 +1250,60 @@ export class UIRenderer {
     } else if (activeTab === 'guide') {
       content.innerHTML = `
         <div class="archive-guide-container">
-          <div class="guide-nav-tabs" id="archive-guide-tabs">
-            ${GUIDE_SECTIONS.map((sec, i) => `
-              <button class="guide-tab-btn ${i === 0 ? 'active' : ''}" data-gtab="${sec.id}">${sec.icon} ${sec.title.split(' ')[1] || sec.title}</button>
+          <div class="guide-stepper" id="archive-guide-stepper">
+            ${TUTORIAL_STEPS.map((s, i) => `
+              <button class="guide-step-pill ${i === 0 ? 'active' : ''}" data-arch-step="${i}">
+                <span class="pill-num">${i + 1}</span>
+                <span class="pill-name">${s.shortTitle}</span>
+              </button>
             `).join('')}
           </div>
-          <div class="guide-body" id="archive-guide-body">
-            ${this.renderGuideCardsHtml(GUIDE_SECTIONS[0].id)}
-          </div>
+          <div class="guide-step-body" id="archive-guide-body"></div>
         </div>
       `;
-      content.querySelectorAll('#archive-guide-tabs .guide-tab-btn').forEach((btn) => {
+
+      const renderArchStep = (idx) => {
+        const s = TUTORIAL_STEPS[idx] || TUTORIAL_STEPS[0];
+        const bodyEl = document.getElementById('archive-guide-body');
+        if (!bodyEl) return;
+        bodyEl.innerHTML = `
+          <div class="guide-step-hero">
+            <span class="guide-step-icon">${s.icon}</span>
+            <div class="guide-step-headings">
+              <span class="guide-step-tag">${s.tag}</span>
+              <h4 class="guide-step-title">${s.title}</h4>
+              <div class="guide-step-subtitle">${s.subtitle}</div>
+            </div>
+          </div>
+
+          <div class="guide-step-highlights">
+            ${s.highlights.map((h) => `
+              <div class="guide-highlight-card">
+                <span class="hl-card-icon">${h.icon}</span>
+                <div class="hl-card-text">
+                  <span class="hl-card-title">${h.title}</span>
+                  <span class="hl-card-desc">${h.desc}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="guide-step-protip">
+            <span class="protip-badge">💡 避坑指南</span>
+            <span class="protip-text">${s.proTip}</span>
+          </div>
+        `;
+      };
+
+      renderArchStep(0);
+
+      content.querySelectorAll('#archive-guide-stepper .guide-step-pill').forEach((btn) => {
         btn.addEventListener('click', () => {
           sound.playClick();
-          content.querySelectorAll('#archive-guide-tabs .guide-tab-btn').forEach((b) => b.classList.remove('active'));
+          content.querySelectorAll('#archive-guide-stepper .guide-step-pill').forEach((b) => b.classList.remove('active'));
           btn.classList.add('active');
-          const gtab = btn.getAttribute('data-gtab');
-          document.getElementById('archive-guide-body').innerHTML = this.renderGuideCardsHtml(gtab);
+          const idx = parseInt(btn.getAttribute('data-arch-step'), 10);
+          renderArchStep(idx);
         });
       });
     }
