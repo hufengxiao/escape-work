@@ -117,8 +117,10 @@ export class OvertimeEngine {
     // 4. Advance clock by 30 mins
     this.advanceClock();
 
-    // 5. Random event encounter on certain turns
-    this.checkRandomEvent();
+    // 5. Random event encounter on certain turns (only if still conscious)
+    if (this.sanity > 0 && this.energy > 0) {
+      this.checkRandomEvent();
+    }
 
     // 6. Check End Conditions
     if (this.sanity <= 0) {
