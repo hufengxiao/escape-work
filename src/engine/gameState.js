@@ -9,6 +9,7 @@ import { PERKS } from '../data/perks.js';
 
 export class GameState {
   constructor() {
+    this.listeners = [];
     this.loadPersistentData();
     this.selectedRoleId = 'backend_dev';
     this.isHardcore = false;
@@ -92,8 +93,6 @@ export class GameState {
         text: `周五 17:45，你化身【${role.name}】(${role.title})${hardcoreText}。今日办公区环境：【${this.currentModifier.icon} ${this.currentModifier.name}】。目标：在老板怀疑度达到 100% 之前准点逃脱！`
       }
     ];
-
-    this.listeners = [];
   }
 
   applyPerks() {

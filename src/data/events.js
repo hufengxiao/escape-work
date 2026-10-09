@@ -372,14 +372,21 @@ export const ZONE_ACTIONS = {
       desc: '走安全楼梯纯肉身狂奔18层！极度消耗体力，但彻底免疫老板偶遇！',
       handler: (state) => {
         state.flags.tookStairs = true;
-        state.zone = 4;
         state.suspicion = 0;
         const actualCost = state.flags.isIntern ? 12 : 25;
         state.energy = Math.max(0, state.energy - actualCost);
-        return {
-          msg: `你撞开常闭防火门，两步并作一步狂奔下楼！18、16、10、3、1！大汗淋漓推开一楼侧门直达大堂！(消耗${actualCost}体力，怀疑度归零！)`,
-          type: 'warning'
-        };
+        if (state.energy >= 30) {
+          return {
+            triggerEnding: 'ending_stair_sprinter',
+            msg: `你撞开常闭防火门狂奔下楼！18、15、9、1！从容推开一楼消防侧门直接冲出大厦，逃出生天！`
+          };
+        } else {
+          state.zone = 4;
+          return {
+            msg: `你撞开常闭防火门狂奔下楼！两腿发软直打颤，跌跌撞撞推开一楼侧门挪进大堂！(消耗${actualCost}体力，怀疑度归零！)`,
+            type: 'warning'
+          };
+        }
       }
     },
     {
@@ -433,7 +440,7 @@ export const ZONE_ACTIONS = {
         if (state.currentHour < 18) {
           state.suspicion += 25;
           return {
-            msg: '闸机红灯急促闪烁：“警告！当前时间未到18:00，属于早退打卡行为，已抄送考勤主管！”你赶紧退后两步！(怀疑度 +25%)',
+            msg: `闸机红灯急促闪烁：“警告！当前时间 ${state.getTimeString()} 未到18:00，属于早退打卡行为，已抄送考勤主管！”你赶紧退后两步！(怀疑度 +25%)`,
             type: 'warning'
           };
         } else {
@@ -517,6 +524,27 @@ export const ZONE_ACTIONS = {
       }
     },
     {
+      id: 'wait_clockout',
+      name: '闸机旁掐表读秒',
+      icon: '⏱️',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '双手插兜假装低头看手机，眼睛余光死死盯住秒针，等待 18:00 整的到来！',
+      handler: (state) => {
+        if (state.currentHour >= 18) {
+          return {
+            msg: `时钟已敲响 ${state.getTimeString()}！下班倒计时已归零！立刻上前刷脸，正是神仙下班最佳时刻！`,
+            type: 'success'
+          };
+        } else {
+          return {
+            msg: `当前时间 ${state.getTimeString()}……你强装镇定低头刷手机，心跳扑通直跳：“还差最后几分钟，稳住别慌！”`,
+            type: 'info'
+          };
+        }
+      }
+    },
+    {
       id: 'burst_sprint',
       name: '紧随外卖骑手强冲闸门',
       icon: '⚡',
@@ -529,12 +557,18 @@ export const ZONE_ACTIONS = {
             triggerEnding: 'ending_embarrassing_drop',
             msg: '你体力不支脚底打滑，背包拉链当场崩开！'
           };
-        } else {
+        }
+        if (state.currentHour < 18) {
+          state.suspicion += 25;
           return {
-            triggerEnding: 'ending_perfect_clockout',
-            msg: '身手敏捷！宛如一道黑色闪电，在闸机闭合前0.1秒滑步冲出大堂！'
+            msg: `未到 18:00 强冲大件通道！保安老王一把拉住你：“小伙子！现在才 ${state.getTimeString()}，没到下班点冲啥呢？全大堂都看着呢！”(怀疑度 +25%)`,
+            type: 'warning'
           };
         }
+        return {
+          triggerEnding: 'ending_perfect_clockout',
+          msg: '身手敏捷！时针恰好划过 18:00，你宛如一道黑色闪电在闸机闭合前0.1秒滑步冲出大堂！'
+        };
       }
     }
   ]
@@ -996,17 +1030,23 @@ export const RANDOM_ENCOUNTERS = [
       {
         text: '【百米冲刺】装作没听见，低头咬牙向旋转门全力飞扑！',
         outcome: (state) => {
-          if (state.energy >= 15) {
-            return {
-              triggerEnding: 'ending_perfect_clockout',
-              msg: '你在全大堂诧异的目光中化作狂风卷出大门！'
-            };
-          } else {
+          if (state.energy < 15) {
             return {
               triggerEnding: 'ending_embarrassing_drop',
               msg: '你腿软摔在老王脚下，当场社死……'
             };
           }
+          if (state.currentHour < 18) {
+            state.suspicion += 30;
+            return {
+              msg: `旋转门感应红灯急促鸣响：“当前未到 18:00 下班时间，非通行时段！”你差点撞在玻璃门上，身旁老王急忙将你拉住，身后传来阎总的厉声大喝！(怀疑度 +30%)`,
+              type: 'warning'
+            };
+          }
+          return {
+            triggerEnding: 'ending_perfect_clockout',
+            msg: '时针已过 18:00！你在全大堂诧异的目光中化作狂风压哨冲出大门！'
+          };
         }
       }
     ]

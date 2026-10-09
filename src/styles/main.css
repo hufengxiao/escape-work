@@ -88,12 +88,15 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .header-logo {
   font-size: 26px;
   display: inline-block;
   animation: runBounce 2s infinite ease-in-out;
+  flex-shrink: 0;
 }
 
 @keyframes runBounce {
@@ -104,6 +107,7 @@ body {
 .header-title-box {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .header-title {
@@ -113,16 +117,23 @@ body {
   background: linear-gradient(120deg, #ffffff, #a5b4fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-subtitle {
   font-size: 11px;
   color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
   display: flex;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .btn-icon {
@@ -138,6 +149,7 @@ body {
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .btn-icon:hover {
@@ -150,6 +162,56 @@ body {
   background: var(--accent-primary);
   color: #fff;
   border-color: var(--accent-primary);
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 8px 10px;
+  }
+  .header-left {
+    gap: 6px;
+  }
+  .header-logo {
+    font-size: 20px;
+  }
+  .header-title {
+    font-size: 15px;
+  }
+  .header-subtitle {
+    display: none;
+  }
+  .header-actions {
+    gap: 3px;
+  }
+  .btn-icon {
+    width: 29px;
+    height: 29px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+}
+
+@media (max-width: 360px) {
+  .app-header {
+    padding: 6px 8px;
+  }
+  .header-left {
+    gap: 4px;
+  }
+  .header-logo {
+    font-size: 18px;
+  }
+  .header-title {
+    font-size: 13px;
+  }
+  .header-actions {
+    gap: 2px;
+  }
+  .btn-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
 }
 
 /* Dashboard Metrics */

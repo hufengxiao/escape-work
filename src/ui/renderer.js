@@ -301,7 +301,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新说明</h3>
-                  <span class="changelog-badge">v2.0.0 重磅大更新 · 职场大进化</span>
+                  <span class="changelog-badge">v2.1.0 考勤机制修复与体验优化</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -309,28 +309,23 @@ export class UIRenderer {
 
             <div class="changelog-body">
               <div class="changelog-item">
-                <div class="changelog-item-title">🎭 五大职场特色角色上线</div>
-                <div class="changelog-item-desc">后端攻城狮、交互UI、觉醒产品人、佛系老油条、清澈实习生全新参战！各具专属被动技能、初始道具与特定对白反杀手段。</div>
+                <div class="changelog-item-title">⏱️ 严谨考勤校验与【闸机掐表读秒】</div>
+                <div class="changelog-item-desc">修复 18:00 前强冲闸门冒领 SSS【神仙准点打卡】的考勤漏洞。一楼大堂新增【⏱️ 闸机旁掐表读秒】神操作，提前到达可假装看手机稳稳卡点熬到 18:00 再打卡！</div>
               </div>
 
               <div class="changelog-item">
-                <div class="changelog-item-title">🧬 摸鱼悟性与局外永久天赋树</div>
-                <div class="changelog-item-desc">存活回合与结局通关结算转化为【摸鱼悟性 EXP】，跨局永久点亮【消音气垫鞋】、【天生扑克脸】、【危机雷达】等 6 大核心特质！</div>
+                <div class="changelog-item-title">🔄 结算与全局重开即时响应修复</div>
+                <div class="changelog-item-desc">彻底修复结算弹窗点击“直接再来一把”、换职业开启及顶栏“重新开始”后 UI 冻结无响应的 Bug，无需再手动刷新网页。</div>
               </div>
 
               <div class="changelog-item">
-                <div class="changelog-item-title">🌦️ 每日随机办公区词条 (Rogue-lite)</div>
-                <div class="changelog-item-desc">办公区随机突发天气：阎总暴走日、全司内网宕机、高层突击视察、下午茶投喂狂欢、季度冲刺决战，局局充满未知与惊喜！</div>
+                <div class="changelog-item-title">📱 窄屏与移动端顶栏布局自适应</div>
+                <div class="changelog-item-desc">彻底解决窗口较窄或手机端时游戏标题折行、顶部区域过高的视觉问题，顶栏高度锁定约 42px 单行紧凑栏。</div>
               </div>
 
               <div class="changelog-item">
-                <div class="changelog-item-title">🔥 【地狱加班修罗场】高难挑战模式</div>
-                <div class="changelog-item-desc">自选开启极限难度！老板提前查岗，初始怀疑度暴涨，体力消耗剧增，通关立享 +80% 悟性结算加成与专属修罗场荣誉印戳！</div>
-              </div>
-
-              <div class="changelog-item">
-                <div class="changelog-item-title">🎒 全新摸鱼神器与 18 大多元结局</div>
-                <div class="changelog-item-desc">新增防蓝光深色墨镜、模拟大客户来电、提神风油精、保洁工卡、离职清单草稿！结局与成就全面扩充至 18 个，解锁外卖伪装、保洁弟子、掀桌加薪、假戏真做红杉合伙人等爆笑结局！</div>
+                <div class="changelog-item-title">🏃 补充消防楼梯跑酷专属结局</div>
+                <div class="changelog-item-desc">修复在 3 区走安全通道体力充足时直冲一楼侧门出逃的【楼梯疾风特工】（A级）成就结局判定。</div>
               </div>
             </div>
 
@@ -364,8 +359,8 @@ export class UIRenderer {
   }
 
   bindGlobalEvents() {
-    // Changelog Notice (v2.0.0)
-    const CURRENT_VERSION = '2.0.0';
+    // Changelog Notice (v2.1.0)
+    const CURRENT_VERSION = '2.1.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
     if (savedVer !== CURRENT_VERSION) {
@@ -411,14 +406,20 @@ export class UIRenderer {
     // Restart button
     document.getElementById('btn-restart').addEventListener('click', () => {
       if (confirm('确定要放弃当前进度重新开始吗？')) {
+        document.getElementById('ending-modal')?.classList.add('hidden');
+        document.getElementById('poster-modal')?.classList.add('hidden');
+        document.getElementById('encounter-modal')?.classList.add('hidden');
         this.engine.restart();
         toast.show('时间已重置为 17:45，新的一局开始！', 'info');
       }
     });
 
     document.getElementById('btn-ending-restart').addEventListener('click', () => {
-      document.getElementById('ending-modal').classList.add('hidden');
+      document.getElementById('ending-modal')?.classList.add('hidden');
+      document.getElementById('poster-modal')?.classList.add('hidden');
+      document.getElementById('encounter-modal')?.classList.add('hidden');
       this.engine.restart();
+      toast.show('时间已重置为 17:45，新的一局开始！', 'info');
     });
 
     // Ending modal change role button
