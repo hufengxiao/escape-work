@@ -10,6 +10,49 @@ import { MapManager } from './mapManager.js';
 import { NPCManager } from './npcManager.js';
 import { PatrolManager } from './patrolManager.js';
 
+export const STORAGE_KEY_V1 = 'escape_work_save';
+export const STORAGE_KEY_V2 = 'ESCAPE_WORK_SAVE_V2';
+
+export function migrateSaveData() {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const v2Raw = localStorage.getItem(STORAGE_KEY_V2);
+    if (v2Raw) {
+      return JSON.parse(v2Raw);
+    }
+
+    const v1Raw = localStorage.getItem(STORAGE_KEY_V1) || localStorage.getItem('ESCAPE_WORK_SAVE');
+    if (v1Raw) {
+      const v1Data = JSON.parse(v1Raw);
+      const migrated = {
+        version: 2,
+        meta: {
+          totalRuns: v1Data.gamesPlayed || v1Data.totalRuns || 0,
+          escapedRuns: v1Data.victories || v1Data.escapedRuns || 0,
+          totalExp: typeof v1Data.slackerExp === 'number' ? v1Data.slackerExp : (v1Data.exp || 50),
+          unlockedPerks: v1Data.unlockedPerks || [],
+          unlockedEndings: v1Data.unlockedEndings || v1Data.endings || [],
+          unlockedAchievements: v1Data.unlockedAchievements || [],
+          unlockedRecipes: v1Data.unlockedRecipes || [],
+          dailyHighScores: v1Data.dailyHighScores || {},
+          roleWins: v1Data.roleWins || {},
+          hardcoreWins: v1Data.hardcoreWins || 0
+        },
+        settings: {
+          soundEnabled: true,
+          hapticsEnabled: true,
+          fastText: false
+        }
+      };
+      localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(migrated));
+      return migrated;
+    }
+  } catch (err) {
+    console.warn('[Migration] Error migrating save data:', err);
+  }
+  return null;
+}
+
 export class GameState {
   constructor() {
     this.listeners = [];
@@ -131,16 +174,36 @@ export class GameState {
 
   loadPersistentData() {
     try {
-      const raw = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_save') : null;
+      const v2Data = migrateSaveData();
+      if (v2Data && v2Data.meta) {
+        const m = v2Data.meta;
+        this.history = {
+          gamesPlayed: m.totalRuns || 0,
+          victories: m.escapedRuns || 0,
+          unlockedEndings: m.unlockedEndings || [],
+          unlockedAchievements: m.unlockedAchievements || [],
+          slackerExp: typeof m.totalExp === 'number' ? m.totalExp : 50,
+          unlockedPerks: m.unlockedPerks || [],
+          unlockedRecipes: m.unlockedRecipes || [],
+          dailyHighScores: m.dailyHighScores || {},
+          roleWins: m.roleWins || {},
+          hardcoreWins: m.hardcoreWins || 0
+        };
+        this.settings = v2Data.settings || { soundEnabled: true, hapticsEnabled: true, fastText: false };
+        return;
+      }
+
+      const raw = typeof localStorage !== 'undefined' ? (localStorage.getItem(STORAGE_KEY_V1) || localStorage.getItem('ESCAPE_WORK_SAVE')) : null;
       const data = raw ? JSON.parse(raw) : {};
       this.history = {
         gamesPlayed: data.gamesPlayed || 0,
         victories: data.victories || 0,
         unlockedEndings: data.unlockedEndings || [],
         unlockedAchievements: data.unlockedAchievements || [],
-        slackerExp: typeof data.slackerExp === 'number' ? data.slackerExp : 50, // 50 starting exp
+        slackerExp: typeof data.slackerExp === 'number' ? data.slackerExp : 50,
         unlockedPerks: data.unlockedPerks || [],
         unlockedRecipes: data.unlockedRecipes || [],
+        dailyHighScores: data.dailyHighScores || {},
         roleWins: data.roleWins || {},
         hardcoreWins: data.hardcoreWins || {}
       };
@@ -153,6 +216,7 @@ export class GameState {
         slackerExp: 50,
         unlockedPerks: [],
         unlockedRecipes: [],
+        dailyHighScores: {},
         roleWins: {},
         hardcoreWins: 0
       };
@@ -162,7 +226,24 @@ export class GameState {
   savePersistentData() {
     if (typeof localStorage === 'undefined') return;
     try {
-      localStorage.setItem('escape_work_save', JSON.stringify(this.history));
+      const v2Data = {
+        version: 2,
+        meta: {
+          totalRuns: this.history.gamesPlayed,
+          escapedRuns: this.history.victories,
+          totalExp: this.history.slackerExp,
+          unlockedPerks: this.history.unlockedPerks,
+          unlockedEndings: this.history.unlockedEndings,
+          unlockedAchievements: this.history.unlockedAchievements,
+          unlockedRecipes: this.history.unlockedRecipes,
+          dailyHighScores: this.history.dailyHighScores || {},
+          roleWins: this.history.roleWins,
+          hardcoreWins: this.history.hardcoreWins
+        },
+        settings: this.settings || { soundEnabled: true, hapticsEnabled: true, fastText: false }
+      };
+      localStorage.setItem(STORAGE_KEY_V2, JSON.stringify(v2Data));
+      localStorage.setItem(STORAGE_KEY_V1, JSON.stringify(this.history));
     } catch (e) {
       console.warn('Failed to save state to localStorage', e);
     }

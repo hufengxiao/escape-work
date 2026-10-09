@@ -119,7 +119,63 @@ export const ACHIEVEMENTS = [
     id: 'ach_master',
     title: '逃跑大满贯',
     icon: '🌟',
-    description: '累计解锁全部 18 个不同结局！',
+    description: '累计解锁至少 18 个不同结局！',
     condition: (history) => history.unlockedEndings.length >= 18
+  },
+  {
+    id: 'ach_reverse_boss_win',
+    title: '阎王铁腕',
+    icon: '👑',
+    description: '扮演阎总在【阎总抓人模式】中成功抓捕3名以上准点逃兵！',
+    condition: (history) => history.unlockedEndings.includes('ending_reverse_boss_win')
+  },
+  {
+    id: 'ach_overtime_god',
+    title: '晨曦不灭战神',
+    icon: '🌅',
+    description: '在【深夜大逃杀】无尽生存模式中成功熬到清晨06:00！',
+    condition: (history) => history.unlockedEndings.includes('ending_overtime_god')
+  },
+  {
+    id: 'ach_alchemy_master',
+    title: '神装炼金大师',
+    icon: '🧪',
+    description: '累计成功合成 3 件以上神级羁绊装备！',
+    condition: (history) => (history.unlockedRecipes && history.unlockedRecipes.length >= 3) || history.unlockedEndings.includes('ending_synergy_alchemist')
+  },
+  {
+    id: 'ach_social_butterfly',
+    title: '职场人脉通天',
+    icon: '🤝',
+    description: '与至少 2 位职场NPC的好感度达到【盟友(≥80)】状态！',
+    condition: (history, state) => state && state.npcRelations && Object.values(state.npcRelations).filter((r) => r.favor >= 80).length >= 2
+  },
+  {
+    id: 'ach_buzzword_king',
+    title: '大厂黑话天花板',
+    icon: '🗣️',
+    description: '在黑话大乱斗中组合出离谱度评分 ≥ 80 的神级黑话句子！',
+    condition: (history, state) => state && state.flags && state.flags.lastBuzzwordScore >= 80
+  },
+  {
+    id: 'ach_clock_perfect',
+    title: '微秒级神仙指法',
+    icon: '🎯',
+    description: '在18:00闸机QTE打卡中斩获 PERFECT 完美评价！',
+    condition: (history, state) => state && state.flags && state.flags.lastQTEGrade === 'PERFECT'
+  },
+  {
+    id: 'ach_doomsday_hero',
+    title: '末日天选打工人',
+    icon: '🌪️',
+    description: '达成【黑色星期五·末日幸存者】结局，在三重混沌词条中脱身！',
+    condition: (history) => history.unlockedEndings.includes('ending_doomsday_survivor')
+  },
+  {
+    id: 'ach_grand_master',
+    title: '全通传奇宗师',
+    icon: '🏆',
+    description: '累计解锁至少 22 个不同结局，受万人打工人敬仰！',
+    condition: (history) => history.unlockedEndings && history.unlockedEndings.length >= 22
   }
 ];

@@ -19,6 +19,8 @@ import { RelationPanel } from './relationPanel.js';
 import { MiniGameUI } from './miniGames.js';
 import { RadarView } from './radarView.js';
 import { DailySystem } from '../data/daily.js';
+import { ReverseBossView } from './reverseBossView.js';
+import { OvertimeView } from './overtimeView.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -28,6 +30,8 @@ export class UIRenderer {
     this.craftModal = new CraftModal(this.state, () => this.render());
     this.relationPanel = new RelationPanel(this.state, () => this.render());
     this.radarView = new RadarView(this.state, () => this.render());
+    this.reverseBossView = new ReverseBossView(this.state, () => this.render());
+    this.overtimeView = new OvertimeView(this.state, () => this.render());
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
@@ -91,6 +95,12 @@ export class UIRenderer {
             </button>
             <button id="btn-archive" class="btn-icon" title="结局与成就图鉴" aria-label="图鉴">
               🏆
+            </button>
+            <button id="btn-boss-mode" class="btn-icon" title="反转模式：阎总抓人模拟器" aria-label="阎总模式">
+              👑
+            </button>
+            <button id="btn-overtime-mode" class="btn-icon" title="无尽模式：周五深夜大逃杀" aria-label="深夜大逃杀">
+              🌙
             </button>
             <button id="btn-restart" class="btn-icon" title="重新开始" aria-label="重来">
               🔄
@@ -271,6 +281,12 @@ export class UIRenderer {
               </button>
               <button id="btn-ending-restart" class="btn btn-secondary">
                 🔄 直接再来一把
+              </button>
+              <button id="btn-ending-overtime" class="btn btn-secondary" style="border-color:#4338ca; color:#c7d2fe;">
+                🌙 触发周五深夜大逃杀
+              </button>
+              <button id="btn-ending-boss-mode" class="btn btn-secondary" style="border-color:#b91c1c; color:#fca5a5;">
+                👑 换位扮演阎总抓逃兵
               </button>
             </div>
           </div>
@@ -613,6 +629,31 @@ export class UIRenderer {
     document.getElementById('btn-ending-role').addEventListener('click', () => {
       document.getElementById('ending-modal').classList.add('hidden');
       this.openRoleModal();
+    });
+
+    // Ending modal: trigger Overtime Nightmare
+    document.getElementById('btn-ending-overtime')?.addEventListener('click', () => {
+      document.getElementById('ending-modal')?.classList.add('hidden');
+      sound.playClick();
+      this.overtimeView.show();
+    });
+
+    // Ending modal: trigger Reverse Boss Mode
+    document.getElementById('btn-ending-boss-mode')?.addEventListener('click', () => {
+      document.getElementById('ending-modal')?.classList.add('hidden');
+      sound.playClick();
+      this.reverseBossView.show();
+    });
+
+    // Top Bar mode buttons
+    document.getElementById('btn-boss-mode')?.addEventListener('click', () => {
+      sound.playClick();
+      this.reverseBossView.show();
+    });
+
+    document.getElementById('btn-overtime-mode')?.addEventListener('click', () => {
+      sound.playClick();
+      this.overtimeView.show();
     });
 
     // Role modal
