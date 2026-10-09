@@ -28,23 +28,31 @@ export class RadarView {
 
     return `
       <div class="radar-bar-container ${cfg.cls}" id="radar-bar-container">
-        <div class="radar-left">
-          <span class="radar-led pulse-led" title="${cfg.desc}">${cfg.led}</span>
-          <span class="radar-badge ${cfg.cls}">${cfg.label}</span>
-          <div class="radar-location-chip">
-            <span class="radar-pin">📍</span>
-            <span>${ps.currentArea}</span>
+        <!-- Top Status & Action Row -->
+        <div class="radar-top-row">
+          <div class="radar-status-group">
+            <span class="radar-led pulse-led" title="${cfg.desc}">${cfg.led}</span>
+            <span class="radar-badge ${cfg.cls}">${cfg.label}</span>
+            <div class="radar-location-chip">
+              <span class="radar-pin">📍</span>
+              <span class="radar-location-name">${ps.currentArea}</span>
+            </div>
+          </div>
+
+          <div class="radar-actions">
+            <button id="btn-radar-decoy" class="btn-radar-action" title="发动声东击西战术引开高管">
+              <span class="radar-action-icon">🎭</span>
+              <span class="radar-action-text">声东击西</span>
+            </button>
           </div>
         </div>
 
-        <div class="radar-ticker-wrap">
-          <span class="radar-ticker-text">${ps.lastBroadcast}</span>
-        </div>
-
-        <div class="radar-actions">
-          <button id="btn-radar-decoy" class="btn-radar-action" title="发动声东击西战术引开高管">
-            🎭 声东击西
-          </button>
+        <!-- Surveillance Broadcast Feed Row -->
+        <div class="radar-bottom-row">
+          <span class="radar-feed-badge">📡 监控简报</span>
+          <div class="radar-ticker-wrap">
+            <span class="radar-ticker-text">${ps.lastBroadcast}</span>
+          </div>
         </div>
       </div>
     `;
@@ -74,36 +82,46 @@ export class RadarView {
             <span class="modal-icon">🎭</span>
             <div>
               <h3 class="modal-title">声东击西 · 调虎离山战术</h3>
-              <span class="modal-subtitle">制造突发意外引开大Boss阎总的巡视路线</span>
+              <span class="modal-subtitle">制造突发意外引开大Boss阎总的巡视动线</span>
             </div>
           </div>
-          <button class="modal-close-btn" id="decoy-close">&times;</button>
+          <button class="modal-close-btn" id="decoy-close" aria-label="关闭">&times;</button>
         </div>
 
-        <div class="decoy-options-grid">
-          <button class="decoy-option-card" data-decoy="fake_alarm">
-            <span class="decoy-card-icon">🚨</span>
-            <div class="decoy-card-info">
-              <strong>伪造核心机房 P0 告警短信</strong>
-              <small>发送虚假严重日志，引诱阎总赶往 15 楼机房（清空威胁 3 回合，怀疑度 -20%）</small>
-            </div>
-          </button>
+        <div class="modal-body">
+          <p class="decoy-panel-intro">
+            大Boss阎总步步紧逼？制造突发意外吸引全楼视线，将老板引诱至其他楼层并牵制数回合！
+          </p>
+          <div class="decoy-options-grid">
+            <button class="decoy-option-card" data-decoy="fake_alarm">
+              <span class="decoy-card-icon">🚨</span>
+              <div class="decoy-card-info">
+                <strong>伪造核心机房 P0 告警短信</strong>
+                <small>向运维大群发送伪造日志，引诱阎总赶往 15 楼机房（清空威胁 3 回合，怀疑度 -20%）</small>
+              </div>
+            </button>
 
-          <button class="decoy-option-card" data-decoy="fake_meeting">
-            <span class="decoy-card-icon">📅</span>
-            <div class="decoy-card-info">
-              <strong>日历预约“紧急预算审批会”</strong>
-              <small>以财务名义虚晃一枪，阎总将在 19 楼闭门会议室驻留等待 4 回合（怀疑度 -15%）</small>
-            </div>
-          </button>
+            <button class="decoy-option-card" data-decoy="fake_meeting">
+              <span class="decoy-card-icon">📅</span>
+              <div class="decoy-card-info">
+                <strong>日历预约“紧急预算审批会”</strong>
+                <small>以财务名义虚晃一枪，阎总将在 19 楼闭门会议室等待 4 回合（怀疑度 -15%）</small>
+              </div>
+            </button>
 
-          <button class="decoy-option-card" data-decoy="printer_jam">
-            <span class="decoy-card-icon">🖨️</span>
-            <div class="decoy-card-info">
-              <strong>制造主打印机卡纸喷废纸</strong>
-              <small>引发全层骚动，将路人视线全部吸引至走廊另一端（安全 2 回合，怀疑度 -10%）</small>
-            </div>
-          </button>
+            <button class="decoy-option-card" data-decoy="printer_jam">
+              <span class="decoy-card-icon">🖨️</span>
+              <div class="decoy-card-info">
+                <strong>制造主打印机卡纸喷废纸</strong>
+                <small>引发全层骚动，将路人视线全部吸引至走廊另一端（安全 2 回合，怀疑度 -10%）</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <span style="font-size:11px; color:#64748b;">调虎离山可解除当前区域极度危险状态</span>
+          <button class="btn btn-secondary" id="btn-cancel-decoy" style="padding:6px 14px; font-size:12px;">取消</button>
         </div>
       </div>
     `;
@@ -115,6 +133,7 @@ export class RadarView {
     };
 
     overlay.querySelector('#decoy-close').addEventListener('click', close);
+    overlay.querySelector('#btn-cancel-decoy')?.addEventListener('click', close);
     overlay.addEventListener('click', (e) => {
       if (e.target.id === 'decoy-modal-overlay') close();
     });

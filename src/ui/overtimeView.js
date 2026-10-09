@@ -24,78 +24,78 @@ export class OvertimeView {
     overlay.id = 'overtime-modal';
 
     overlay.innerHTML = `
-      <div class="modal-card overtime-card" style="max-width: 600px; width: 94%;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #09090b, #1e1b4b); border-bottom: 2px solid #4338ca;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:24px;">🌙</span>
+      <div class="modal-card overtime-card slide-up">
+        <div class="modal-header ot-modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">🌙</span>
             <div>
-              <div style="font-weight:bold; font-size:16px; color:#f8fafc;">周五深夜大逃杀：绝地熬夜生存</div>
-              <div style="font-size:12px; color:#a5b4fc;">无尽附加关 · 从 20:00 熬至明晨 06:00 破晓</div>
+              <h3 class="modal-title">周五深夜大逃杀：绝地熬夜生存</h3>
+              <span class="modal-subtitle">无尽附加关 · 从 20:00 熬至明晨 06:00 破晓加冕</span>
             </div>
           </div>
-          <button class="modal-close" id="btn-close-overtime" style="color:#c7d2fe;">✕</button>
+          <button class="modal-close-btn" id="btn-close-overtime" aria-label="关闭">&times;</button>
         </div>
 
-        <div class="modal-body" style="padding: 16px; display:flex; flex-direction:column; gap:12px;">
-          <!-- Time & Turn Progress -->
-          <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; padding:10px 14px; border-radius:8px; border:1px solid #312e81;">
-            <div>
-              <span style="color:#94a3b8; font-size:12px;">当前时刻：</span>
-              <strong id="ot-clock" style="font-size:20px; color:#818cf8; font-family:monospace;">20:00</strong>
+        <div class="modal-body ot-modal-body">
+          <!-- Time & Turn Progress Banner -->
+          <div class="ot-clock-banner">
+            <div class="clock-banner-left">
+              <span class="clock-label">当前时刻：</span>
+              <strong id="ot-clock" class="clock-time">20:00</strong>
             </div>
-            <div style="text-align:right;">
-              <span style="color:#94a3b8; font-size:12px;">破晓进度：</span>
-              <span id="ot-progress" style="color:#cbd5e1; font-weight:bold; font-size:13px;">0 / 20 回合</span>
+            <div class="clock-banner-right">
+              <span class="progress-label">破晓进度：</span>
+              <span id="ot-progress" class="progress-val">0 / 20 回合</span>
             </div>
           </div>
 
           <!-- Triple Survival Meters -->
-          <div style="display:flex; flex-direction:column; gap:8px; background:rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid #1e293b;">
+          <div class="ot-meters-card">
             <!-- Sanity -->
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
-                <span style="color:#38bdf8;">🧠 清醒值 (Sanity)</span>
-                <span id="ot-sanity-val" style="color:#38bdf8; font-weight:bold;">100%</span>
+            <div class="meter-group">
+              <div class="meter-head">
+                <span class="meter-title title-sanity">🧠 清醒值 (Sanity)</span>
+                <span id="ot-sanity-val" class="meter-num num-sanity">100%</span>
               </div>
-              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
-                <div id="ot-sanity-bar" style="width:100%; height:100%; background:#0284c7; transition:width 0.3s;"></div>
+              <div class="meter-track">
+                <div id="ot-sanity-bar" class="meter-fill fill-sanity" style="width:100%;"></div>
               </div>
             </div>
 
             <!-- Energy -->
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
-                <span style="color:#4ade80;">⚡ 体能值 (Energy)</span>
-                <span id="ot-energy-val" style="color:#4ade80; font-weight:bold;">100%</span>
+            <div class="meter-group">
+              <div class="meter-head">
+                <span class="meter-title title-energy">⚡ 体能值 (Energy)</span>
+                <span id="ot-energy-val" class="meter-num num-energy">100%</span>
               </div>
-              <div style="height:8px; background:#1e293b; border-radius:4px; overflow:hidden;">
-                <div id="ot-energy-bar" style="width:100%; height:100%; background:#16a34a; transition:width 0.3s;"></div>
+              <div class="meter-track">
+                <div id="ot-energy-bar" class="meter-fill fill-energy" style="width:100%;"></div>
               </div>
             </div>
 
             <!-- Presence with Safe Zone 20-60% -->
-            <div>
-              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:3px;">
-                <span style="color:#fbbf24;">👁️ 存在感 (Presence · 需保持 20%~60%)</span>
-                <span id="ot-presence-val" style="color:#fbbf24; font-weight:bold;">40% (🟢 安全)</span>
+            <div class="meter-group">
+              <div class="meter-head">
+                <span class="meter-title title-presence">👁️ 存在感 (Presence · 需保持 20%~60%)</span>
+                <span id="ot-presence-val" class="meter-num num-presence">40% (🟢 安全)</span>
               </div>
-              <div style="position:relative; height:10px; background:#1e293b; border-radius:5px; overflow:hidden;">
+              <div class="meter-track track-presence">
                 <!-- Highlight Safe Zone: 20% to 60% -->
-                <div style="position:absolute; left:20%; width:40%; height:100%; background:rgba(34, 197, 94, 0.25); border-left:1px dashed #22c55e; border-right:1px dashed #22c55e;"></div>
-                <div id="ot-presence-bar" style="width:40%; height:100%; background:#eab308; transition:width 0.3s;"></div>
+                <div class="presence-safe-zone"></div>
+                <div id="ot-presence-bar" class="meter-fill fill-presence" style="width:40%;"></div>
               </div>
             </div>
           </div>
 
           <!-- Tactical Action Buttons -->
-          <div>
-            <div style="font-size:12px; font-weight:bold; color:#cbd5e1; margin-bottom:6px;">🛠️ 深夜熬会自救对策</div>
-            <div id="ot-actions-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+          <div class="ot-actions-section">
+            <div class="actions-section-title">🛠️ 深夜熬会自救对策</div>
+            <div id="ot-actions-grid" class="ot-actions-grid">
               ${OVERTIME_ACTIONS.map(
                 (act) => `
-                <button class="action-btn ot-act-btn" data-act="${act.id}" style="text-align:left; padding:8px 10px; background:#1e1b4b; border-color:#4338ca; font-size:12px;">
-                  <div style="font-weight:bold; color:#e0e7ff;">${act.name}</div>
-                  <div style="font-size:10px; color:#a5b4fc;">${act.desc}</div>
+                <button class="action-btn ot-act-btn" data-act="${act.id}">
+                  <div class="ot-act-name">${act.name}</div>
+                  <div class="ot-act-desc">${act.desc}</div>
                 </button>
               `
               ).join('')}
@@ -103,13 +103,17 @@ export class OvertimeView {
           </div>
 
           <!-- Narrative Log Terminal -->
-          <div id="ot-logs" style="height: 120px; overflow-y:auto; background:#020617; border:1px solid #1e1b4b; border-radius:6px; padding:8px; font-family: monospace; font-size:11px; color:#e2e8f0; display:flex; flex-direction:column; gap:4px;">
+          <div class="ot-log-box">
+            <div class="log-box-header">📜 会议室现场实况</div>
+            <div id="ot-logs" class="ot-logs-scroll"></div>
           </div>
         </div>
 
-        <div class="modal-footer" style="padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11px; color:#64748b;">准点下班大作战 · 绝地求生DLC</span>
-          <button id="btn-ot-restart" class="secondary-btn" style="padding:4px 12px; font-size:12px;">重新挑战</button>
+        <div class="modal-footer ot-modal-footer">
+          <span class="footer-note">准点下班大作战 · 绝地求生DLC (v3.0.0)</span>
+          <div class="footer-actions">
+            <button id="btn-ot-restart" class="btn btn-secondary" style="padding:6px 14px; font-size:12px;">重新挑战</button>
+          </div>
         </div>
       </div>
     `;
@@ -206,13 +210,13 @@ export class OvertimeView {
     if (logBox) {
       logBox.innerHTML = s.logs
         .map((log) => {
-          let color = '#94a3b8';
-          if (log.type === 'action') color = '#a5b4fc';
-          if (log.type === 'warning') color = '#fbbf24';
-          if (log.type === 'event') color = '#f472b6';
-          if (log.type === 'victory') color = '#38bdf8';
-          if (log.type === 'defeat') color = '#f87171';
-          return `<div><span style="color:#64748b;">[${log.time}]</span> <span style="color:${color};">${log.text}</span></div>`;
+          let cls = 'log-default';
+          if (log.type === 'action') cls = 'log-action';
+          if (log.type === 'warning') cls = 'log-warn';
+          if (log.type === 'event') cls = 'log-event';
+          if (log.type === 'victory') cls = 'log-win';
+          if (log.type === 'defeat') cls = 'log-lose';
+          return `<div class="ot-log-row ${cls}"><span class="log-time">[${log.time}]</span> <span class="log-msg">${log.text}</span></div>`;
         })
         .join('');
       logBox.scrollTop = logBox.scrollHeight;

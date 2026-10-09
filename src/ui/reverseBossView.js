@@ -10,10 +10,12 @@ export class ReverseBossView {
     this.engine = new ReverseBossEngine();
     this.onFinishCallback = onFinishCallback;
     this.container = null;
+    this.outcomeShown = false;
   }
 
   show() {
     this.hide();
+    this.outcomeShown = false;
     this.engine.reset();
 
     const overlay = document.createElement('div');
@@ -21,88 +23,95 @@ export class ReverseBossView {
     overlay.id = 'reverse-boss-modal';
 
     overlay.innerHTML = `
-      <div class="modal-card reverse-boss-card" style="max-width: 620px; width: 94%;">
-        <div class="modal-header" style="background: linear-gradient(135deg, #450a0a, #7f1d1d); border-bottom: 2px solid #b91c1c;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:24px;">👑</span>
+      <div class="modal-card reverse-boss-card slide-up">
+        <div class="modal-header boss-modal-header">
+          <div class="modal-title-group">
+            <span class="modal-icon">👑</span>
             <div>
-              <div style="font-weight:bold; font-size:16px; color:#fef2f2;">阎总的一天：逮捕准点逃兵</div>
-              <div style="font-size:12px; color:#fca5a5;">角色反转挑战模式 · 18:05 前阻截至少 3 名下班员工</div>
+              <h3 class="modal-title">阎总的一天：逮捕准点逃兵</h3>
+              <span class="modal-subtitle">角色反转模式 · 18:05 前阻截至少 3 名员工通宵加班</span>
             </div>
           </div>
-          <button class="modal-close" id="btn-close-reverse-boss" style="color:#fecaca;">✕</button>
+          <button class="modal-close-btn" id="btn-close-reverse-boss" aria-label="关闭">&times;</button>
         </div>
 
-        <div class="modal-body" style="padding: 16px; display:flex; flex-direction:column; gap:12px;">
+        <div class="modal-body boss-modal-body">
           <!-- Top Stats HUD -->
-          <div class="reverse-hud-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; background: rgba(0,0,0,0.3); padding:10px; border-radius:8px; border:1px solid #7f1d1d;">
-            <div style="text-align:center;">
-              <div style="font-size:11px; color:#94a3b8;">当前时刻</div>
-              <div id="boss-time" style="font-size:18px; font-weight:bold; color:#f87171;">17:45</div>
+          <div class="reverse-hud-grid">
+            <div class="hud-stat-cell">
+              <span class="hud-cell-label">当前时刻</span>
+              <span id="boss-time" class="hud-cell-val val-time">17:45</span>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:11px; color:#94a3b8;">阎总威严值</div>
-              <div id="boss-majesty" style="font-size:18px; font-weight:bold; color:#fbbf24;">100 / 100</div>
+            <div class="hud-stat-cell">
+              <span class="hud-cell-label">阎总威严值</span>
+              <span id="boss-majesty" class="hud-cell-val val-majesty">100 / 100</span>
             </div>
-            <div style="text-align:center;">
-              <div style="font-size:11px; color:#94a3b8;">抓捕战果</div>
-              <div id="boss-caught-score" style="font-size:18px; font-weight:bold; color:#4ade80;">🎯 0 / 3</div>
+            <div class="hud-stat-cell">
+              <span class="hud-cell-label">抓捕战果</span>
+              <span id="boss-caught-score" class="hud-cell-val val-caught">🎯 0 / 3</span>
             </div>
           </div>
 
-          <!-- Current Location -->
-          <div style="display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:8px 12px; border-radius:6px; font-size:13px;">
-            <span style="color:#94a3b8;">📍 阎总当前位置：</span>
-            <strong id="boss-current-area" style="color:#fca5a5;">19楼总裁办</strong>
-            <span id="boss-escaped-count" style="color:#ef4444; font-size:12px;">🏃 已逃离: 0 / 3</span>
+          <!-- Current Location Bar -->
+          <div class="boss-location-bar">
+            <div class="location-bar-left">
+              <span class="loc-pin">📍</span>
+              <span class="loc-label">当前巡查位置：</span>
+              <strong id="boss-current-area" class="loc-name">19楼总裁办</strong>
+            </div>
+            <span id="boss-escaped-count" class="escaped-badge">🏃 已逃离: 0 / 3</span>
           </div>
 
           <!-- Employee Tracker -->
-          <div style="background:#0f172a; border-radius:6px; padding:10px; border:1px solid #334155;">
-            <div style="font-size:12px; font-weight:bold; color:#cbd5e1; margin-bottom:6px; display:flex; justify-content:space-between;">
-              <span>🎯 重点盯防员工动向</span>
-              <span style="color:#64748b; font-size:11px;">每回合向1楼大堂移动</span>
+          <div class="boss-tracker-panel">
+            <div class="tracker-header">
+              <span class="tracker-title">🎯 重点盯防员工动向</span>
+              <span class="tracker-hint">每回合向 1 楼大堂逃窜</span>
             </div>
-            <div id="boss-employee-list" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:12px;">
+            <div id="boss-employee-list" class="tracker-list-grid">
               <!-- Employee items inserted here -->
             </div>
           </div>
 
           <!-- Boss Skills -->
-          <div style="background: rgba(185, 28, 28, 0.15); border: 1px solid #991b1b; border-radius:8px; padding:10px;">
-            <div style="font-size:12px; font-weight:bold; color:#fca5a5; margin-bottom:8px;">🔥 阎总专属管理权术</div>
-            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
-              <button id="btn-boss-deadly-at" class="action-btn" style="background:#7f1d1d; border-color:#b91c1c; font-size:12px; padding:6px; text-align:center;">
-                <div style="font-weight:bold; color:#fef2f2;">📢 夺命艾特</div>
-                <div style="font-size:10px; color:#fca5a5;">群发红包全员定身(-20)</div>
+          <div class="boss-skills-panel">
+            <div class="skills-panel-title">🔥 阎总专属管理权术</div>
+            <div class="skills-btn-grid">
+              <button id="btn-boss-deadly-at" class="skill-btn">
+                <div class="skill-name">📢 夺命艾特</div>
+                <div class="skill-cost">群发红包全员定身 (-20)</div>
               </button>
-              <button id="btn-boss-raid" class="action-btn" style="background:#7f1d1d; border-color:#b91c1c; font-size:12px; padding:6px; text-align:center;">
-                <div style="font-weight:bold; color:#fef2f2;">🦅 突击查岗</div>
-                <div style="font-size:10px; color:#fca5a5;">搜查当前区域抓现行(-15)</div>
+              <button id="btn-boss-raid" class="skill-btn">
+                <div class="skill-name">🦅 突击查岗</div>
+                <div class="skill-cost">搜查本区识破伪装 (-15)</div>
               </button>
-              <button id="btn-boss-lift-ambush" class="action-btn" style="background:#7f1d1d; border-color:#b91c1c; font-size:12px; padding:6px; text-align:center;">
-                <div style="font-weight:bold; color:#fef2f2;">🛗 专梯伏击</div>
-                <div style="font-size:10px; color:#fca5a5;">直降1楼大堂截门(-30)</div>
+              <button id="btn-boss-lift-ambush" class="skill-btn">
+                <div class="skill-name">🛗 专梯伏击</div>
+                <div class="skill-cost">直降1楼大堂截门 (-30)</div>
               </button>
             </div>
           </div>
 
           <!-- Movement Navigation -->
-          <div>
-            <div style="font-size:12px; font-weight:bold; color:#94a3b8; margin-bottom:6px;">🚶 巡查移动（消耗 5 威严）</div>
-            <div id="boss-move-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px;">
+          <div class="boss-move-panel">
+            <div class="move-panel-title">🚶 巡查移动（消耗 5 威严）</div>
+            <div id="boss-move-grid" class="move-btn-grid">
               <!-- Dynamic area move buttons -->
             </div>
           </div>
 
           <!-- Action Log Terminal -->
-          <div id="boss-logs" style="height: 110px; overflow-y:auto; background:#020617; border:1px solid #1e293b; border-radius:6px; padding:8px; font-family: monospace; font-size:11px; color:#e2e8f0; display:flex; flex-direction:column; gap:4px;">
+          <div class="boss-log-box">
+            <div class="log-box-header">📋 抓捕行动简报</div>
+            <div id="boss-logs" class="boss-logs-scroll"></div>
           </div>
         </div>
 
-        <div class="modal-footer" style="padding:10px 16px; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11px; color:#64748b;">准点下班大作战 · 阎总反转DLC</span>
-          <button id="btn-boss-restart" class="secondary-btn" style="padding:4px 12px; font-size:12px;">重置本局</button>
+        <div class="modal-footer boss-modal-footer">
+          <span class="footer-note">准点下班大作战 · 阎总反转DLC (v3.0.0)</span>
+          <div class="footer-actions">
+            <button id="btn-boss-restart" class="btn btn-secondary" style="padding:6px 14px; font-size:12px;">重置本局</button>
+          </div>
         </div>
       </div>
     `;
@@ -129,6 +138,7 @@ export class ReverseBossView {
     });
 
     this.container.querySelector('#btn-boss-restart')?.addEventListener('click', () => {
+      this.outcomeShown = false;
       this.engine.reset();
       this.render();
     });
@@ -180,13 +190,13 @@ export class ReverseBossView {
         .map((emp) => {
           const isCaught = s.caughtEmployees.some((c) => c.id === emp.id);
           const isEscaped = s.escapedEmployees.some((e) => e.id === emp.id);
-          let badge = `<span style="color:#fbbf24;">📍 ${emp.area}</span>`;
-          if (isCaught) badge = `<span style="color:#4ade80; font-weight:bold;">🔒 已逮捕加班</span>`;
-          if (isEscaped) badge = `<span style="color:#ef4444; font-weight:bold;">💨 已成功逃离</span>`;
+          let badge = `<span class="emp-status-badge status-moving">📍 ${emp.area}</span>`;
+          if (isCaught) badge = `<span class="emp-status-badge status-caught">🔒 已逮捕加班</span>`;
+          if (isEscaped) badge = `<span class="emp-status-badge status-escaped">💨 已逃离大厦</span>`;
 
           return `
-            <div style="background: rgba(30, 41, 59, 0.5); padding: 4px 8px; border-radius: 4px; display:flex; justify-content:space-between; align-items:center;">
-              <span style="color:#e2e8f0;">${emp.name}</span>
+            <div class="emp-tracker-card ${isCaught ? 'caught' : ''} ${isEscaped ? 'escaped' : ''}">
+              <span class="emp-name">${emp.name}</span>
               ${badge}
             </div>
           `;
@@ -200,16 +210,15 @@ export class ReverseBossView {
       moveGrid.innerHTML = BOSS_AREAS.map((area) => {
         const isCurrent = area.name === s.currentArea;
         return `
-          <button class="action-btn boss-area-btn ${isCurrent ? 'active' : ''}" 
+          <button class="area-move-btn ${isCurrent ? 'current' : ''}" 
                   data-area="${area.name}" 
-                  ${isCurrent || s.isFinished ? 'disabled' : ''}
-                  style="font-size:11px; padding:6px 4px; ${isCurrent ? 'background:#334155; opacity:0.6;' : 'background:#1e293b;'}">
+                  ${isCurrent || s.isFinished ? 'disabled' : ''}>
             ${isCurrent ? '📍 ' : ''}${area.name}
           </button>
         `;
       }).join('');
 
-      moveGrid.querySelectorAll('.boss-area-btn').forEach((btn) => {
+      moveGrid.querySelectorAll('.area-move-btn').forEach((btn) => {
         btn.addEventListener('click', (e) => {
           const area = e.currentTarget.getAttribute('data-area');
           this.engine.moveTo(area);
@@ -223,13 +232,13 @@ export class ReverseBossView {
     if (logBox) {
       logBox.innerHTML = s.logs
         .map((log) => {
-          let color = '#94a3b8';
-          if (log.type === 'catch') color = '#4ade80';
-          if (log.type === 'escape') color = '#ef4444';
-          if (log.type === 'skill') color = '#fbbf24';
-          if (log.type === 'victory') color = '#38bdf8';
-          if (log.type === 'defeat') color = '#f87171';
-          return `<div><span style="color:#64748b;">[${log.time}]</span> <span style="color:${color};">${log.text}</span></div>`;
+          let cls = 'log-default';
+          if (log.type === 'catch') cls = 'log-catch';
+          if (log.type === 'escape') cls = 'log-escape';
+          if (log.type === 'skill') cls = 'log-skill';
+          if (log.type === 'victory') cls = 'log-win';
+          if (log.type === 'defeat') cls = 'log-lose';
+          return `<div class="boss-log-row ${cls}"><span class="log-time">[${log.time}]</span> <span class="log-msg">${log.text}</span></div>`;
         })
         .join('');
       logBox.scrollTop = logBox.scrollHeight;

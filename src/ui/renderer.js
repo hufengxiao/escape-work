@@ -61,22 +61,19 @@ export class UIRenderer {
           <div class="header-left">
             <span class="header-logo">🏃‍♂️</span>
             <div class="header-title-box">
-              <h1 class="header-title">准点下班大作战</h1>
+              <div class="header-title-row">
+                <h1 class="header-title">准点下班大作战</h1>
+                <span class="header-version-pill">v3.0.0</span>
+              </div>
               <span class="header-subtitle">逃离老板视线 · 职场摸鱼生存记</span>
             </div>
           </div>
           <div class="header-actions">
-            <button id="btn-guide" class="btn-icon" title="全屏高亮新手指引与界面教学" aria-label="新手指引">
+            <button id="btn-guide" class="btn-icon" title="玩法介绍与出逃指引" aria-label="新手指引">
               📖
             </button>
             <button id="btn-changelog" class="btn-icon" title="版本更新说明" aria-label="更新说明">
               📢
-            </button>
-            <button id="btn-role" class="btn-icon" title="选择职场角色" aria-label="角色">
-              🎭
-            </button>
-            <button id="btn-talent" class="btn-icon" title="摸鱼天赋树" aria-label="天赋">
-              🧬
             </button>
             <button id="btn-sound" class="btn-icon" title="音效开关" aria-label="音效开关">
               ${this.state.history && sound.isMuted ? '🔇' : '🔊'}
@@ -84,29 +81,47 @@ export class UIRenderer {
             <button id="btn-bgm" class="btn-icon" title="背景紧张音效" aria-label="紧张旋律">
               🎵
             </button>
-            <button id="btn-craft" class="btn-icon" title="职场妙手合成 · 羁绊神装" aria-label="合成">
-              🧪
-            </button>
-            <button id="btn-relation" class="btn-icon" title="职场人脉网络 · 好感度" aria-label="人脉">
-              🤝
-            </button>
-            <button id="btn-daily" class="btn-icon" title="每日职场黄历 · 天梯榜" aria-label="黄历">
-              📅
-            </button>
-            <button id="btn-archive" class="btn-icon" title="结局与成就图鉴" aria-label="图鉴">
-              🏆
-            </button>
-            <button id="btn-boss-mode" class="btn-icon" title="反转模式：阎总抓人模拟器" aria-label="阎总模式">
-              👑
-            </button>
-            <button id="btn-overtime-mode" class="btn-icon" title="无尽模式：周五深夜大逃杀" aria-label="深夜大逃杀">
-              🌙
-            </button>
             <button id="btn-restart" class="btn-icon" title="重新开始" aria-label="重来">
               🔄
             </button>
           </div>
         </header>
+
+        <!-- Cyber Tactical Quick Hub -->
+        <nav class="cyber-quick-hub" aria-label="快捷战术功能中心">
+          <button id="btn-boss-mode" class="hub-pill pill-boss" title="角色反转：扮演阎总逮捕逃兵">
+            <span class="hub-icon">👑</span>
+            <span class="hub-label">阎总模式</span>
+          </button>
+          <button id="btn-overtime-mode" class="hub-pill pill-overtime" title="无尽生存：周五深夜大逃杀">
+            <span class="hub-icon">🌙</span>
+            <span class="hub-label">深夜逃杀</span>
+          </button>
+          <button id="btn-craft" class="hub-pill pill-craft" title="职场黑产工坊 · 羁绊神装合成">
+            <span class="hub-icon">🧪</span>
+            <span class="hub-label">神装合成</span>
+          </button>
+          <button id="btn-relation" class="hub-pill pill-relation" title="职场人脉网络 · 好感度与送礼">
+            <span class="hub-icon">🤝</span>
+            <span class="hub-label">职场人脉</span>
+          </button>
+          <button id="btn-daily" class="hub-pill pill-daily" title="每日职场黄历 · 天梯挑战">
+            <span class="hub-icon">📅</span>
+            <span class="hub-label">每日黄历</span>
+          </button>
+          <button id="btn-archive" class="hub-pill pill-archive" title="结局与成就全景图鉴">
+            <span class="hub-icon">🏆</span>
+            <span class="hub-label">图鉴成就</span>
+          </button>
+          <button id="btn-role" class="hub-pill pill-role" title="切换职场角色与难度">
+            <span class="hub-icon">🎭</span>
+            <span class="hub-label">角色</span>
+          </button>
+          <button id="btn-talent" class="hub-pill pill-talent" title="摸鱼悟性天赋树">
+            <span class="hub-icon">🧬</span>
+            <span class="hub-label">天赋</span>
+          </button>
+        </nav>
 
         <!-- Boss Patrol Surveillance Radar -->
         <div id="radar-slot"></div>
@@ -374,7 +389,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新日志</h3>
-                  <span class="changelog-badge">当前最新 v2.3.0 · 历史版本全览</span>
+                  <span class="changelog-badge">当前最新 v3.0.0 · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -385,7 +400,7 @@ export class UIRenderer {
             </div>
 
             <div class="changelog-footer">
-              <button id="btn-confirm-changelog" class="btn btn-primary btn-block">
+              <button id="btn-confirm-changelog" class="btn-primary btn btn-block">
                 🚀 我知道了，立刻体验！
               </button>
             </div>
@@ -400,7 +415,7 @@ export class UIRenderer {
                 <span class="guide-icon">📖</span>
                 <div>
                   <h3 class="guide-title">准点下班 · 逃脱行动向导</h3>
-                  <span id="guide-step-counter-badge" class="guide-badge">步骤 1 / 5 · 终极目标</span>
+                  <span id="guide-step-counter-badge" class="guide-badge">步骤 1 / 8 · 终极目标</span>
                 </div>
               </div>
               <button id="btn-close-guide" class="btn-icon" aria-label="关闭">&times;</button>
@@ -1285,37 +1300,39 @@ export class UIRenderer {
           <button class="modal-close-btn" id="daily-close">&times;</button>
         </div>
 
-        <div class="daily-almanac-banner">
-          <span class="daily-almanac-date">公历 ${almanac.date} · 今日种子 [${almanac.seed}]</span>
-          <p class="daily-almanac-quote">${almanac.lunarQuote}</p>
-        </div>
-
-        <div class="daily-good-bad-grid">
-          <div class="daily-card-good">
-            <strong class="good-title">${almanac.good.name}</strong>
-            <p class="good-desc">${almanac.good.desc}</p>
+        <div class="modal-body">
+          <div class="daily-almanac-banner">
+            <span class="daily-almanac-date">公历 ${almanac.date} · 今日种子 [${almanac.seed}]</span>
+            <p class="daily-almanac-quote">${almanac.lunarQuote}</p>
           </div>
-          <div class="daily-card-bad">
-            <strong class="bad-title">${almanac.bad.name}</strong>
-            <p class="bad-desc">${almanac.bad.desc}</p>
-          </div>
-        </div>
 
-        <div class="daily-ladder-section">
-          <div class="daily-ladder-title">🏆 今日挑战最高得分记录</div>
-          <div class="daily-ladder-table">
-            <div class="ladder-row">
-              <span>🥇 本机历史最佳 (${almanac.date})</span>
-              <strong style="color:#fbbf24;">${todayHighScore > 0 ? `${todayHighScore} 分` : '暂未挑战'}</strong>
+          <div class="daily-good-bad-grid">
+            <div class="daily-card-good">
+              <strong class="good-title">${almanac.good.name}</strong>
+              <p class="good-desc">${almanac.good.desc}</p>
             </div>
-            <div class="ladder-row">
-              <span>🥈 社区标杆榜 (Top 1%)</span>
-              <strong style="color:#38bdf8;">2,450 分</strong>
+            <div class="daily-card-bad">
+              <strong class="bad-title">${almanac.bad.name}</strong>
+              <p class="bad-desc">${almanac.bad.desc}</p>
             </div>
           </div>
+
+          <div class="daily-ladder-section">
+            <div class="daily-ladder-title">🏆 今日挑战最高得分记录</div>
+            <div class="daily-ladder-table">
+              <div class="ladder-row">
+                <span>🥇 本机历史最佳 (${almanac.date})</span>
+                <strong style="color:#fbbf24;">${todayHighScore > 0 ? `${todayHighScore} 分` : '暂未挑战'}</strong>
+              </div>
+              <div class="ladder-row">
+                <span>🥈 社区标杆榜 (Top 1%)</span>
+                <strong style="color:#38bdf8;">2,450 分</strong>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="modal-footer" style="margin-top:16px;">
+        <div class="modal-footer">
           <button id="btn-start-daily-run" class="btn btn-primary btn-block">
             ${isTodaySeeded ? '🔄 重新挑战今日黄历关卡' : '🚀 立即开启今日黄历挑战 (统一随机种子)'}
           </button>
