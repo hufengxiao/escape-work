@@ -12,6 +12,7 @@ import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
 import { CHANGELOGS } from '../data/changelog.js';
+import { GUIDE_SECTIONS } from '../data/guide.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -24,6 +25,7 @@ export class UIRenderer {
   init() {
     this.buildBaseLayout();
     this.renderChangelogModal();
+    this.renderGuideModal();
     this.bindGlobalEvents();
     this.render();
     this.state.subscribe(() => this.render());
@@ -42,6 +44,9 @@ export class UIRenderer {
             </div>
           </div>
           <div class="header-actions">
+            <button id="btn-guide" class="btn-icon" title="玩法介绍与新手指南" aria-label="玩法介绍">
+              📖
+            </button>
             <button id="btn-changelog" class="btn-icon" title="版本更新说明" aria-label="更新说明">
               📢
             </button>
@@ -71,7 +76,10 @@ export class UIRenderer {
           <div class="status-card time-card">
             <div class="status-label">
               <span>🕒 当前时刻</span>
-              <span id="target-time-badge" class="badge-sub">下班目标 18:00</span>
+              <div class="status-label-right">
+                <button id="btn-quick-guide" class="chip-guide-link" title="点击查看玩法指南">💡 玩法指南</button>
+                <span id="target-time-badge" class="badge-sub">下班目标 18:00</span>
+              </div>
             </div>
             <div class="time-display" id="time-display">17:45</div>
             <div class="time-progress-bar">
@@ -321,6 +329,37 @@ export class UIRenderer {
           </div>
         </div>
 
+        <!-- Gameplay Guide Modal -->
+        <div id="guide-modal" class="modal-backdrop hidden">
+          <div class="modal-box guide-box">
+            <div class="guide-header">
+              <div class="guide-title-group">
+                <span class="guide-icon">📖</span>
+                <div>
+                  <h3 class="guide-title">准点下班 · 逃脱行动指南</h3>
+                  <span class="guide-badge">新特工必读 · 职场生存防抓保姆级攻略</span>
+                </div>
+              </div>
+              <button id="btn-close-guide" class="btn-icon" aria-label="关闭">&times;</button>
+            </div>
+
+            <!-- Guide Navigation Tabs -->
+            <div class="guide-nav-tabs" id="guide-nav-tabs">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <div class="guide-body" id="guide-body-content">
+              <!-- Rendered dynamically -->
+            </div>
+
+            <div class="guide-footer">
+              <button id="btn-confirm-guide" class="btn btn-primary btn-block">
+                🚀 我懂了，立即开启准点逃脱！
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Archive & Achievements Modal -->
         <div id="archive-modal" class="modal-backdrop hidden">
           <div class="modal-box archive-box">
@@ -332,6 +371,7 @@ export class UIRenderer {
               <button id="tab-endings" class="tab-btn active">结局图鉴 (<span id="unlocked-endings-count">0</span>/${Object.keys(ENDINGS).length})</button>
               <button id="tab-achievements" class="tab-btn">勋章成就 (<span id="unlocked-achievements-count">0</span>/${ACHIEVEMENTS.length})</button>
               <button id="tab-career" class="tab-btn">职场档案</button>
+              <button id="tab-guide" class="tab-btn">📖 玩法指南</button>
             </div>
             <div class="archive-content" id="archive-content">
               <!-- Populated by tab selection -->
@@ -343,11 +383,35 @@ export class UIRenderer {
   }
 
   bindGlobalEvents() {
-    // Changelog Notice (v2.1.0)
+    // Gameplay Guide Modal
+    const guideModal = document.getElementById('guide-modal');
+    const closeGuide = () => {
+      guideModal.classList.add('hidden');
+    };
+    document.getElementById('btn-close-guide').addEventListener('click', closeGuide);
+    document.getElementById('btn-confirm-guide').addEventListener('click', closeGuide);
+    document.getElementById('btn-guide').addEventListener('click', () => {
+      sound.playClick();
+      this.openGuideModal();
+    });
+    document.getElementById('btn-quick-guide')?.addEventListener('click', () => {
+      sound.playClick();
+      this.openGuideModal();
+    });
+
+    // Changelog Notice (v2.1.0) & First-time onboarding check
     const CURRENT_VERSION = '2.1.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
-    if (savedVer !== CURRENT_VERSION) {
+    const hasSeenGuide = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_guide') : null;
+
+    if (!hasSeenGuide) {
+      this.openGuideModal('goal');
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('escape_work_has_seen_guide', 'true');
+        localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
+      }
+    } else if (savedVer !== CURRENT_VERSION) {
       changelogModal.classList.remove('hidden');
     }
 
@@ -448,6 +512,7 @@ export class UIRenderer {
     document.getElementById('tab-endings').addEventListener('click', () => this.renderArchiveModal('endings'));
     document.getElementById('tab-achievements').addEventListener('click', () => this.renderArchiveModal('achievements'));
     document.getElementById('tab-career').addEventListener('click', () => this.renderArchiveModal('career'));
+    document.getElementById('tab-guide')?.addEventListener('click', () => this.renderArchiveModal('guide'));
 
     // Poster Modal
     const posterModal = document.getElementById('poster-modal');
@@ -611,6 +676,50 @@ export class UIRenderer {
         `).join('')}
       </section>
     `).join('');
+  }
+
+  openGuideModal(tabId = 'goal') {
+    sound.playClick();
+    this.renderGuideModal(tabId);
+    document.getElementById('guide-modal').classList.remove('hidden');
+  }
+
+  renderGuideCardsHtml(sectionId) {
+    const sec = GUIDE_SECTIONS.find((s) => s.id === sectionId) || GUIDE_SECTIONS[0];
+    return `
+      <div class="guide-sec-summary">💡 ${sec.summary}</div>
+      ${sec.cards.map((c) => `
+        <div class="guide-card">
+          <div class="guide-card-head">
+            <span class="guide-card-title">${c.title}</span>
+            <span class="guide-card-badge">${c.badge}</span>
+          </div>
+          <div class="guide-card-desc">${c.desc}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  renderGuideModal(activeTabId = 'goal') {
+    const tabsContainer = document.getElementById('guide-nav-tabs');
+    const bodyContainer = document.getElementById('guide-body-content');
+    if (!tabsContainer || !bodyContainer) return;
+
+    tabsContainer.innerHTML = GUIDE_SECTIONS.map((sec) => `
+      <button class="guide-tab-btn ${sec.id === activeTabId ? 'active' : ''}" data-tab="${sec.id}">
+        ${sec.icon} ${sec.title.split(' ')[1] || sec.title}
+      </button>
+    `).join('');
+
+    bodyContainer.innerHTML = this.renderGuideCardsHtml(activeTabId);
+
+    tabsContainer.querySelectorAll('.guide-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        const tabId = btn.getAttribute('data-tab');
+        this.renderGuideModal(tabId);
+      });
+    });
   }
 
   render() {
@@ -868,6 +977,7 @@ export class UIRenderer {
     const tabEndings = document.getElementById('tab-endings');
     const tabAchievements = document.getElementById('tab-achievements');
     const tabCareer = document.getElementById('tab-career');
+    const tabGuide = document.getElementById('tab-guide');
     const content = document.getElementById('archive-content');
 
     const unlockedEndings = this.state.history.unlockedEndings || [];
@@ -879,6 +989,7 @@ export class UIRenderer {
     tabEndings.classList.toggle('active', activeTab === 'endings');
     tabAchievements.classList.toggle('active', activeTab === 'achievements');
     tabCareer.classList.toggle('active', activeTab === 'career');
+    if (tabGuide) tabGuide.classList.toggle('active', activeTab === 'guide');
 
     if (activeTab === 'endings') {
       content.innerHTML = `
@@ -917,7 +1028,7 @@ export class UIRenderer {
           }).join('')}
         </div>
       `;
-    } else {
+    } else if (activeTab === 'career') {
       // Career stats
       const h = this.state.history;
       const roleWins = h.roleWins || {};
@@ -956,6 +1067,28 @@ export class UIRenderer {
           </div>
         </div>
       `;
+    } else if (activeTab === 'guide') {
+      content.innerHTML = `
+        <div class="archive-guide-container">
+          <div class="guide-nav-tabs" id="archive-guide-tabs">
+            ${GUIDE_SECTIONS.map((sec, i) => `
+              <button class="guide-tab-btn ${i === 0 ? 'active' : ''}" data-gtab="${sec.id}">${sec.icon} ${sec.title.split(' ')[1] || sec.title}</button>
+            `).join('')}
+          </div>
+          <div class="guide-body" id="archive-guide-body">
+            ${this.renderGuideCardsHtml(GUIDE_SECTIONS[0].id)}
+          </div>
+        </div>
+      `;
+      content.querySelectorAll('#archive-guide-tabs .guide-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sound.playClick();
+          content.querySelectorAll('#archive-guide-tabs .guide-tab-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          const gtab = btn.getAttribute('data-gtab');
+          document.getElementById('archive-guide-body').innerHTML = this.renderGuideCardsHtml(gtab);
+        });
+      });
     }
   }
 }
