@@ -5,7 +5,7 @@
 > 在大Boss阎总的鹰眼巡视、产品经理阿强的需求背刺与HR刘姐的价值观盘问下，合理利用摸鱼神器、合成黑产神装、拉拢职场盟友、识破红包陷阱，分秒必争逃离写字楼！
 
 [![Release](https://img.shields.io/badge/release-v3.0.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
-[![Build Status](https://img.shields.io/badge/CI%2FCD-passing-brightgreen.svg?style=flat-square)](https://github.com/hufengxiao/escape-work/actions)
+[![CI/CD](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml)
 [![Tests](https://img.shields.io/badge/tests-20%2F20%20passed-success.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![Platform](https://img.shields.io/badge/platform-H5%20%7C%20PWA%20%7C%20Cloudflare%20Pages-orange.svg?style=flat-square)](https://pages.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg?style=flat-square)](LICENSE)
