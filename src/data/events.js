@@ -430,6 +430,44 @@ export const ZONE_ACTIONS = {
 
   4: [
     {
+      id: 'clockout_qte_punch',
+      name: '⏱️ 闸机毫秒压线打卡 (QTE)',
+      icon: '⏱️',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '精准停表压线打卡！分秒不差挑战神仙准点判定！',
+      handler: (state) => {
+        if (state.currentHour < 18) {
+          state.suspicion += 20;
+          return {
+            msg: `尚未到 18:00！闸机播报早退警告！当前时间 ${state.getTimeString()}，请先掐表熬到 18:00！(怀疑度 +20%)`,
+            type: 'warning'
+          };
+        }
+        if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+          setTimeout(() => {
+            import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+              MiniGameUI.showClockOutQTE(state, window.__GAME__.engine, (qteResult) => {
+                if (qteResult.grade === 'PERFECT') {
+                  window.__GAME__.engine.triggerEnding('ending_god_slacker');
+                } else if (qteResult.grade === 'LATE') {
+                  window.__GAME__.engine.triggerEnding('ending_normal_escape');
+                }
+              });
+            });
+          }, 50);
+          return {
+            msg: '你走近蓝光闸机，准备在时钟划过 18:00:00 的瞬间精准掐表打卡！',
+            type: 'info'
+          };
+        }
+        return {
+          triggerEnding: 'ending_perfect_clockout',
+          msg: '闸机发出清脆的“滴——打卡成功！”'
+        };
+      }
+    },
+    {
       id: 'face_recognition',
       name: '人脸识别闸机打卡',
       icon: '📸',
@@ -575,6 +613,69 @@ export const ZONE_ACTIONS = {
 };
 
 export const RANDOM_ENCOUNTERS = [
+  {
+    id: 'encounter_buzzword_battle',
+    zones: [1, 2, 3],
+    title: '📢 高管突击：黑话矩阵灵魂拷问！',
+    character: 'HR总监刘姐 / 业务VP',
+    avatar: '👠',
+    description: '高管迎面走来，眼神锐利：“小李，下半年你所负责板块的顶层设计和长效抓手是什么？给我拉通一下。”',
+    choices: [
+      {
+        text: '🗣️ 现场黑话对线（限时 6 秒词牌组装 Mini-Game）',
+        outcome: (state) => {
+          if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+            setTimeout(() => {
+              import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+                MiniGameUI.showBuzzwordBattle(state, window.__GAME__.engine);
+              });
+            }, 50);
+            return { msg: '你深吸一口气，脑中疯狂检索高阶黑话词库！', type: 'info' };
+          }
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return { msg: '你用一套顶层设计黑话组合拳直接震慑了高管！怀疑度 -10%', type: 'success' };
+        }
+      },
+      {
+        text: '🤫 低头附和假装沉思（怀疑度 +12%）',
+        outcome: (state) => {
+          state.suspicion += 12;
+          return { msg: '你支支吾吾连连点头，高管皱了皱眉头，眼神里满是怀疑。(怀疑度 +12%)', type: 'warning' };
+        }
+      }
+    ]
+  },
+  {
+    id: 'encounter_redpacket_mine',
+    zones: [1, 2],
+    title: '🧧 全员大群突发：季度冲刺攻坚红包！',
+    character: '大Boss阎总',
+    avatar: '👔',
+    description: '手机一阵急促震动！阎总在近千人的全员大群里连发三个拼手气红包，并附带语音：“今晚冲刺！红包抢得快的来我办公室对一下排期！”',
+    choices: [
+      {
+        text: '🧧 抢红包排雷（进入微信排雷 Mini-Game）',
+        outcome: (state) => {
+          if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+            setTimeout(() => {
+              import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+                MiniGameUI.showRedPacketModal(state, window.__GAME__.engine);
+              });
+            }, 50);
+            return { msg: '你迅速点开微信大群红包界面！', type: 'info' };
+          }
+          return { msg: '你掐表领到了 2.5 元零钱，没引起任何注意。', type: 'info' };
+        }
+      },
+      {
+        text: '📴 假装开启免打扰闭关写代码',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 5);
+          return { msg: '你面无表情关掉手机屏幕，专注于显示器。安全隐蔽！', type: 'info' };
+        }
+      }
+    ]
+  },
   {
     id: 'encounter_pm_intercept',
     zones: [1, 2],

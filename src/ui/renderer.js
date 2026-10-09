@@ -15,6 +15,8 @@ import { CHANGELOGS } from '../data/changelog.js';
 import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS, INTERACTIVE_TOUR_STEPS } from '../data/guide.js';
 import { MapView } from './mapView.js';
 import { CraftModal } from './craftModal.js';
+import { RelationPanel } from './relationPanel.js';
+import { MiniGameUI } from './miniGames.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -22,6 +24,7 @@ export class UIRenderer {
     this.engine = engine;
     this.mapView = new MapView(this.state, (nodeId) => this.engine.travelToNode(nodeId));
     this.craftModal = new CraftModal(this.state, () => this.render());
+    this.relationPanel = new RelationPanel(this.state, () => this.render());
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
@@ -76,6 +79,9 @@ export class UIRenderer {
             </button>
             <button id="btn-craft" class="btn-icon" title="职场妙手合成 · 羁绊神装" aria-label="合成">
               🧪
+            </button>
+            <button id="btn-relation" class="btn-icon" title="职场人脉网络 · 好感度" aria-label="人脉">
+              🤝
             </button>
             <button id="btn-archive" class="btn-icon" title="结局与成就图鉴" aria-label="图鉴">
               🏆
@@ -629,6 +635,12 @@ export class UIRenderer {
     document.getElementById('btn-quick-craft')?.addEventListener('click', () => {
       sound.playClick();
       this.craftModal.show();
+    });
+
+    // Relation panel
+    document.getElementById('btn-relation')?.addEventListener('click', () => {
+      sound.playClick();
+      this.relationPanel.show();
     });
 
     // Archive Modal

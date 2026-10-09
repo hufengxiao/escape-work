@@ -7,6 +7,7 @@ import { CHARACTERS } from '../data/characters.js';
 import { getRandomModifier, MODIFIERS } from '../data/modifiers.js';
 import { PERKS } from '../data/perks.js';
 import { MapManager } from './mapManager.js';
+import { NPCManager } from './npcManager.js';
 
 export class GameState {
   constructor() {
@@ -46,6 +47,9 @@ export class GameState {
     this.mapGraph = MapManager.generateDungeonMap(this.dailySeed || Date.now());
     this.currentMapNodeId = this.mapGraph[0][0].id;
     this.zone = this.mapGraph[0][0].zone || 1;
+
+    // Initialize NPC workplace relations
+    NPCManager.initRelations(this);
 
     // Inventory starting items based on character
     this.inventory = [...(role.startingItems || ['chair_jacket', 'fake_bsod'])];
