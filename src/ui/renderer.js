@@ -11,6 +11,7 @@ import { PERKS } from '../data/perks.js';
 import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
+import { CHANGELOGS } from '../data/changelog.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -22,6 +23,7 @@ export class UIRenderer {
 
   init() {
     this.buildBaseLayout();
+    this.renderChangelogModal();
     this.bindGlobalEvents();
     this.render();
     this.state.subscribe(() => this.render());
@@ -300,33 +302,15 @@ export class UIRenderer {
               <div class="changelog-title-group">
                 <span class="changelog-icon">🎉</span>
                 <div>
-                  <h3 class="changelog-title">版本更新说明</h3>
-                  <span class="changelog-badge">v2.1.0 考勤机制修复与体验优化</span>
+                  <h3 class="changelog-title">版本更新日志</h3>
+                  <span class="changelog-badge">当前最新 v2.1.0 · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
             </div>
 
-            <div class="changelog-body">
-              <div class="changelog-item">
-                <div class="changelog-item-title">⏱️ 严谨考勤校验与【闸机掐表读秒】</div>
-                <div class="changelog-item-desc">修复 18:00 前强冲闸门冒领 SSS【神仙准点打卡】的考勤漏洞。一楼大堂新增【⏱️ 闸机旁掐表读秒】神操作，提前到达可假装看手机稳稳卡点熬到 18:00 再打卡！</div>
-              </div>
-
-              <div class="changelog-item">
-                <div class="changelog-item-title">🔄 结算与全局重开即时响应修复</div>
-                <div class="changelog-item-desc">彻底修复结算弹窗点击“直接再来一把”、换职业开启及顶栏“重新开始”后 UI 冻结无响应的 Bug，无需再手动刷新网页。</div>
-              </div>
-
-              <div class="changelog-item">
-                <div class="changelog-item-title">📱 窄屏与移动端顶栏布局自适应</div>
-                <div class="changelog-item-desc">彻底解决窗口较窄或手机端时游戏标题折行、顶部区域过高的视觉问题，顶栏高度锁定约 42px 单行紧凑栏。</div>
-              </div>
-
-              <div class="changelog-item">
-                <div class="changelog-item-title">🏃 补充消防楼梯跑酷专属结局</div>
-                <div class="changelog-item-desc">修复在 3 区走安全通道体力充足时直冲一楼侧门出逃的【楼梯疾风特工】（A级）成就结局判定。</div>
-              </div>
+            <div class="changelog-body" id="changelog-body-list">
+              <!-- Dynamically populated from CHANGELOGS -->
             </div>
 
             <div class="changelog-footer">
@@ -604,6 +588,29 @@ export class UIRenderer {
         }
       });
     });
+  }
+
+  renderChangelogModal() {
+    const listEl = document.getElementById('changelog-body-list');
+    if (!listEl) return;
+    listEl.innerHTML = CHANGELOGS.map((ver) => `
+      <section class="changelog-section">
+        <div class="changelog-version-header ${ver.isLatest ? 'latest' : ''}">
+          <div class="version-left">
+            <span class="version-tag">v${ver.version}</span>
+            <span class="version-pill ${ver.isLatest ? 'latest' : ''}">${ver.badge}</span>
+            <span class="version-title">${ver.title}</span>
+          </div>
+          <span class="version-date">${ver.date}</span>
+        </div>
+        ${ver.items.map((item) => `
+          <div class="changelog-item">
+            <div class="changelog-item-title">${item.title}</div>
+            <div class="changelog-item-desc">${item.desc}</div>
+          </div>
+        `).join('')}
+      </section>
+    `).join('');
   }
 
   render() {

@@ -1110,11 +1110,72 @@
 .changelog-body {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   max-height: 52vh;
   overflow-y: auto;
   padding-right: 4px;
   margin-bottom: 14px;
+}
+
+.changelog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.changelog-version-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #6366f1;
+}
+
+.changelog-version-header.latest {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.version-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.version-tag {
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.version-pill {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+}
+
+.version-pill.latest {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  font-weight: 700;
+}
+
+.version-title {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.version-date {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: auto;
+  white-space: nowrap;
 }
 
 .changelog-item {
