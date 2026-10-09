@@ -1,0 +1,16 @@
+{
+  "name": "准点下班大作战：逃离老板视线",
+  "short_name": "准点下班",
+  "description": "文字类H5职场摸鱼逃脱小游戏，在老板与产品经理的重重包围下准点打卡逃离！",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#1e1b4b",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

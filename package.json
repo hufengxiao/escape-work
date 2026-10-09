@@ -1,0 +1,24 @@
+{
+  "name": "escape-work",
+  "version": "1.0.0",
+  "description": "准点下班大作战：逃离老板视线 - 文字类H5策略逃脱小游戏",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "h5-game",
+    "text-adventure",
+    "escape-office",
+    "cloudflare-pages",
+    "workplace-game"
+  ],
+  "author": "hufen",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "vite": "^6.0.0"
+  }
+}
