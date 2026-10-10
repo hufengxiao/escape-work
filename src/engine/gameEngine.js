@@ -119,6 +119,103 @@ export class GameEngine {
     this.state.notify();
   }
 
+  isMapOutOfSync() {
+    const mapGraph = this.state.mapGraph;
+    if (!mapGraph || mapGraph.length === 0) return false;
+    const currNode = MapManager.findNode(mapGraph, this.state.currentMapNodeId);
+    if (!currNode) return true;
+
+    // Check if map depth matches workplace zone
+    // Depth 0 -> Zone 1
+    // Depth 1 -> Zone 2
+    // Depth 2 -> Zone 3
+    // Depth 3, 4 -> Zone 4
+    if (this.state.zone === 1) return currNode.depth !== 0;
+    if (this.state.zone === 2) return currNode.depth !== 1;
+    if (this.state.zone === 3) return currNode.depth !== 2;
+    if (this.state.zone === 4) return currNode.depth < 3;
+    return false;
+  }
+
+  syncMapToZone(targetZone, hintId = null) {
+    const mapGraph = this.state.mapGraph;
+    if (!mapGraph || mapGraph.length === 0) return;
+
+    let currNode = MapManager.findNode(mapGraph, this.state.currentMapNodeId) || mapGraph[0][0];
+    let currentDepth = currNode ? currNode.depth : 0;
+
+    let targetDepth = 0;
+    if (targetZone === 2) targetDepth = 1;
+    else if (targetZone === 3) targetDepth = 2;
+    else if (targetZone === 4) targetDepth = 4;
+
+    if (currentDepth >= targetDepth) return;
+
+    while (currentDepth < targetDepth && currentDepth < mapGraph.length - 1) {
+      const nextLayer = mapGraph[currentDepth + 1];
+      if (!nextLayer || nextLayer.length === 0) break;
+
+      const validChildren = (currNode.nextNodeIds || [])
+        .map((id) => MapManager.findNode(mapGraph, id))
+        .filter(Boolean);
+
+      let chosenNextNode = null;
+
+      if (hintId && validChildren.length > 0) {
+        const h = hintId.toLowerCase();
+        if (h.includes('stair') || h.includes('fire')) {
+          chosenNextNode = validChildren.find(
+            (n) => n.title.includes('爬梯') || n.title.includes('消防') || n.title.includes('楼梯')
+          );
+        } else if (h.includes('cargo')) {
+          chosenNextNode = validChildren.find(
+            (n) => n.title.includes('货梯') || n.title.includes('后勤')
+          );
+        } else if (h.includes('main') || h.includes('elevator')) {
+          chosenNextNode = validChildren.find(
+            (n) => n.title.includes('专梯') || n.title.includes('客梯')
+          );
+        } else if (h.includes('pantry') || h.includes('coffee') || h.includes('tea')) {
+          chosenNextNode = validChildren.find(
+            (n) => n.title.includes('茶水间') || n.title.includes('咖啡')
+          );
+        } else if (h.includes('printer')) {
+          chosenNextNode = validChildren.find((n) => n.title.includes('打印机'));
+        }
+      }
+
+      if (!chosenNextNode) {
+        chosenNextNode = validChildren.length > 0 ? validChildren[0] : nextLayer[0];
+      }
+
+      chosenNextNode.isVisited = true;
+      currNode = chosenNextNode;
+      currentDepth = currNode.depth;
+    }
+
+    this.state.currentMapNodeId = currNode.id;
+    this.state.zone = Math.min(4, Math.max(1, currNode.zone || currNode.depth + 1));
+
+    mapGraph.forEach((layer) => {
+      layer.forEach((node) => {
+        node.isAvailable = false;
+      });
+    });
+
+    if (currNode.nextNodeIds && currNode.nextNodeIds.length > 0) {
+      currNode.nextNodeIds.forEach((childId) => {
+        const child = MapManager.findNode(mapGraph, childId);
+        if (child) child.isAvailable = true;
+      });
+    }
+
+    this.state.addLog(
+      `🗺️【路线同步】逃脱拓扑路线已同步切入【${currNode.title}】(${currNode.zoneName || '出逃路线'})。`,
+      'info'
+    );
+    this.state.emit('map:update', currNode);
+  }
+
   executeAction(actionId) {
     if (this.state.currentEnding || this.state.activeEncounter) return;
 
@@ -127,6 +224,8 @@ export class GameEngine {
     const action = zoneActions.find((a) => a.id === actionId);
 
     if (!action) return;
+
+    const prevZone = this.state.zone;
 
     // Calculate energy cost with perks and difficulty
     let energyCost = action.costEnergy || 0;
@@ -165,6 +264,11 @@ export class GameEngine {
         this.triggerEncounterById(result.triggerEncounter);
         return;
       }
+    }
+
+    // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
+    if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
+      this.syncMapToZone(this.state.zone, action.id);
     }
 
     // Step Boss patrol surveillance
@@ -257,6 +361,7 @@ export class GameEngine {
       return;
     }
 
+    const prevZone = this.state.zone;
     const result = choice.outcome(this.state);
     this.state.activeEncounter = null;
 
@@ -269,6 +374,11 @@ export class GameEngine {
         this.triggerEnding(result.triggerEnding);
         return result;
       }
+    }
+
+    // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
+    if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
+      this.syncMapToZone(this.state.zone);
     }
 
     // Check vitals again

@@ -236,7 +236,7 @@ export const ZONE_ACTIONS = {
       icon: '🚶',
       costTime: 2,
       costEnergy: 5,
-      desc: '离开工位区，正式进入走廊与茶水间！',
+      desc: '离开工位区，并同步推进逃脱路线至走廊分支！',
       handler: (state) => {
         let suspJump = 10;
         if (state.flags.hasDecoyJacket) suspJump -= 8;
@@ -378,7 +378,7 @@ export const ZONE_ACTIONS = {
       icon: '🏃',
       costTime: 2,
       costEnergy: 6,
-      desc: '抓住无人注视的空档，迅速穿过玻璃门进入电梯厅！',
+      desc: '抓住无人注视的空档切入玻璃门，并同步推进逃脱路线至垂直交通枢纽！',
       handler: (state) => {
         state.zone = 3;
         return {

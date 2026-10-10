@@ -6,6 +6,8 @@ import { TAICHI_SCENARIOS, getRandomTaiChiScenario } from '../src/data/taichi.js
 import { NPCS } from '../src/data/npcs.js';
 import { NPCManager } from '../src/engine/npcManager.js';
 import { GameState } from '../src/engine/gameState.js';
+import { GameEngine } from '../src/engine/gameEngine.js';
+import { MapManager } from '../src/engine/mapManager.js';
 import { RECIPES } from '../src/data/recipes.js';
 import { CraftManager } from '../src/engine/craftManager.js';
 import { ITEMS } from '../src/data/items.js';
@@ -185,3 +187,107 @@ test('T6.7 Total Endings, Achievements, Encounters and Zone actions validation',
   assert.equal(achKeyboard.condition({}, { flags: { hasKeyboardGod: true } }), true);
   assert.equal(achKeyboard.condition({}, { flags: {} }), false);
 });
+
+test('T6.8 Workplace actions & DAG Escape route bidirectional synchronization verification', async (t) => {
+  const state = new GameState();
+  const engine = new GameEngine(state);
+
+  // 1. Initial State: Player is at Zone 1 and Map is at node_0_0 (Depth 0)
+  assert.equal(state.zone, 1);
+  assert.equal(state.currentMapNodeId, state.mapGraph[0][0].id);
+  assert.ok(state.mapGraph[0][0].isVisited);
+
+  // 2. Execute 'leave_desk_zone' in Zone 1 (Workplace Action)
+  state.activeEncounter = null;
+  engine.executeAction('leave_desk_zone');
+  assert.equal(state.zone, 2, 'Zone must advance to 2');
+
+  const currNodeL2 = MapManager.findNode(state.mapGraph, state.currentMapNodeId);
+  assert.ok(currNodeL2, 'Current map node must exist');
+  assert.equal(currNodeL2.depth, 1, 'Map must advance to Depth 1 (L2)');
+  assert.ok(currNodeL2.isVisited, 'Current node in Depth 1 must be visited');
+
+  // Available nodes must now be Depth 2 (L3), NOT Depth 1 (L2)
+  const availableL3 = MapManager.getAvailableNextNodes(state.mapGraph, state.currentMapNodeId);
+  assert.ok(availableL3.length > 0);
+  availableL3.forEach((n) => assert.equal(n.depth, 2));
+
+  // 3. Execute 'dash_to_elevator_lobby' in Zone 2
+  state.activeEncounter = null;
+  engine.executeAction('dash_to_elevator_lobby');
+  assert.equal(state.zone, 3, 'Zone must advance to 3');
+
+  const currNodeL3 = MapManager.findNode(state.mapGraph, state.currentMapNodeId);
+  assert.ok(currNodeL3);
+  assert.equal(currNodeL3.depth, 2, 'Map must advance to Depth 2 (L3)');
+  assert.ok(currNodeL3.isVisited);
+
+  // 4. Execute 'wait_elevator_main' in Zone 3 (taking elevator down to Zone 4)
+  state.activeEncounter = null;
+  state.flags.hasEncounteredBossInElevator = true;
+  engine.executeAction('wait_elevator_main');
+  assert.equal(state.zone, 4, 'Zone must advance to 4 (Lobby)');
+
+  const currNodeL5 = MapManager.findNode(state.mapGraph, state.currentMapNodeId);
+  assert.ok(currNodeL5);
+  assert.equal(currNodeL5.depth, 4, 'Map must advance to Depth 4 (Boss Gate node_4_0)');
+  assert.equal(currNodeL5.id, state.mapGraph[4][0].id);
+  assert.ok(currNodeL5.isVisited);
+
+  // When at Zone 4 / Depth 4, no L2 or intermediate nodes are waiting
+  const remainingAvailable = MapManager.getAvailableNextNodes(state.mapGraph, state.currentMapNodeId);
+  assert.equal(remainingAvailable.length, 0, 'No forward nodes past final gate');
+
+  // Verify all previous layers on path are marked visited
+  assert.ok(state.mapGraph[0][0].isVisited);
+  assert.ok(currNodeL2.isVisited);
+  assert.ok(currNodeL3.isVisited);
+
+  // 5. Test travelToNode backward/forward consistency
+  const state2 = new GameState();
+  const engine2 = new GameEngine(state2);
+  const nextNodes = MapManager.getAvailableNextNodes(state2.mapGraph, state2.currentMapNodeId);
+  assert.ok(nextNodes.length > 0);
+  const chosenNode = nextNodes[0];
+
+  engine2.travelToNode(chosenNode.id);
+  assert.equal(state2.currentMapNodeId, chosenNode.id);
+  assert.equal(state2.zone, chosenNode.zone || chosenNode.depth + 1);
+  assert.ok(chosenNode.isVisited);
+
+  // 6. Test encounter choice that mutates zone to 4 automatically synchronizes map
+  const state3 = new GameState();
+  const engine3 = new GameEngine(state3);
+  state3.activeEncounter = {
+    id: 'test_secret_chute',
+    title: '秘密滑梯',
+    character: '测试',
+    choices: [
+      {
+        text: '直接滑向一楼大堂',
+        outcome: (st) => {
+          st.zone = 4;
+          return { msg: '滑达一楼！' };
+        }
+      }
+    ]
+  };
+  engine3.resolveEncounterChoice(0);
+  assert.equal(state3.zone, 4, 'Zone must be 4');
+  assert.equal(state3.currentMapNodeId, state3.mapGraph[4][0].id, 'Map must sync to depth 4 boss gate');
+  assert.ok(state3.mapGraph[4][0].isVisited);
+
+  // 7. Verify UI code and CSS structure
+  const fs = await import('node:fs');
+  const rendererCode = fs.readFileSync(new URL('../src/ui/renderer.js', import.meta.url), 'utf-8');
+  const componentsCss = fs.readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf-8');
+  const mapViewCode = fs.readFileSync(new URL('../src/ui/mapView.js', import.meta.url), 'utf-8');
+
+  assert.ok(rendererCode.includes('id="route-advance-section"'), 'Must have route-advance-section container');
+  assert.ok(rendererCode.includes('renderRouteAdvanceSection()'), 'Must define renderRouteAdvanceSection()');
+  assert.ok(rendererCode.includes('btn-branch-travel'), 'Must render travel buttons for branch cards');
+  assert.ok(componentsCss.includes('.route-advance-card {'), 'Must define route-advance-card in components.css');
+  assert.ok(componentsCss.includes('.btn-branch-travel {'), 'Must define btn-branch-travel in components.css');
+  assert.ok(mapViewCode.includes('map-current-zone-chip'), 'MapView must render synchronized zone chip');
+});
+

@@ -30,6 +30,8 @@ export class MapView {
 
     const currentNodeId = this.state.currentMapNodeId || mapGraph[0][0]?.id;
     const isAtBoss = currentNodeId && mapGraph[4]?.[0]?.id === currentNodeId;
+    const currentLayerMeta = MAP_LAYERS.find((l) => l.zone === this.state.zone) || MAP_LAYERS[0];
+    const currentNode = MapManager.findNode(mapGraph, currentNodeId);
 
     return `
       <div class="map-view-container dag-map-container" id="map-view-container">
@@ -39,6 +41,9 @@ export class MapView {
             <div>
               <h3 class="map-header-title">逃生路线拓扑网络 (DAG)</h3>
               <span class="map-header-sub">规划多段分支线路 · 避开高管视野直达一楼</span>
+              <div class="map-status-sync-row">
+                <span class="map-current-zone-chip">📍 现场阶段：第 ${this.state.zone} 阶段 / ${currentLayerMeta.name}${currentNode ? ` · ${currentNode.title}` : ''}</span>
+              </div>
             </div>
           </div>
           <div class="map-legend">
@@ -57,7 +62,7 @@ export class MapView {
             <span class="boss-banner-icon">🏁</span>
             <div class="boss-banner-info">
               <strong>已抵达最终关口【一楼大堂闸机】！</strong>
-              <span>现场已解锁 7 大冲卡打卡行动，满 18:00 即可打卡脱身！</span>
+              <span>现场已解锁 8 大冲卡打卡绝活，满 18:00 即可打卡脱身！</span>
             </div>
             <button class="btn-map-go-action" id="btn-map-go-action">立即前往现场抉择 ➔</button>
           </div>

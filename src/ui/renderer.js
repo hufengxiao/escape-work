@@ -21,6 +21,8 @@ import { RadarView } from './radarView.js';
 import { DailySystem } from '../data/daily.js';
 import { ReverseBossView } from './reverseBossView.js';
 import { OvertimeView } from './overtimeView.js';
+import { MapManager } from '../engine/mapManager.js';
+import { NODE_TYPES } from '../data/maps.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -234,6 +236,11 @@ export class UIRenderer {
                 正在加载场景……
               </p>
             </div>
+
+            <!-- Route Advance Branch Section (Synchronized with DAG Escape Map) -->
+            <section class="route-advance-section" id="route-advance-section">
+              <!-- Dynamically populated branch routes -->
+            </section>
 
             <!-- Tactical Action Buttons -->
             <section class="action-section">
@@ -1672,6 +1679,7 @@ export class UIRenderer {
     this.renderTacticalStepBar();
     this.renderMapView();
     this.renderSceneInfo();
+    this.renderRouteAdvanceSection();
     this.renderActionButtons();
     this.renderBackpack();
     this.renderLogs();
@@ -2103,10 +2111,17 @@ export class UIRenderer {
 
   renderSceneInfo() {
     const currentZone = ZONES.find((z) => z.id === this.state.zone) || ZONES[0];
-    document.getElementById('scene-icon').textContent = currentZone.icon;
+    const currentNode = MapManager.findNode(this.state.mapGraph, this.state.currentMapNodeId);
+
+    document.getElementById('scene-icon').textContent = currentNode?.icon || currentZone.icon;
     document.getElementById('scene-title').textContent = currentZone.name;
-    document.getElementById('scene-sub').textContent = currentZone.title;
-    document.getElementById('scene-desc').textContent = currentZone.description;
+    document.getElementById('scene-sub').textContent = currentNode
+      ? `${currentNode.title} · ${this.state.getTimeString()}`
+      : currentZone.title;
+
+    const baseDesc = currentZone.description;
+    const nodeNarrative = currentNode?.desc ? `【当前探索点 · ${currentNode.title}】：${currentNode.desc}` : '';
+    document.getElementById('scene-desc').textContent = nodeNarrative ? `${baseDesc} ${nodeNarrative}` : baseDesc;
 
     const tag = document.getElementById('scene-status-tag');
     if (this.state.flags.hasDecoyJacket && this.state.zone === 1) {
@@ -2122,6 +2137,103 @@ export class UIRenderer {
       tag.textContent = '👀 伺机而动';
       tag.className = 'scene-tag';
     }
+  }
+
+  renderRouteAdvanceSection() {
+    const container = document.getElementById('route-advance-section');
+    if (!container) return;
+
+    const mapGraph = this.state.mapGraph;
+    if (!mapGraph) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const currentNodeId = this.state.currentMapNodeId;
+    const availableNextNodes = MapManager.getAvailableNextNodes(mapGraph, currentNodeId);
+    const nextZoneMeta = ZONES.find((z) => z.id === this.state.zone + 1);
+
+    if (this.state.zone >= 4 && availableNextNodes.length === 0) {
+      container.innerHTML = `
+        <div class="route-advance-card final-gate-card">
+          <div class="route-advance-header">
+            <div class="route-title-box">
+              <span class="route-header-icon">🏁</span>
+              <div>
+                <h4 class="route-header-title">逃生最终关口 · 一楼大堂闸机</h4>
+                <span class="route-header-sub">已突破全段拓扑逃脱路线！请在下方【战术抉择】中打卡冲关；未满 18:00 请先掐表读秒！</span>
+              </div>
+            </div>
+            <button class="btn-jump-to-map" id="btn-quick-map-link" title="查看已走过的逃脱路线拓扑">
+              🗺️ 逃脱路线 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    } else if (availableNextNodes.length > 0) {
+      container.innerHTML = `
+        <div class="route-advance-card">
+          <div class="route-advance-header">
+            <div class="route-title-box">
+              <span class="route-header-icon">🗺️</span>
+              <div>
+                <h4 class="route-header-title">突围路线分支 · 前往下一区域${nextZoneMeta ? ` (${nextZoneMeta.name})` : ''}</h4>
+                <span class="route-header-sub">选择前进路线直接切入目标场景，获得专属物资/回血/密道增益并同步逃脱路线</span>
+              </div>
+            </div>
+            <button class="btn-jump-to-map" id="btn-quick-map-link" title="在拓扑图中查看全局所有分支">
+              🗺️ 完整拓扑 ➔
+            </button>
+          </div>
+          <div class="route-branch-list">
+            ${availableNextNodes
+              .map((node) => {
+                const typeMeta = NODE_TYPES[node.type] || NODE_TYPES.action;
+                const threatTag = node.hasBossThreat
+                  ? `<span class="branch-threat-tag">⚠️ 高管视线逼近</span>`
+                  : '';
+                return `
+                  <div class="route-branch-item ${node.hasBossThreat ? 'item-threat' : ''}" data-branch-id="${node.id}">
+                    <div class="branch-item-top">
+                      <div class="branch-item-title-row">
+                        <span class="branch-node-icon">${node.icon}</span>
+                        <strong class="branch-node-title">${node.title}</strong>
+                        <span class="branch-type-pill ${typeMeta.badgeClass}">${typeMeta.name}</span>
+                        ${threatTag}
+                      </div>
+                      <button class="btn-branch-travel" data-travel-id="${node.id}">
+                        🚶 前进 (⏱️+2分 ⚡-8)
+                      </button>
+                    </div>
+                    <div class="branch-item-desc">${node.desc}</div>
+                  </div>
+                `;
+              })
+              .join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = '';
+    }
+
+    const mapLinkBtn = container.querySelector('#btn-quick-map-link');
+    if (mapLinkBtn) {
+      mapLinkBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.setActiveTab('map');
+      });
+    }
+
+    container.querySelectorAll('.btn-branch-travel').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const nodeId = btn.getAttribute('data-travel-id');
+        if (nodeId) {
+          this.engine.travelToNode(nodeId);
+        }
+      });
+    });
   }
 
   renderActionButtons() {
