@@ -10,10 +10,12 @@ export class MapView {
   /**
    * @param {Object} state - GameState instance
    * @param {Function} onSelectNode - Callback when an available node is clicked
+   * @param {Function} [onSwitchTab] - Callback to switch view tab
    */
-  constructor(state, onSelectNode) {
+  constructor(state, onSelectNode, onSwitchTab) {
     this.state = state;
     this.onSelectNode = onSelectNode;
+    this.onSwitchTab = onSwitchTab;
   }
 
   /**
@@ -27,6 +29,7 @@ export class MapView {
     }
 
     const currentNodeId = this.state.currentMapNodeId || mapGraph[0][0]?.id;
+    const isAtBoss = currentNodeId && mapGraph[4]?.[0]?.id === currentNodeId;
 
     return `
       <div class="map-view-container dag-map-container" id="map-view-container">
@@ -46,6 +49,21 @@ export class MapView {
             <span class="legend-chip">🗝️ 密道</span>
           </div>
         </div>
+
+        ${
+          isAtBoss
+            ? `
+          <div class="map-boss-banner" id="map-boss-banner">
+            <span class="boss-banner-icon">🏁</span>
+            <div class="boss-banner-info">
+              <strong>已抵达最终关口【一楼大堂闸机】！</strong>
+              <span>现场已解锁 7 大冲卡打卡行动，满 18:00 即可打卡脱身！</span>
+            </div>
+            <button class="btn-map-go-action" id="btn-map-go-action">立即前往现场抉择 ➔</button>
+          </div>
+        `
+            : ''
+        }
 
         <!-- Scrollable Graph Stage -->
         <div class="map-stage-scroll" id="map-stage-scroll">
@@ -133,6 +151,18 @@ export class MapView {
         }
       });
     });
+
+    // Go to action tab button on boss banner
+    const goActionBtn = containerEl.querySelector('#btn-map-go-action');
+    if (goActionBtn) {
+      goActionBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sound.playClick();
+        if (this.onSwitchTab) {
+          this.onSwitchTab('action');
+        }
+      });
+    }
 
     // Auto-scroll to current active node column
     const currentCard = containerEl.querySelector('.map-node-card.current');

@@ -2781,6 +2781,60 @@
   transform: translateY(-1px);
 }
 
+.map-boss-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(6, 95, 70, 0.25));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  animation: pulseSubtle 2.5s infinite;
+}
+
+.boss-banner-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.boss-banner-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.boss-banner-info strong {
+  font-size: 13px;
+  color: #34d399;
+}
+
+.boss-banner-info span {
+  font-size: 11px;
+  color: #cbd5e1;
+}
+
+.btn-map-go-action {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-map-go-action:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
 /* Craft Modal Styles */
 .craft-modal-card {
   max-width: 520px;

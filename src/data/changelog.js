@@ -4,10 +4,31 @@
 
 export const CHANGELOGS = [
   {
+    version: '3.3.4',
+    title: '逃脱路线与现场关卡深度互通：终点闸机状态同步修复、18:00 突围打卡解锁与全景指引',
+    date: '2026-10-10',
+    isLatest: true,
+    badge: '机制深度修复 v3.3.4',
+    items: [
+      {
+        title: '🗺️ 彻底修复路线到达终点闸机后场景越界与无选项 Bug',
+        desc: '修正 DAG 地图最终关口（Layer 5 一楼大堂闸机）的 Zone 边界配置（从 Zone 5 矫正为合规的 Zone 4）；同时在路线穿行时强制触发全端 UI 重新渲染，彻底解决到达终点后回退到工位且现场抉择为空白的问题。'
+      },
+      {
+        title: '🏁 18:00 闸机突围打卡行动即时全量解锁',
+        desc: '抵达一楼大堂闸机后，现场抉择即刻呈现 7 大通关冲卡抉择（⏱️ 毫秒压线打卡 QTE、📸 人脸识别打卡、👮 找保安老王等）；若已满 18:00，系统将全屏提示并高亮打卡按钮，直通各大胜利结局！'
+      },
+      {
+        title: '🧭 拓扑路线定位指示条与一键直通现场抉择',
+        desc: '在逃脱路线到达一楼大堂终点时，顶部实时展现胜利就绪指示条与【立即前往现场抉择 ➔】直达快捷键；战术指引栏在 18:00 准时变更为下班狂欢提示，新手与老玩家出逃指引一览无余。'
+      }
+    ]
+  },
+  {
     version: '3.3.3',
     title: '数值变化高亮反馈与动态通报字体升级：即时Delta跳字、偶遇Toast直达与大字号战况流',
     date: '2026-10-10',
-    isLatest: true,
+    isLatest: false,
     badge: '体验专项升级 v3.3.3',
     items: [
       {
@@ -385,4 +406,4 @@ export const CHANGELOGS = [
   }
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.3';
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.4';

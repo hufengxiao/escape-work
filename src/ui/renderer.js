@@ -26,10 +26,14 @@ export class UIRenderer {
   constructor(state, engine) {
     this.state = state;
     this.engine = engine;
-    this.mapView = new MapView(this.state, (nodeId) => {
-      this.engine.travelToNode(nodeId);
-      this.setActiveTab('action');
-    });
+    this.mapView = new MapView(
+      this.state,
+      (nodeId) => {
+        this.engine.travelToNode(nodeId);
+        this.setActiveTab('action');
+      },
+      (tab) => this.setActiveTab(tab || 'action')
+    );
     this.activeTab = 'action';
     this.activeBottomNavTab = 'escape';
     this.craftModal = new CraftModal(
@@ -1640,6 +1644,10 @@ export class UIRenderer {
       badgeText = '🛑 考勤铁律';
       hintText = '未满 18:00 切勿早退冲卡！点击【⏱️ 闸机旁掐表读秒】稳到 18:00 整再刷脸！';
       isUrgent = true;
+    } else if (this.state.zone === 4 && this.state.currentHour >= 18) {
+      badgeText = '🎉 下班时间到！';
+      hintText = '✅ 已达 18:00 下班时刻！立即进行【⏱️ 毫秒压线打卡】或【📸 人脸识别打卡】冲出大门！';
+      isUrgent = false;
     } else {
       const tipData = ZONE_STEP_TIPS[this.state.zone] || ZONE_STEP_TIPS[1];
       badgeText = tipData.stepNum;

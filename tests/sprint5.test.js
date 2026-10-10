@@ -236,6 +236,55 @@ test('T5.12 Stat delta highlight, encounter toast feedback & enlarged dynamic lo
   assert.ok(rendererCode.includes('非实习生装嫩将+8%怀疑度'), 'Must display non-intern risk warning in encounter choices');
 });
 
+test('T5.13 DAG map travel zone synchronization & Zone 4 turnstile action verification', async (t) => {
+  const { GameState } = await import('../src/engine/gameState.js');
+  const { GameEngine } = await import('../src/engine/gameEngine.js');
+  const { MAP_LAYERS } = await import('../src/data/maps.js');
+  const { ZONE_ACTIONS, ZONES } = await import('../src/data/events.js');
+  const { MapManager } = await import('../src/engine/mapManager.js');
 
+  // 1. Verify MAP_LAYERS configuration: layer 4 must map to zone 4 (not 5)
+  assert.equal(MAP_LAYERS[4].zone, 4, 'Layer 4 (gate) must map to zone 4');
+  assert.equal(MAP_LAYERS[3].zone, 4, 'Layer 3 must map to zone 4');
 
+  // 2. Instantiate state & engine
+  const state = new GameState();
+  const engine = new GameEngine(state);
 
+  let notified = false;
+  state.subscribe(() => {
+    notified = true;
+  });
+
+  // 3. Find the boss node at depth 4
+  const bossNode = state.mapGraph[4][0];
+  assert.ok(bossNode, 'Boss node at depth 4 must exist');
+  assert.equal(bossNode.zone, 4, 'Boss node zone must be 4');
+
+  // Make boss node available for traversal test
+  bossNode.isAvailable = true;
+
+  // Travel to boss node
+  engine.travelToNode(bossNode.id);
+
+  // 4. Verify zone is strictly 4, notify was called, and Zone 4 actions are present
+  assert.equal(state.zone, 4, 'State zone must be clamped to 4');
+  assert.equal(notified, true, 'State subscriber notify() must be called on travel');
+
+  const zone4 = ZONES.find((z) => z.id === state.zone);
+  assert.ok(zone4, 'Zone 4 metadata must exist');
+  assert.equal(zone4.id, 4);
+
+  const zone4Actions = ZONE_ACTIONS[state.zone] || [];
+  assert.ok(zone4Actions.length > 0, 'Zone 4 must have available punch-out actions');
+  assert.ok(zone4Actions.some((a) => a.id === 'clockout_qte_punch'), 'Zone 4 must include QTE clockout action');
+  assert.ok(zone4Actions.some((a) => a.id === 'face_recognition'), 'Zone 4 must include face recognition action');
+
+  // 5. Check MapView boss banner and button rendering
+  const { MapView } = await import('../src/ui/mapView.js');
+  let switchedTab = null;
+  const mapView = new MapView(state, () => {}, (tab) => { switchedTab = tab; });
+  const html = mapView.render();
+  assert.ok(html.includes('id="map-boss-banner"'), 'MapView must render boss banner when at gate node');
+  assert.ok(html.includes('id="btn-map-go-action"'), 'MapView must render button to switch to action tab');
+});

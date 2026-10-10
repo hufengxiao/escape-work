@@ -7,7 +7,7 @@ export const MAP_LAYERS = [
   { depth: 1, zone: 2, name: '楼层走廊与补给', subtitle: '各方耳目潜伏，谨慎探路' },
   { depth: 2, zone: 3, name: '纵向交通枢纽', subtitle: '垂直电梯与安全楼梯的博弈' },
   { depth: 3, zone: 4, name: '一楼大堂过渡', subtitle: '安保与前台视线交汇之地' },
-  { depth: 4, zone: 5, name: '逃生最终关口', subtitle: '打卡闸机与通向自由之门' }
+  { depth: 4, zone: 4, name: '逃生最终关口', subtitle: '打卡闸机与通向自由之门' }
 ];
 
 export const NODE_TYPES = {

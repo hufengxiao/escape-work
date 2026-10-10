@@ -64,7 +64,7 @@ export class GameEngine {
     // Update node states in graph
     targetNode.isVisited = true;
     this.state.currentMapNodeId = targetNode.id;
-    this.state.zone = targetNode.zone || Math.min(5, targetNode.depth + 1);
+    this.state.zone = Math.min(4, Math.max(1, targetNode.zone || targetNode.depth + 1));
 
     // Reset all nodes availability, then activate target's children
     mapGraph.forEach((layer) => {
@@ -101,7 +101,13 @@ export class GameEngine {
     } else if (targetNode.type === 'event') {
       this.evaluateRandomEncounter();
     } else if (targetNode.type === 'boss') {
-      this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
+      if (this.state.currentHour >= 18) {
+        this.state.addLog(`🎉 抵达闸机：前面就是一楼大堂终点闸机，且已到 18:00 下班时刻！立即切换至【现场抉择】打卡突围！`, 'alert');
+        toast.show('🎉 已抵达一楼大堂闸机且已满 18:00！请在【现场抉择】中打卡突围！', 'success', 4000);
+      } else {
+        this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
+        toast.show('🚪 已抵达一楼大堂闸机！未满 18:00 请先掐表读秒，切勿早退冲卡！', 'info', 3500);
+      }
     }
 
     // Step Boss patrol surveillance
@@ -110,6 +116,7 @@ export class GameEngine {
     if (this.checkVitalConditions()) return;
 
     this.state.emit('map:update', targetNode);
+    this.state.notify();
   }
 
   executeAction(actionId) {
