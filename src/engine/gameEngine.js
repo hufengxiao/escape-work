@@ -10,6 +10,7 @@ import { sound } from '../audio/sound.js';
 import { MapManager } from './mapManager.js';
 import { PatrolManager } from './patrolManager.js';
 import { DailySystem } from '../data/daily.js';
+import { toast } from '../ui/toast.js';
 
 export class GameEngine {
   constructor(state) {
@@ -145,6 +146,7 @@ export class GameEngine {
     if (result) {
       if (result.msg) {
         this.state.addLog(result.msg, result.type || 'info');
+        toast.show(result.msg, result.type || 'info');
       }
 
       if (result.triggerEnding) {

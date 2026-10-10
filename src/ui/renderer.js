@@ -26,7 +26,11 @@ export class UIRenderer {
   constructor(state, engine) {
     this.state = state;
     this.engine = engine;
-    this.mapView = new MapView(this.state, (nodeId) => this.engine.travelToNode(nodeId));
+    this.mapView = new MapView(this.state, (nodeId) => {
+      this.engine.travelToNode(nodeId);
+      this.setActiveTab('action');
+    });
+    this.activeTab = 'action';
     this.craftModal = new CraftModal(this.state, () => this.render());
     this.relationPanel = new RelationPanel(this.state, () => this.render());
     this.radarView = new RadarView(this.state, () => this.render());
@@ -63,7 +67,7 @@ export class UIRenderer {
             <div class="header-title-box">
               <div class="header-title-row">
                 <h1 class="header-title">准点下班大作战</h1>
-                <span class="header-version-pill">v3.0.0</span>
+                <span class="header-version-pill">v3.1.0</span>
               </div>
               <span class="header-subtitle">逃离老板视线 · 职场摸鱼生存记</span>
             </div>
@@ -200,11 +204,32 @@ export class UIRenderer {
           </button>
         </div>
 
-        <!-- DAG Workplace Exploration Map Slot -->
-        <div id="map-view-slot"></div>
+        <!-- Cyber Segmented Navigation for Compact Playability -->
+        <nav class="view-tab-nav" aria-label="主界面视图导航">
+          <button class="view-tab-btn active" data-tab="action" id="tab-btn-action">
+            <span class="tab-icon">🎯</span>
+            <span class="tab-label">现场抉择</span>
+          </button>
+          <button class="view-tab-btn" data-tab="map" id="tab-btn-map">
+            <span class="tab-icon">🗺️</span>
+            <span class="tab-label">逃脱路线</span>
+            <span class="tab-badge hidden" id="map-avail-badge"></span>
+          </button>
+          <button class="view-tab-btn" data-tab="log" id="tab-btn-log">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label">动态通报</span>
+          </button>
+          <button class="view-tab-btn tab-all-view" data-tab="all" id="tab-btn-all" title="全景展开纵览">
+            <span class="tab-icon">📑</span>
+            <span class="tab-label">全景</span>
+          </button>
+        </nav>
 
-        <!-- Main Workspace Screen -->
-        <main class="main-screen">
+        <!-- Tab Panel: DAG Workplace Exploration Map Slot -->
+        <div id="map-view-slot" class="view-tab-panel panel-hidden" data-panel="map"></div>
+
+        <!-- Tab Panel: Main Workspace Screen (Action & Scene) -->
+        <main class="main-screen view-tab-panel" data-panel="action">
           <!-- Zone Scene Box -->
           <div class="scene-card" id="scene-card">
             <div class="scene-header">
@@ -247,17 +272,24 @@ export class UIRenderer {
             </div>
           </section>
 
-          <!-- Live Event Feed -->
-          <section class="log-section">
-            <h3 class="section-title">
-              <span>📜 实时动态通报</span>
-              <span class="section-hint">分秒必争</span>
-            </h3>
-            <div class="log-container" id="log-container">
-              <!-- Dynamic logs -->
-            </div>
-          </section>
+          <!-- Quick Action Log Preview Strip -->
+          <div class="action-log-ticker" id="action-log-ticker" title="点击查看全部通报动态">
+            <span class="action-log-icon">📜</span>
+            <span class="action-log-text" id="action-log-preview">周五 17:45，逃脱战役正式打响！</span>
+            <span class="action-log-more">全部动态 ➡️</span>
+          </div>
         </main>
+
+        <!-- Tab Panel: Live Event Feed -->
+        <section class="log-section view-tab-panel panel-hidden" data-panel="log">
+          <h3 class="section-title">
+            <span>📜 实时动态通报</span>
+            <span class="section-hint">分秒必争</span>
+          </h3>
+          <div class="log-container" id="log-container">
+            <!-- Dynamic logs -->
+          </div>
+        </section>
 
         <!-- Encounters Modal -->
         <div id="encounter-modal" class="modal-backdrop hidden">
@@ -389,7 +421,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新日志</h3>
-                  <span class="changelog-badge">当前最新 v3.0.0 · 历史版本全览</span>
+                  <span class="changelog-badge">当前最新 v3.1.0 · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -567,22 +599,21 @@ export class UIRenderer {
       }
     });
 
-    // Changelog Notice (v2.3.0) & First-time onboarding check
-    const CURRENT_VERSION = '2.3.0';
+    // Changelog Notice (v3.1.0) & First-time onboarding check
+    const CURRENT_VERSION = '3.1.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
     const hasSeenTour = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_tour') : null;
 
-    if (!hasSeenTour) {
+    if (savedVer !== CURRENT_VERSION) {
+      changelogModal.classList.remove('hidden');
+    } else if (!hasSeenTour) {
       setTimeout(() => {
         this.startTour(0);
       }, 350);
       if (typeof localStorage !== 'undefined') {
         localStorage.setItem('escape_work_has_seen_tour', 'true');
-        localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
       }
-    } else if (savedVer !== CURRENT_VERSION) {
-      changelogModal.classList.remove('hidden');
     }
 
     const closeChangelog = () => {
@@ -590,6 +621,14 @@ export class UIRenderer {
         localStorage.setItem('escape_work_changelog_ver', CURRENT_VERSION);
       }
       changelogModal.classList.add('hidden');
+      if (!hasSeenTour) {
+        setTimeout(() => {
+          this.startTour(0);
+        }, 350);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('escape_work_has_seen_tour', 'true');
+        }
+      }
     };
 
     document.getElementById('btn-close-changelog').addEventListener('click', closeChangelog);
@@ -768,6 +807,20 @@ export class UIRenderer {
         });
       };
     });
+
+    // View Tab Navigation events
+    document.querySelectorAll('.view-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        const tab = btn.getAttribute('data-tab');
+        this.setActiveTab(tab);
+      });
+    });
+
+    document.getElementById('action-log-ticker')?.addEventListener('click', () => {
+      sound.playClick();
+      this.setActiveTab('log');
+    });
   }
 
   openRoleModal() {
@@ -919,6 +972,10 @@ export class UIRenderer {
     window.removeEventListener('resize', this.onTourWindowUpdate);
     window.removeEventListener('scroll', this.onTourWindowUpdate);
 
+    if (this.activeTab !== 'action' && this.activeTab !== 'all') {
+      this.setActiveTab('action');
+    }
+
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('escape_work_has_seen_tour', 'true');
     }
@@ -950,6 +1007,12 @@ export class UIRenderer {
   renderTourStep(index) {
     const step = INTERACTIVE_TOUR_STEPS[index];
     if (!step) return;
+
+    if (step.step === 5) {
+      this.setActiveTab('map');
+    } else if (step.step >= 6) {
+      this.setActiveTab('action');
+    }
 
     // 1. Update text & metadata
     const iconEl = document.getElementById('tour-card-icon');
@@ -1257,6 +1320,65 @@ export class UIRenderer {
     this.renderBackpack();
     this.renderLogs();
     this.renderModals();
+    this.updateTabBadges();
+    this.syncActiveTabUI();
+  }
+
+  setActiveTab(tabName) {
+    this.activeTab = tabName;
+    this.syncActiveTabUI();
+    if (this.tourActive) {
+      this.updateTourPositions();
+    }
+  }
+
+  syncActiveTabUI() {
+    const currentTab = this.activeTab || 'action';
+    const tabBtns = document.querySelectorAll('.view-tab-btn');
+    tabBtns.forEach((btn) => {
+      const tab = btn.getAttribute('data-tab');
+      if (tab === currentTab) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    const panels = document.querySelectorAll('.view-tab-panel');
+    panels.forEach((panel) => {
+      const panelName = panel.getAttribute('data-panel');
+      if (currentTab === 'all') {
+        panel.classList.remove('panel-hidden');
+      } else if (panelName === currentTab) {
+        panel.classList.remove('panel-hidden');
+      } else {
+        panel.classList.add('panel-hidden');
+      }
+    });
+  }
+
+  updateTabBadges() {
+    const mapBadge = document.getElementById('map-avail-badge');
+    if (mapBadge && this.state.mapGraph) {
+      let availCount = 0;
+      this.state.mapGraph.forEach((layer) => {
+        layer.forEach((node) => {
+          if (node.isAvailable) availCount++;
+        });
+      });
+      if (availCount > 0) {
+        mapBadge.textContent = `${availCount}可选`;
+        mapBadge.classList.remove('hidden');
+      } else {
+        mapBadge.classList.add('hidden');
+      }
+    }
+
+    const logPreview = document.getElementById('action-log-preview');
+    if (logPreview && this.state.logs && this.state.logs.length > 0) {
+      const latest = this.state.logs[0];
+      logPreview.textContent = `[${latest.time}] ${latest.text}`;
+    }
   }
 
   renderRadarView() {
@@ -1525,7 +1647,10 @@ export class UIRenderer {
         e.stopPropagation();
         const itemId = btn.getAttribute('data-use');
         sound.playItem();
-        this.state.useItem(itemId);
+        const res = this.state.useItem(itemId);
+        if (res && res.message) {
+          toast.show(`【${ITEMS[itemId]?.name || '道具'}】${res.message}`, res.success ? 'item' : 'warning');
+        }
       });
     });
   }

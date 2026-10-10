@@ -29,7 +29,7 @@ export class MapView {
     const currentNodeId = this.state.currentMapNodeId || mapGraph[0][0]?.id;
 
     return `
-      <div class="map-view-container" id="map-view-container">
+      <div class="map-view-container dag-map-container" id="map-view-container">
         <div class="map-header">
           <div class="map-title-row">
             <span class="map-header-icon">🗺️</span>

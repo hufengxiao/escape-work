@@ -1,10 +1,10 @@
 # 🏃‍♂️《准点下班大作战：逃离老板视线》
-### Escape from Work: The 18:00 Run (v3.0.0)
+### Escape from Work: The 18:00 Run (v3.1.0)
 
 > **周五 17:45，距离 18:00 准点下班仅剩最后 15 分钟！**  
 > 在大Boss阎总的鹰眼巡视、产品经理阿强的需求背刺与HR刘姐的价值观盘问下，合理利用摸鱼神器、合成黑产神装、拉拢职场盟友、识破红包陷阱，分秒必争逃离写字楼！
 
-[![Release](https://img.shields.io/badge/release-v3.0.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Release](https://img.shields.io/badge/release-v3.1.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![CI/CD](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml)
 [![Tests](https://img.shields.io/badge/tests-20%2F20%20passed-success.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![Platform](https://img.shields.io/badge/platform-H5%20%7C%20PWA%20%7C%20Cloudflare%20Pages-orange.svg?style=flat-square)](https://pages.cloudflare.com/)
@@ -275,6 +275,12 @@ npx wrangler pages deploy dist --project-name=escape-work
 ---
 
 ## 📝 完整版本演进足迹 (Changelog)
+
+### [v3.1.0] - 2026-10-10 (界面交互专项革新)
+- 🎯 **操作浮动提示与顶栏向导精准居中**：重构现代 Popover 顶层容器定位机制，彻底解决反馈提示偏向屏幕左上角的问题，浮动气泡与战术向导栏均实现视口正中高光居中；
+- 📱 **高密度双列紧凑驾驶舱 HUD**：彻底根治界面过长导致反复上下拖动滚动的痛点，仪表盘重构为双列紧凑 HUD，高度从 170px 压缩至 55px，关键战局数值一目了然；
+- ⚡ **赛博交互分栏模式 (现场抉择 / 逃脱路线 / 动态通报)**：引入分栏切换架构，默认【现场抉择】单屏全览核心操作与背包，【逃脱路线】独立呈现 DAG 拓扑并附带路线可用提示角标，并支持【全景】总览；
+- 🚀 **即时居中动效反馈与路线智能联动**：每次行动抉择与背包使用均触发居中动效通报，节点穿梭后自动无缝回切现场抉择视窗。
 
 ### [v3.0.0] - 2026-10-09 (Sprint 4 里程碑)
 - 👑 **逆转 Boss 模式 (Reverse Boss Mode)**：反转扮演大Boss阎总，掌控威严值，施展夺命@、全场突击查岗与电梯伏击，在 18:05 前阻截逃跑员工，通关达成专属 EX 级【阎王铁腕】统治结局；

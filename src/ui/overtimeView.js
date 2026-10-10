@@ -4,6 +4,7 @@
 
 import { OvertimeEngine } from '../engine/overtimeEngine.js';
 import { OVERTIME_ACTIONS } from '../data/overtimeEvents.js';
+import { sound } from '../audio/sound.js';
 
 export class OvertimeView {
   constructor(gameState, onFinishCallback = null) {
@@ -140,18 +141,29 @@ export class OvertimeView {
     });
 
     this.container.querySelector('#btn-ot-restart')?.addEventListener('click', () => {
-      this.outcomeShown = false;
-      this.engine.reset();
-      this.render();
+      this.restartGame();
     });
 
     this.container.querySelectorAll('.ot-act-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
+        sound.playClick();
         const actId = e.currentTarget.getAttribute('data-act');
         this.engine.performAction(actId);
         this.render();
       });
     });
+  }
+
+  restartGame() {
+    this.removeSettlementModal();
+    this.outcomeShown = false;
+    this.engine.reset();
+    this.render();
+  }
+
+  removeSettlementModal() {
+    const existing = this.container?.querySelector('.ot-settlement-overlay');
+    if (existing) existing.remove();
   }
 
   render() {
@@ -222,7 +234,7 @@ export class OvertimeView {
       logBox.scrollTop = logBox.scrollHeight;
     }
 
-    // 5. Outcome
+    // 5. Outcome settlement screen (Replacing alert)
     if (s.isFinished && !this.outcomeShown) {
       this.outcomeShown = true;
       if (this.gameState && s.resultEnding) {
@@ -238,13 +250,104 @@ export class OvertimeView {
         this.gameState.notify();
       }
 
-      setTimeout(() => {
-        const isWin = s.result === 'victory';
-        const msg = isWin
-          ? `🌅【职场不灭战神·晨曦破晓】\n\n你成功熬过整整 10 小时通宵闭门会！迎着清晨06:00的第一缕朝阳出逃！\n已解锁传说结局【${s.resultEnding?.title}】及新成就【晨曦不灭战神】！`
-          : `💔【深夜大逃杀出局】\n\n${s.defeatReason}\n已解锁结局【${s.resultEnding?.title}】！`;
-        alert(msg);
-      }, 300);
+      const isWin = s.result === 'victory';
+      if (isWin) {
+        sound.playSuccess();
+      } else {
+        sound.playFail();
+      }
+
+      this.showSettlementModal(s, isWin);
     }
+  }
+
+  showSettlementModal(s, isWin) {
+    this.removeSettlementModal();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'settlement-overlay ot-settlement-overlay slide-up';
+
+    overlay.innerHTML = `
+      <div class="settlement-card-inner">
+        <!-- Rank Badge -->
+        <div>
+          <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
+            ${isWin ? '🌅 SSS 级 · 晨曦不灭战神' : '💀 淘汰 · 深夜熬夜出局'}
+          </span>
+        </div>
+
+        <div class="settlement-icon">${isWin ? '🌅' : '💔'}</div>
+        <h2 class="settlement-title">${isWin ? '晨曦破晓 · 绝地生存胜利！' : '周五深夜大逃杀出局'}</h2>
+        <p class="settlement-subtitle">
+          ${isWin 
+            ? '你奇迹般熬过了整整 <strong>10 小时</strong> 通宵闭门会！迎着清晨 06:00 的第一缕朝阳昂首踏出大厦大门！' 
+            : (s.defeatReason || '精疲力竭，倒在黎明之前...')}
+        </p>
+
+        <!-- Stats Grid -->
+        <div class="settle-stats-grid">
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">⏱️ 存活轮数</span>
+            <strong class="settle-stat-val ${isWin ? 'text-success' : ''}">${s.turn} / ${s.maxTurns} 回合 (${s.time})</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">🧠 最终清醒值</span>
+            <strong class="settle-stat-val ${s.sanity <= 20 ? 'text-danger' : 'text-success'}">${s.sanity}%</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">⚡ 最终体能值</span>
+            <strong class="settle-stat-val ${s.energy <= 20 ? 'text-danger' : 'text-success'}">${s.energy}%</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">👁️ 最终存在感</span>
+            <strong class="settle-stat-val ${s.presence < 20 || s.presence > 60 ? 'text-warning' : 'text-success'}">${s.presence}%</strong>
+          </div>
+        </div>
+
+        <!-- Unlocks Card -->
+        <div class="settle-unlock-card">
+          <div class="settle-unlock-row">
+            <span class="settle-unlock-icon">📜</span>
+            <div class="settle-unlock-info">
+              <span class="settle-unlock-title">达成结局：【${s.resultEnding?.title || '深夜大逃杀'}】</span>
+              <span class="settle-unlock-desc">${s.resultEnding?.summary || s.resultEnding?.description || '绝地求生无尽附加关'}</span>
+            </div>
+          </div>
+          ${isWin ? `
+            <div class="settle-unlock-row" style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
+              <span class="settle-unlock-icon">🏅</span>
+              <div class="settle-unlock-info">
+                <span class="settle-unlock-title">解锁成就：【晨曦不灭战神】</span>
+                <span class="settle-unlock-desc">在周五深夜大逃杀模式中熬过 20 回合坚持至清晨 06:00 破晓加冕</span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Actions -->
+        <div class="settle-actions-row">
+          <button id="btn-ot-settle-restart" class="btn btn-primary">🔄 再次挑战通宵</button>
+          <button id="btn-ot-settle-exit" class="btn btn-secondary">🚪 离开深夜战场</button>
+        </div>
+      </div>
+    `;
+
+    const card = this.container.querySelector('.modal-card');
+    if (card) {
+      card.appendChild(overlay);
+    } else {
+      this.container.appendChild(overlay);
+    }
+
+    overlay.querySelector('#btn-ot-settle-restart')?.addEventListener('click', () => {
+      sound.playClick();
+      this.restartGame();
+    });
+
+    overlay.querySelector('#btn-ot-settle-exit')?.addEventListener('click', () => {
+      sound.playClick();
+      this.hide();
+      if (this.onFinishCallback) this.onFinishCallback();
+    });
   }
 }

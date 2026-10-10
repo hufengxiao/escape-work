@@ -9,27 +9,35 @@ class ToastManager {
   }
 
   init() {
+    if (typeof document === 'undefined') return;
     if (!document.getElementById('toast-container')) {
       const container = document.createElement('div');
       container.id = 'toast-container';
       container.className = 'toast-container';
+      if ('popover' in HTMLElement.prototype) {
+        container.setAttribute('popover', 'manual');
+      }
       document.body.appendChild(container);
       this.container = container;
+      if (container.showPopover && container.hasAttribute('popover')) {
+        try { container.showPopover(); } catch {}
+      }
     } else {
       this.container = document.getElementById('toast-container');
     }
   }
 
   show(message, type = 'info', duration = 3200) {
+    if (typeof document === 'undefined') return;
     if (!this.container) this.init();
+    if (!this.container) return;
+
+    if (this.container.showPopover && this.container.hasAttribute('popover')) {
+      try { this.container.showPopover(); } catch {}
+    }
 
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-
-    // Modern Popover manual if supported
-    if ('popover' in HTMLElement.prototype) {
-      toast.setAttribute('popover', 'manual');
-    }
 
     const iconMap = {
       info: '📢',
@@ -54,9 +62,6 @@ class ToastManager {
     const dismiss = () => {
       toast.classList.add('toast-exit');
       setTimeout(() => {
-        if (toast.hidePopover && toast.hasAttribute('popover')) {
-          try { toast.hidePopover(); } catch {}
-        }
         toast.remove();
       }, 250);
     };
@@ -64,10 +69,6 @@ class ToastManager {
     closeBtn.addEventListener('click', dismiss);
 
     this.container.appendChild(toast);
-
-    if (toast.showPopover && toast.hasAttribute('popover')) {
-      try { toast.showPopover(); } catch {}
-    }
 
     // Auto dismiss
     setTimeout(dismiss, duration);

@@ -462,7 +462,7 @@ export const INTERACTIVE_TOUR_STEPS = [
   },
   {
     step: 5,
-    selector: '#dag-map-container',
+    selector: '#map-view-container, #map-view-slot, .map-view-container, #dag-map-container',
     icon: '🗺️',
     title: '5 层 DAG 拓扑逃生路线图',
     badge: '步骤 5 / 8 · 路线网络',

@@ -108,18 +108,79 @@ export class MiniGameUI {
 
       state.addLog(evalResult.msg, evalResult.grade === 'VICTORY' ? 'achievement' : 'alert');
 
-      if (evalResult.grade === 'VICTORY') {
+      const isWin = evalResult.grade === 'VICTORY';
+      if (isWin) {
         sound.playSuccess();
-        toast.show(evalResult.msg, 'success', 3500);
+        toast.show(evalResult.msg, 'success', 3000);
       } else {
         sound.playAlert();
-        toast.show(evalResult.msg, 'alert', 3500);
+        toast.show(evalResult.msg, 'alert', 3000);
       }
 
-      setTimeout(() => {
+      const words = selectedIds.map((id) => options.find((o) => o.id === id)?.text).filter(Boolean);
+      const quoteText = words.length > 0
+        ? `“我们通过 <strong>${words.join('</strong>，打通 <strong>')}</strong>，形成全矩阵赋能！”`
+        : '“……（对线超时，支支吾吾未能成句）”';
+
+      // Dedicated Settlement Card Overlay
+      const card = overlay.querySelector('.minigame-card');
+      const settleEl = document.createElement('div');
+      settleEl.className = 'settlement-overlay minigame-settlement-overlay slide-up';
+      settleEl.innerHTML = `
+        <div class="settlement-card-inner">
+          <div>
+            <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
+              ${isWin ? '🏆 降维打击达成 (VICTORY)' : '⚠️ 逻辑露怯崩塌 (FAIL)'}
+            </span>
+          </div>
+
+          <div class="settlement-icon">${isWin ? '🗣️' : '😵'}</div>
+          <h3 class="settlement-title">${isWin ? '气场全开 · 震撼全场！' : '词锋不逮 · 考核失利'}</h3>
+
+          <div class="res-quote-box">
+            <span class="res-quote-label" style="font-size:10.5px;color:#94a3b8;font-weight:700;">🗣️ 发言实录：</span>
+            <div style="margin-top:2px;">${quoteText}</div>
+          </div>
+
+          <div class="settle-stats-grid">
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">对线评分</span>
+              <strong class="settle-stat-val ${isWin ? 'text-success' : 'text-danger'}">${evalResult.score} 分</strong>
+            </div>
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">考核判定</span>
+              <strong class="settle-stat-val">${evalResult.grade}</strong>
+            </div>
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">摸鱼嫌疑</span>
+              <strong class="settle-stat-val ${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
+                ${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta || 0}%
+              </strong>
+            </div>
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">剩余体能</span>
+              <strong class="settle-stat-val ${evalResult.energyDelta < 0 ? 'text-danger' : 'text-success'}">
+                ${evalResult.energyDelta > 0 ? '+' : ''}${evalResult.energyDelta || 0}
+              </strong>
+            </div>
+          </div>
+
+          <div class="res-msg-box">${evalResult.msg}</div>
+
+          <div class="settle-actions-row">
+            <button id="btn-close-buzzword-settle" class="btn btn-primary" style="width:100%;">
+              ✨ 确认对线战果 · 继续逃跑
+            </button>
+          </div>
+        </div>
+      `;
+      card.appendChild(settleEl);
+
+      settleEl.querySelector('#btn-close-buzzword-settle')?.addEventListener('click', () => {
+        sound.playClick();
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         if (onComplete) onComplete(evalResult);
-      }, 500);
+      });
     };
 
     // Countdown timer
@@ -226,16 +287,98 @@ export class MiniGameUI {
 
       if (result.suspicionDelta > 0) {
         sound.playAlert();
-        toast.show(result.msg, 'alert', 3500);
+        toast.show(result.msg, 'alert', 3000);
       } else {
         sound.playSuccess();
-        toast.show(result.msg, 'success', 3500);
+        toast.show(result.msg, 'success', 3000);
       }
 
-      setTimeout(() => {
+      const isJackpot = result.type === 'first_jackpot';
+      const isPoison = result.type === 'first_poison';
+      const isSafe = result.type === 'last_safe';
+      const isSkipTagged = result.type === 'skip_tagged';
+
+      let stampText = '🍵 稳健落袋';
+      let stampCls = 'stamp-win';
+      let icon = '🧧';
+      let title = '红包开启结算';
+
+      if (isJackpot) {
+        stampText = '💰 欧皇降临';
+        stampCls = 'stamp-win';
+        icon = '🤑';
+        title = '手气最佳 · 暴富加持！';
+      } else if (isPoison) {
+        stampText = '💣 踩中地雷';
+        stampCls = 'stamp-lose';
+        icon = '😱';
+        title = '惨遭抓包 · 0.01元毒雷！';
+      } else if (isSafe) {
+        stampText = '🍵 掐表垫后';
+        stampCls = 'stamp-win';
+        icon = '☕';
+        title = '稳健捡漏 · 安全避雷！';
+      } else if (isSkipTagged) {
+        stampText = '😨 点名抓壮丁';
+        stampCls = 'stamp-lose';
+        icon = '🤦';
+        title = '人在家中坐 · 锅从天上来！';
+      } else {
+        stampText = '🧘 佛系免打扰';
+        stampCls = 'stamp-lose';
+        icon = '🧘';
+        title = '心如止水 · 假装免打扰！';
+      }
+
+      const card = overlay.querySelector('.modal-card');
+      const settleEl = document.createElement('div');
+      settleEl.className = 'settlement-overlay redpacket-settlement-overlay slide-up';
+      settleEl.innerHTML = `
+        <div class="settlement-card-inner">
+          <div>
+            <span class="settlement-stamp-badge ${stampCls}">
+              ${stampText}
+            </span>
+          </div>
+
+          <div class="settlement-icon">${icon}</div>
+          <h3 class="settlement-title">${title}</h3>
+
+          <div class="rp-amount-display" style="font-size:24px;font-weight:900;color:#fbbf24;margin:4px 0;">
+            ${result.amount > 0 ? `¥${result.amount.toFixed(2)}` : '¥0.00'}
+          </div>
+
+          <div class="settle-stats-grid">
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">摸鱼嫌疑变动</span>
+              <strong class="settle-stat-val ${result.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
+                ${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%
+              </strong>
+            </div>
+            <div class="settle-stat-item">
+              <span class="settle-stat-label">体能恢复变动</span>
+              <strong class="settle-stat-val ${result.energyDelta < 0 ? 'text-danger' : 'text-success'}">
+                ${result.energyDelta > 0 ? '+' : ''}${result.energyDelta || 0}
+              </strong>
+            </div>
+          </div>
+
+          <div class="res-msg-box">${result.msg}</div>
+
+          <div class="settle-actions-row">
+            <button id="btn-close-rp-settle" class="btn btn-primary" style="width:100%;">
+              👌 收下战果 · 继续溜走
+            </button>
+          </div>
+        </div>
+      `;
+      card.appendChild(settleEl);
+
+      settleEl.querySelector('#btn-close-rp-settle')?.addEventListener('click', () => {
+        sound.playClick();
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         if (onComplete) onComplete(result);
-      }, 500);
+      });
     };
 
     overlay.querySelectorAll('.packet-item').forEach((item) => {
@@ -291,7 +434,6 @@ export class MiniGameUI {
     const punchBtn = overlay.querySelector('#btn-qte-punch');
 
     // Simulate clock scrolling smoothly from 17:59:58.000 towards 18:00:03.000
-    // Total simulated interval: 5 seconds in 3.5 real seconds
     const startVirtualMs = 17 * 3600000 + 59 * 60000 + 58000;
     const targetVirtualMs = 18 * 3600000; // 18:00:00
     const startRealTime = performance.now();
@@ -309,22 +451,6 @@ export class MiniGameUI {
       )}.${String(ms).padStart(3, '0')}`;
     };
 
-    const updateLoop = () => {
-      if (isStopped) return;
-      const elapsedReal = performance.now() - startRealTime;
-      // 1 real ms advances 1.3 virtual ms
-      const currentVirtualMs = startVirtualMs + elapsedReal * 1.35;
-      digitalEl.textContent = formatMsTime(currentVirtualMs);
-
-      if (currentVirtualMs > targetVirtualMs + 3000) {
-        // Auto-trigger if missed
-        onPunch(currentVirtualMs);
-        return;
-      }
-
-      animId = requestAnimationFrame(updateLoop);
-    };
-
     const onPunch = (capturedVirtualMs) => {
       if (isStopped) return;
       isStopped = true;
@@ -337,15 +463,15 @@ export class MiniGameUI {
         digitalEl.style.color = '#10b981';
         digitalEl.classList.add('glow-perfect');
         sound.playSuccess();
-        toast.show(result.msg, 'success', 4000);
+        toast.show(result.msg, 'success', 3500);
       } else if (result.grade === 'EARLY') {
         digitalEl.style.color = '#ef4444';
         sound.playAlert();
-        toast.show(result.msg, 'alert', 4000);
+        toast.show(result.msg, 'alert', 3500);
       } else {
         digitalEl.style.color = '#f59e0b';
         sound.playFail();
-        toast.show(result.msg, 'warning', 4000);
+        toast.show(result.msg, 'warning', 3500);
       }
 
       punchBtn.disabled = true;
@@ -357,10 +483,75 @@ export class MiniGameUI {
 
       state.addLog(result.msg, result.grade === 'PERFECT' ? 'achievement' : 'alert');
 
-      setTimeout(() => {
+      // Attendance Slip Receipt Overlay
+      const isPerf = result.grade === 'PERFECT';
+      const isEarly = result.grade === 'EARLY';
+
+      const card = overlay.querySelector('.modal-card');
+      const settleEl = document.createElement('div');
+      settleEl.className = 'settlement-overlay qte-settlement-overlay slide-up';
+      settleEl.innerHTML = `
+        <div class="settlement-card-inner">
+          <div class="qte-receipt-paper">
+            <div class="receipt-header-row">
+              <span>🏢 宏图科技智能终端</span>
+              <span>考勤凭条小票</span>
+            </div>
+
+            <div class="receipt-time-center">
+              <span style="font-size:10px;color:#64748b;display:block;">考勤定格时刻</span>
+              <strong class="rcpt-clock-large">${digitalEl.textContent}</strong>
+              <span class="rcpt-offset-badge">
+                精确误差: ${result.diffMs > 0 ? '+' : ''}${result.diffMs} ms
+              </span>
+            </div>
+
+            <div style="text-align:center;">
+              <span class="rcpt-stamp ${isPerf ? 'stamp-perfect' : isEarly ? 'stamp-early' : 'stamp-late'}">
+                ${isPerf ? '🌟 准点神仙' : isEarly ? '⚠️ 提早早退' : '🐢 晚点迟疑'}
+              </span>
+            </div>
+
+            <div class="receipt-header-row" style="border-top:1px dashed #94a3b8;border-bottom:none;padding-top:6px;margin-top:2px;">
+              <span>考勤判定: <strong>${result.grade}</strong></span>
+              <span>嫌疑度: <strong style="color:${result.suspicionDelta > 0 ? '#dc2626' : '#059669'}">${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%</strong></span>
+            </div>
+
+            <div class="rcpt-footer-dashed">
+              ${result.msg}
+            </div>
+          </div>
+
+          <div class="settle-actions-row">
+            <button id="btn-close-qte-settle" class="btn btn-primary" style="width:100%;">
+              🏃 撕下打卡单 · 潇洒开溜！
+            </button>
+          </div>
+        </div>
+      `;
+      card.appendChild(settleEl);
+
+      settleEl.querySelector('#btn-close-qte-settle')?.addEventListener('click', () => {
+        sound.playClick();
         if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
         if (onComplete) onComplete(result);
-      }, 800);
+      });
+    };
+
+    const updateLoop = () => {
+      if (isStopped) return;
+      const elapsedReal = performance.now() - startRealTime;
+      // 1 real ms advances 1.35 virtual ms
+      const currentVirtualMs = startVirtualMs + elapsedReal * 1.35;
+      digitalEl.textContent = formatMsTime(currentVirtualMs);
+
+      if (currentVirtualMs > targetVirtualMs + 3000) {
+        // Auto-trigger if missed
+        onPunch(currentVirtualMs);
+        return;
+      }
+
+      animId = requestAnimationFrame(updateLoop);
     };
 
     punchBtn.addEventListener('click', () => {

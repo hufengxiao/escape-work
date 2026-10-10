@@ -3,6 +3,17 @@
  */
 
 import { ReverseBossEngine, BOSS_AREAS } from '../engine/reverseBossEngine.js';
+import { toast } from './toast.js';
+import { sound } from '../audio/sound.js';
+
+const AREA_CONFIG = {
+  'area_19_office': { icon: '👑', shortDesc: '监控大屏与专梯' },
+  'area_18_desk': { icon: '💻', shortDesc: '键盘稀拉·收拾背包' },
+  'area_18_corridor': { icon: '🏃', shortDesc: '核心走廊·匆忙脚步' },
+  'area_18_pantry': { icon: '☕', shortDesc: '微波炉旁·密谋出逃' },
+  'area_18_lift': { icon: '🛗', shortDesc: '客梯按键·焦虑开溜' },
+  'area_1_lobby': { icon: '🏢', shortDesc: '人脸识别闸机出入口' }
+};
 
 export class ReverseBossView {
   constructor(gameState, onFinishCallback = null) {
@@ -94,9 +105,12 @@ export class ReverseBossView {
 
           <!-- Movement Navigation -->
           <div class="boss-move-panel">
-            <div class="move-panel-title">🚶 巡查移动（消耗 5 威严）</div>
+            <div class="move-panel-title">
+              <span>🚶 巡查移动选择</span>
+              <span class="move-panel-subtitle">（每次移动消耗 5 威严值）</span>
+            </div>
             <div id="boss-move-grid" class="move-btn-grid">
-              <!-- Dynamic area move buttons -->
+              <!-- Dynamic area move cards -->
             </div>
           </div>
 
@@ -138,28 +152,53 @@ export class ReverseBossView {
     });
 
     this.container.querySelector('#btn-boss-restart')?.addEventListener('click', () => {
-      this.outcomeShown = false;
-      this.engine.reset();
-      this.render();
+      this.restartGame();
     });
 
     this.container.querySelector('#btn-boss-deadly-at')?.addEventListener('click', () => {
       const res = this.engine.useSkillDeadlyAt();
-      if (!res.success) alert(res.message);
+      if (!res.success) {
+        toast.show(res.message, 'warning', 2500);
+        sound.playAlert();
+      } else {
+        sound.playDing();
+      }
       this.render();
     });
 
     this.container.querySelector('#btn-boss-raid')?.addEventListener('click', () => {
       const res = this.engine.useSkillRaidInspection();
-      if (!res.success) alert(res.message);
+      if (!res.success) {
+        toast.show(res.message, 'warning', 2500);
+        sound.playAlert();
+      } else {
+        sound.playDing();
+      }
       this.render();
     });
 
     this.container.querySelector('#btn-boss-lift-ambush')?.addEventListener('click', () => {
       const res = this.engine.useSkillLiftAmbush();
-      if (!res.success) alert(res.message);
+      if (!res.success) {
+        toast.show(res.message, 'warning', 2500);
+        sound.playAlert();
+      } else {
+        sound.playDing();
+      }
       this.render();
     });
+  }
+
+  restartGame() {
+    this.removeSettlementModal();
+    this.outcomeShown = false;
+    this.engine.reset();
+    this.render();
+  }
+
+  removeSettlementModal() {
+    const existing = this.container?.querySelector('.boss-settlement-overlay');
+    if (existing) existing.remove();
   }
 
   render() {
@@ -204,22 +243,57 @@ export class ReverseBossView {
         .join('');
     }
 
-    // 3. Move Grid
+    // 3. Move Grid - Beautified tactical cards
     const moveGrid = this.container.querySelector('#boss-move-grid');
     if (moveGrid) {
       moveGrid.innerHTML = BOSS_AREAS.map((area) => {
         const isCurrent = area.name === s.currentArea;
+        const cfg = AREA_CONFIG[area.id] || { icon: '📍', shortDesc: area.desc };
+
+        // Real-time intel: count active employees in this area
+        const empsHere = s.employees.filter((emp) => {
+          const isCaught = s.caughtEmployees.some((c) => c.id === emp.id);
+          const isEscaped = s.escapedEmployees.some((e) => e.id === emp.id);
+          return !isCaught && !isEscaped && emp.area === area.name;
+        });
+
+        let statusBadge = '';
+        if (isCurrent) {
+          statusBadge = `<span class="area-status-pill pill-current">📍 阎总坐镇</span>`;
+        } else if (empsHere.length > 0) {
+          statusBadge = `<span class="area-status-pill pill-threat">🚨 发现 ${empsHere.length} 人</span>`;
+        } else {
+          statusBadge = `<span class="area-status-pill pill-calm">暂无异动</span>`;
+        }
+
         return `
-          <button class="area-move-btn ${isCurrent ? 'current' : ''}" 
+          <button class="boss-area-card ${isCurrent ? 'is-current' : ''} ${empsHere.length > 0 ? 'has-threat' : ''}" 
                   data-area="${area.name}" 
-                  ${isCurrent || s.isFinished ? 'disabled' : ''}>
-            ${isCurrent ? '📍 ' : ''}${area.name}
+                  ${isCurrent || s.isFinished ? 'disabled' : ''}
+                  aria-label="巡查前往${area.name}">
+            <div class="area-card-top">
+              <div class="area-card-meta">
+                <span class="area-icon">${cfg.icon}</span>
+                <span class="area-floor-tag">F${area.floor}</span>
+              </div>
+              ${statusBadge}
+            </div>
+            <div class="area-card-main">
+              <strong class="area-name-text">${area.name}</strong>
+              <span class="area-desc-text">${cfg.shortDesc}</span>
+            </div>
+            <div class="area-card-bot">
+              ${isCurrent 
+                ? '<span class="area-action-text current-text">当前巡查中</span>' 
+                : '<span class="area-action-text cost-text">⚡ 消耗 5 威严</span>'}
+            </div>
           </button>
         `;
       }).join('');
 
-      moveGrid.querySelectorAll('.area-move-btn').forEach((btn) => {
+      moveGrid.querySelectorAll('.boss-area-card').forEach((btn) => {
         btn.addEventListener('click', (e) => {
+          sound.playClick();
           const area = e.currentTarget.getAttribute('data-area');
           this.engine.moveTo(area);
           this.render();
@@ -244,7 +318,7 @@ export class ReverseBossView {
       logBox.scrollTop = logBox.scrollHeight;
     }
 
-    // 5. Finished outcome popup
+    // 5. Finished outcome settlement screen (Replacing alert)
     if (s.isFinished && !this.outcomeShown) {
       this.outcomeShown = true;
       if (this.gameState && s.resultEnding) {
@@ -260,13 +334,122 @@ export class ReverseBossView {
         this.gameState.notify();
       }
 
-      setTimeout(() => {
-        const isWin = s.result === 'victory';
-        const msg = isWin
-          ? `🏆【阎王铁腕·大获全胜】\n\n成功逮捕 ${s.caughtCount} 名员工！今晚大会议室座无虚席！\n已解锁新结局【${s.resultEnding?.title}】及新成就【阎王铁腕】！`
-          : `💔【独守空房·打工人的胜利】\n\n18:05已过，未能阻挡员工下班潮！整座大厦已空无一人！\n已解锁结局【${s.resultEnding?.title}】！`;
-        alert(msg);
-      }, 300);
+      const isWin = s.result === 'victory';
+      if (isWin) {
+        sound.playSuccess();
+      } else {
+        sound.playFail();
+      }
+
+      this.showSettlementModal(s, isWin);
     }
+  }
+
+  showSettlementModal(s, isWin) {
+    this.removeSettlementModal();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'settlement-overlay boss-settlement-overlay slide-up';
+
+    overlay.innerHTML = `
+      <div class="settlement-card-inner">
+        <!-- Rank Badge -->
+        <div>
+          <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
+            ${isWin ? '👑 SSS 级 · 阎王铁腕' : '💨 D 级 · 独守空房'}
+          </span>
+        </div>
+
+        <div class="settlement-icon">${isWin ? '🏆' : '💔'}</div>
+        <h2 class="settlement-title">${isWin ? '阎王铁腕 · 大获全胜！' : '独守空房 · 打工人的胜利！'}</h2>
+        <p class="settlement-subtitle">
+          ${isWin 
+            ? `成功在 18:05 前逮捕 <strong>${s.caughtCount}</strong> 名准点逃兵！今晚大会议室座无虚席！` 
+            : `18:05 时钟定格！员工潮冲破闸机，全楼灭灯，你只能独守空房！`}
+        </p>
+
+        <!-- Stats Grid -->
+        <div class="settle-stats-grid">
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">🎯 成功逮捕</span>
+            <strong class="settle-stat-val ${isWin ? 'text-success' : ''}">${s.caughtCount} / ${s.targetCaught} 人</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">🏃 成功逃脱</span>
+            <strong class="settle-stat-val ${s.escapedCount > 0 ? 'text-warning' : ''}">${s.escapedCount} / 3 人</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">👑 剩余威严</span>
+            <strong class="settle-stat-val text-warning">${s.majesty} / 100</strong>
+          </div>
+          <div class="settle-stat-item">
+            <span class="settle-stat-label">⏱️ 终局时刻</span>
+            <strong class="settle-stat-val">${s.time}</strong>
+          </div>
+        </div>
+
+        <!-- Employee Capture Roster -->
+        <div class="settle-employees-box">
+          <div class="settle-section-label">👥 员工去向总览</div>
+          <div class="settle-emp-tags">
+            ${s.employees.map((emp) => {
+              const caught = s.caughtEmployees.some((c) => c.id === emp.id);
+              const escaped = s.escapedEmployees.some((e) => e.id === emp.id);
+              if (caught) {
+                return `<span class="settle-emp-pill caught">🔒 ${emp.name} (${emp.role}) - 截获通宵</span>`;
+              } else if (escaped) {
+                return `<span class="settle-emp-pill escaped">💨 ${emp.name} (${emp.role}) - 逃脱大厦</span>`;
+              } else {
+                return `<span class="settle-emp-pill" style="background:rgba(148,163,184,0.15);color:#94a3b8;">❓ ${emp.name} (${emp.role})</span>`;
+              }
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Unlocks Card -->
+        <div class="settle-unlock-card">
+          <div class="settle-unlock-row">
+            <span class="settle-unlock-icon">📜</span>
+            <div class="settle-unlock-info">
+              <span class="settle-unlock-title">达成结局：【${s.resultEnding?.title || '普通结局'}】</span>
+              <span class="settle-unlock-desc">${s.resultEnding?.summary || s.resultEnding?.description || '成功完成反转模式'}</span>
+            </div>
+          </div>
+          ${isWin ? `
+            <div class="settle-unlock-row" style="border-top:1px dashed rgba(255,255,255,0.1); padding-top:6px;">
+              <span class="settle-unlock-icon">🏅</span>
+              <div class="settle-unlock-info">
+                <span class="settle-unlock-title">解锁成就：【阎王铁腕】</span>
+                <span class="settle-unlock-desc">在反转模式中成功阻截至少 3 名准点逃兵回会议室加班</span>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Actions -->
+        <div class="settle-actions-row">
+          <button id="btn-settle-restart" class="btn btn-primary">🔄 重新执掌巡查</button>
+          <button id="btn-settle-exit" class="btn btn-secondary">🚪 退出阎总视角</button>
+        </div>
+      </div>
+    `;
+
+    const card = this.container.querySelector('.modal-card');
+    if (card) {
+      card.appendChild(overlay);
+    } else {
+      this.container.appendChild(overlay);
+    }
+
+    overlay.querySelector('#btn-settle-restart')?.addEventListener('click', () => {
+      sound.playClick();
+      this.restartGame();
+    });
+
+    overlay.querySelector('#btn-settle-exit')?.addEventListener('click', () => {
+      sound.playClick();
+      this.hide();
+      if (this.onFinishCallback) this.onFinishCallback();
+    });
   }
 }
