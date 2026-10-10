@@ -35,16 +35,16 @@ export class UIRenderer {
     this.craftModal = new CraftModal(
       this.state,
       () => this.render(),
-      () => this.updateBottomTabHighlight('escape')
+      () => this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape')
     );
     this.relationPanel = new RelationPanel(this.state, () => this.render());
     this.radarView = new RadarView(this.state, () => this.render());
     this.reverseBossView = new ReverseBossView(this.state, () => {
-      this.updateBottomTabHighlight('escape');
+      this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape');
       this.render();
     });
     this.overtimeView = new OvertimeView(this.state, () => {
-      this.updateBottomTabHighlight('escape');
+      this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape');
       this.render();
     });
     this.guideCurrentStep = 0;
@@ -129,11 +129,8 @@ export class UIRenderer {
           <section class="dashboard">
             <div class="status-card time-card">
               <div class="status-label">
-                <span>🕒 当前时刻</span>
-                <div class="status-label-right">
-                  <button id="btn-quick-guide" class="chip-guide-link" title="点击查看玩法指南">💡 玩法指南</button>
-                  <span id="target-time-badge" class="badge-sub">下班目标 18:00</span>
-                </div>
+                <span class="status-label-title">🕒 当前时刻</span>
+                <span id="target-time-badge" class="badge-sub">18:00打卡</span>
               </div>
               <div class="time-display" id="time-display">17:45</div>
               <div class="time-progress-bar">
@@ -173,16 +170,18 @@ export class UIRenderer {
 
           <!-- Tactical Step Guidance Bar -->
           <div class="tactical-step-bar" id="tactical-step-bar">
-            <div class="tactical-step-left">
-              <span class="tactical-step-badge" id="tactical-step-badge">第 1 阶段 / 工位潜行</span>
-              <span class="tactical-step-text" id="tactical-step-text">加载提示中...</span>
+            <div class="tactical-step-content">
+              <div class="tactical-step-header">
+                <span class="tactical-step-badge" id="tactical-step-badge">第 1 阶段 / 工位潜行</span>
+                <button id="btn-step-guide-link" class="tactical-step-link" title="点击打开本阶段详细向导">
+                  📖 玩法向导
+                </button>
+              </div>
+              <div class="tactical-step-text" id="tactical-step-text">加载提示中...</div>
             </div>
-            <button id="btn-step-guide-link" class="tactical-step-link" title="点击打开本阶段详细向导">
-              📖 玩法向导
-            </button>
           </div>
 
-          <!-- Cyber Segmented Navigation for Compact Playability -->
+          <!-- Cyber Segmented Navigation for Compact Playability (4 fixed columns, zero horizontal scroll) -->
           <nav class="view-tab-nav" aria-label="主界面视图导航">
             <button class="view-tab-btn active" data-tab="action" id="tab-btn-action">
               <span class="tab-icon">🎯</span>
@@ -193,22 +192,14 @@ export class UIRenderer {
               <span class="tab-label">逃脱路线</span>
               <span class="tab-badge hidden" id="map-avail-badge"></span>
             </button>
-            <button class="view-tab-btn" data-tab="radar" id="tab-btn-radar">
-              <span class="tab-icon">📡</span>
-              <span class="tab-label">监控雷达</span>
-            </button>
             <button class="view-tab-btn" data-tab="backpack" id="tab-btn-backpack">
               <span class="tab-icon">🎒</span>
               <span class="tab-label">摸鱼背包</span>
-              <span class="tab-badge" id="backpack-tab-badge">0</span>
+              <span class="tab-badge hidden" id="backpack-tab-badge">0</span>
             </button>
             <button class="view-tab-btn" data-tab="log" id="tab-btn-log">
               <span class="tab-icon">📜</span>
               <span class="tab-label">动态通报</span>
-            </button>
-            <button class="view-tab-btn tab-all-view" data-tab="all" id="tab-btn-all" title="全景展开纵览">
-              <span class="tab-icon">📑</span>
-              <span class="tab-label">全景</span>
             </button>
           </nav>
 
@@ -250,11 +241,13 @@ export class UIRenderer {
             </div>
           </main>
 
-          <!-- Tab Panel: DAG Workplace Exploration Map Slot -->
-          <div id="map-view-slot" class="view-tab-panel panel-hidden" data-panel="map"></div>
-
-          <!-- Tab Panel: Boss Surveillance Radar Slot -->
-          <div id="radar-slot" class="view-tab-panel panel-hidden" data-panel="radar"></div>
+          <!-- Tab Panel: DAG Workplace Exploration Map Slot & Boss Radar -->
+          <div id="map-view-panel" class="view-tab-panel panel-hidden" data-panel="map">
+            <!-- Boss Surveillance Radar Slot: Integrated into Escape Route -->
+            <div id="radar-slot"></div>
+            <!-- DAG Workplace Exploration Map Slot -->
+            <div id="map-view-slot"></div>
+          </div>
 
           <!-- Tab Panel: Tactical Backpack Items -->
           <section class="backpack-section view-tab-panel panel-hidden" data-panel="backpack">
@@ -1217,9 +1210,8 @@ export class UIRenderer {
     window.removeEventListener('resize', this.onTourWindowUpdate);
     window.removeEventListener('scroll', this.onTourWindowUpdate);
 
-    if (this.activeTab !== 'action' && this.activeTab !== 'all') {
-      this.setActiveTab('action');
-    }
+    this.switchBottomNavTab('escape', false);
+    this.setActiveTab('action');
 
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem('escape_work_has_seen_tour', 'true');
@@ -1266,19 +1258,16 @@ export class UIRenderer {
     const step = INTERACTIVE_TOUR_STEPS[index];
     if (!step) return;
 
-    // Ensure main escape screen is active for tour spotlight
-    this.switchBottomNavTab('escape', false);
-
-    if (step.step === 3) {
-      this.setActiveTab('radar');
-    } else if (step.step === 5) {
-      this.setActiveTab('map');
-    } else if (step.step === 8) {
-      this.setActiveTab('backpack');
-    } else if (step.step === 6 || step.step === 7) {
-      this.setActiveTab('action');
+    // Automatically switch the user to the corresponding tab & view!
+    if (step.step === 4) {
+      this.switchBottomNavTab('modes', false);
     } else {
-      if (this.activeTab !== 'action' && this.activeTab !== 'all') {
+      this.switchBottomNavTab('escape', false);
+      if (step.step === 3 || step.step === 5) {
+        this.setActiveTab('map');
+      } else if (step.step === 8) {
+        this.setActiveTab('backpack');
+      } else {
         this.setActiveTab('action');
       }
     }
@@ -1603,7 +1592,7 @@ export class UIRenderer {
 
   switchBottomNavTab(tabId, playAudio = true) {
     if (playAudio) sound.playClick();
-    this.updateBottomTabHighlight(tabId);
+    this.activeBottomNavTab = tabId;
 
     const escapeView = document.getElementById('escape-view-container');
     const modesHub = document.getElementById('modes-hub-container');
@@ -1630,17 +1619,23 @@ export class UIRenderer {
     } else if (tabId === 'boss') {
       this.switchBottomNavTab('modes', false);
       this.reverseBossView?.show();
+      return;
     } else if (tabId === 'overtime') {
       this.switchBottomNavTab('modes', false);
       this.overtimeView?.show();
+      return;
     } else if (tabId === 'workshop') {
       this.switchBottomNavTab('modes', false);
       this.craftModal?.show();
+      return;
     } else if (tabId === 'archive') {
       this.switchBottomNavTab('modes', false);
       this.renderArchiveModal('endings');
       document.getElementById('archive-modal')?.classList.remove('hidden');
+      return;
     }
+
+    this.updateBottomTabHighlight(tabId);
   }
 
   updateModesHubStats() {
@@ -1664,6 +1659,7 @@ export class UIRenderer {
   }
 
   setActiveTab(tabName) {
+    if (tabName === 'radar') tabName = 'map';
     this.activeTab = tabName;
     this.syncActiveTabUI();
     if (this.tourActive) {

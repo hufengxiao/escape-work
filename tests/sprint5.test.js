@@ -165,5 +165,32 @@ test('T5.9 Consolidated 2-tab bottom navigation and Modes Hub card architecture'
   assert.ok(step8.selector.includes('#tab-btn-backpack') || step8.selector.includes('.backpack-section'), 'Step 8 must target backpack');
 });
 
+test('T5.10 Streamlined 4-tab zero-scroll layout, full tactical step text and Tour automatic tab switching', async (t) => {
+  const fs = await import('node:fs');
+  const rendererCode = fs.readFileSync(new URL('../src/ui/renderer.js', import.meta.url), 'utf-8');
+
+  // Verify view-tab-nav is streamlined to exactly 4 tabs (no horizontal scroll)
+  assert.ok(rendererCode.includes('id="tab-btn-action"'), 'Must have action tab');
+  assert.ok(rendererCode.includes('id="tab-btn-map"'), 'Must have map tab');
+  assert.ok(rendererCode.includes('id="tab-btn-backpack"'), 'Must have backpack tab');
+  assert.ok(rendererCode.includes('id="tab-btn-log"'), 'Must have log tab');
+  assert.ok(!rendererCode.includes('id="tab-btn-radar"'), 'Radar tab must be merged into map panel');
+  assert.ok(!rendererCode.includes('id="tab-btn-all"'), 'All tab must be removed to avoid horizontal sliding');
+
+  // Verify radar-slot is integrated into map-view-panel
+  assert.ok(rendererCode.includes('id="map-view-panel"'), 'Must have map-view-panel');
+  assert.ok(rendererCode.includes('id="radar-slot"'), 'Must have radar-slot');
+
+  // Verify tactical step bar full-width structure
+  assert.ok(rendererCode.includes('class="tactical-step-content"'), 'Must have tactical-step-content');
+  assert.ok(rendererCode.includes('class="tactical-step-header"'), 'Must have tactical-step-header');
+
+  // Verify Tour Step 4 targets #nav-tab-modes
+  const { INTERACTIVE_TOUR_STEPS } = await import('../src/data/guide.js');
+  const step4 = INTERACTIVE_TOUR_STEPS.find((s) => s.step === 4);
+  assert.ok(step4.selector.includes('#nav-tab-modes'), 'Step 4 selector must target nav-tab-modes');
+});
+
+
 
 

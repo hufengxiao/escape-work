@@ -1387,20 +1387,16 @@
   margin-top: 4px;
 }
 
-/* Tactical Step Guidance Bar - Centered and Compact */
+/* Tactical Step Guidance Bar - Two-Tier Full Width */
 .tactical-step-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display: block;
   background: rgba(19, 27, 46, 0.85);
   border: 1px solid rgba(99, 102, 241, 0.25);
   border-radius: var(--radius-md);
-  padding: 5px 12px;
+  padding: 6px 12px 7px;
   margin: 0 12px 6px;
   transition: all 0.25s ease;
   backdrop-filter: blur(8px);
-  text-align: center;
 }
 
 .tactical-step-bar.tactical-urgent {
@@ -1414,25 +1410,27 @@
   50% { box-shadow: 0 0 14px rgba(244, 63, 94, 0.3); }
 }
 
-.tactical-step-left {
+.tactical-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tactical-step-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 6px;
-  min-width: 0;
-  flex: 1;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .tactical-step-badge {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: #a5b4fc;
   background: rgba(99, 102, 241, 0.2);
-  padding: 2px 7px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .tactical-urgent .tactical-step-badge {
@@ -1441,13 +1439,12 @@
 }
 
 .tactical-step-text {
-  font-size: 11px;
+  font-size: 11.5px;
   color: #cbd5e1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  line-height: 1.4;
-  text-align: center;
+  white-space: normal;
+  line-height: 1.45;
+  text-align: left;
+  word-break: break-word;
 }
 
 .tactical-urgent .tactical-step-text {
@@ -1459,9 +1456,9 @@
   background: rgba(99, 102, 241, 0.2);
   border: 1px solid rgba(99, 102, 241, 0.35);
   color: #cbd5e1;
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
-  padding: 3px 8px;
+  padding: 2px 8px;
   border-radius: var(--radius-full);
   cursor: pointer;
   white-space: nowrap;
@@ -1477,32 +1474,35 @@
 }
 
 /* ==========================================================================
-   Cyber View Mode Segmented Tab Navigation & Panels
+   Cyber View Mode Segmented Tab Navigation & Panels (4 Columns, Zero Scroll)
    ========================================================================== */
 .view-tab-nav {
   display: grid;
-  grid-template-columns: repeat(5, 1fr) 0.65fr;
-  gap: 4px;
-  padding: 2px 8px 6px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  padding: 2px 10px 6px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 @media (max-width: 480px) {
   .view-tab-nav {
-    grid-template-columns: repeat(5, 1fr) 0.6fr;
-    gap: 3px;
-    padding: 2px 4px 6px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 2px 6px 6px;
   }
   .view-tab-btn {
-    padding: 5px 2px;
-    font-size: 11px;
-    gap: 2px;
+    padding: 6px 2px;
+    font-size: 11.5px;
+    gap: 3px;
   }
   .view-tab-btn .tab-icon {
-    font-size: 13px;
+    font-size: 13.5px;
   }
   .view-tab-btn .tab-label {
-    font-size: 10px;
-    letter-spacing: -0.2px;
+    font-size: 11px;
+    white-space: nowrap;
   }
 }
 
@@ -3309,6 +3309,23 @@
   background: linear-gradient(90deg, #38bdf8, #818cf8);
   border-radius: 999px;
   box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+}
+
+.bottom-tab-btn#nav-tab-modes.active {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(56, 189, 248, 0.22));
+  border-color: rgba(168, 85, 247, 0.6);
+  color: #c084fc;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.35);
+}
+
+.bottom-tab-btn#nav-tab-modes.active .bottom-tab-label {
+  color: #c084fc;
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+.bottom-tab-btn#nav-tab-modes.active::before {
+  background: linear-gradient(90deg, #c084fc, #38bdf8);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
 }
 
 .hub-pill {

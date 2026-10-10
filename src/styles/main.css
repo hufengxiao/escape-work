@@ -250,6 +250,7 @@ body {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 8px 10px;
+  min-width: 0;
 }
 
 .time-card {
@@ -258,6 +259,7 @@ body {
   justify-content: space-between;
   gap: 4px;
   background: linear-gradient(135deg, rgba(30, 27, 75, 0.7), rgba(15, 23, 42, 0.8));
+  min-width: 0;
 }
 
 .status-label {
@@ -266,21 +268,34 @@ body {
   align-items: center;
   font-size: 11px;
   color: var(--text-muted);
+  white-space: nowrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.status-label-title {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
 .status-label-right {
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-sub {
-  font-size: 10px;
-  padding: 1px 6px;
+  font-size: 9.5px;
+  padding: 1px 5px;
   border-radius: var(--radius-full);
   background: rgba(99, 102, 241, 0.2);
   color: #a5b4fc;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .badge-urgent {
