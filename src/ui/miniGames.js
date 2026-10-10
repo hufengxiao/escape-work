@@ -414,6 +414,7 @@ export class MiniGameUI {
               <span class="minigame-sub">精准定格在 18:00:00.000 触发神仙准点判定！</span>
             </div>
           </div>
+          <button class="modal-close-btn" id="btn-close-qte-top" aria-label="关闭">&times;</button>
         </div>
 
         <div class="qte-clock-screen">
@@ -434,6 +435,7 @@ export class MiniGameUI {
 
     const digitalEl = overlay.querySelector('#qte-digital-time');
     const punchBtn = overlay.querySelector('#btn-qte-punch');
+    const closeTopBtn = overlay.querySelector('#btn-close-qte-top');
 
     // Simulate clock scrolling smoothly from 17:59:58.000 towards 18:00:03.000
     const startVirtualMs = 17 * 3600000 + 59 * 60000 + 58000;
@@ -441,6 +443,34 @@ export class MiniGameUI {
     const startRealTime = performance.now();
     let animId = null;
     let isStopped = false;
+    let finalResult = null;
+
+    const closeOverlay = (res) => {
+      sound.playClick();
+      if (animId) cancelAnimationFrame(animId);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+      if (onComplete) onComplete(res || finalResult || { grade: 'LATE', diffMs: 3000, msg: '打卡已结束' });
+    };
+
+    closeTopBtn?.addEventListener('click', () => {
+      if (!isStopped) {
+        // user clicked close before punching
+        const elapsedReal = performance.now() - startRealTime;
+        const currentVirtualMs = startVirtualMs + elapsedReal * 1.35;
+        isStopped = true;
+        cancelAnimationFrame(animId);
+        const res = MiniGameRunner.evaluateClockOutQTE(targetVirtualMs, currentVirtualMs);
+        closeOverlay(res);
+      } else {
+        closeOverlay();
+      }
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay && isStopped) {
+        closeOverlay();
+      }
+    });
 
     const formatMsTime = (totalMs) => {
       const h = Math.floor(totalMs / 3600000);
@@ -459,6 +489,7 @@ export class MiniGameUI {
       cancelAnimationFrame(animId);
 
       const result = MiniGameRunner.evaluateClockOutQTE(targetVirtualMs, capturedVirtualMs);
+      finalResult = result;
       digitalEl.textContent = formatMsTime(capturedVirtualMs);
 
       if (result.grade === 'PERFECT') {
@@ -490,33 +521,43 @@ export class MiniGameUI {
       const isEarly = result.grade === 'EARLY';
 
       const card = overlay.querySelector('.modal-card');
+      card.classList.add('settled');
+
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay qte-settlement-overlay slide-up';
       settleEl.innerHTML = `
-        <div class="settlement-card-inner">
+        <div class="settlement-card-inner qte-settlement-inner">
+          <div class="qte-settle-head">
+            <div class="qte-settle-titles">
+              <span class="qte-settle-badge">📋 闸机考勤结算凭条</span>
+              <span class="qte-settle-sub">宏图科技 · 智能终端实时生成</span>
+            </div>
+            <button class="modal-close-btn" id="btn-close-qte-settle-top" aria-label="关闭">&times;</button>
+          </div>
+
           <div class="qte-receipt-paper">
             <div class="receipt-header-row">
-              <span>🏢 宏图科技智能终端</span>
-              <span>考勤凭条小票</span>
+              <span>🏢 宏图科技智慧考勤系统</span>
+              <span>打卡凭条小票</span>
             </div>
 
             <div class="receipt-time-center">
-              <span style="font-size:10px;color:#64748b;display:block;">考勤定格时刻</span>
+              <span class="rcpt-label">考勤定格时刻</span>
               <strong class="rcpt-clock-large">${digitalEl.textContent}</strong>
               <span class="rcpt-offset-badge">
                 精确误差: ${result.diffMs > 0 ? '+' : ''}${result.diffMs} ms
               </span>
             </div>
 
-            <div style="text-align:center;">
+            <div class="rcpt-stamp-row">
               <span class="rcpt-stamp ${isPerf ? 'stamp-perfect' : isEarly ? 'stamp-early' : 'stamp-late'}">
                 ${isPerf ? '🌟 准点神仙' : isEarly ? '⚠️ 提早早退' : '🐢 晚点迟疑'}
               </span>
             </div>
 
-            <div class="receipt-header-row" style="border-top:1px dashed #94a3b8;border-bottom:none;padding-top:6px;margin-top:2px;">
-              <span>考勤判定: <strong>${result.grade}</strong></span>
-              <span>嫌疑度: <strong style="color:${result.suspicionDelta > 0 ? '#dc2626' : '#059669'}">${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%</strong></span>
+            <div class="receipt-header-row receipt-meta-row">
+              <span>考勤判定: <strong class="rcpt-grade-val">${result.grade}</strong></span>
+              <span>嫌疑度: <strong class="${result.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%</strong></span>
             </div>
 
             <div class="rcpt-footer-dashed">
@@ -533,10 +574,12 @@ export class MiniGameUI {
       `;
       card.appendChild(settleEl);
 
+      settleEl.querySelector('#btn-close-qte-settle-top')?.addEventListener('click', () => {
+        closeOverlay(result);
+      });
+
       settleEl.querySelector('#btn-close-qte-settle')?.addEventListener('click', () => {
-        sound.playClick();
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-        if (onComplete) onComplete(result);
+        closeOverlay(result);
       });
     };
 
