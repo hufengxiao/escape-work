@@ -452,7 +452,7 @@ export const INTERACTIVE_TOUR_STEPS = [
   },
   {
     step: 4,
-    selector: '.cyber-bottom-nav, .bottom-nav-bar, .cyber-quick-hub',
+    selector: '#cyber-bottom-nav, .cyber-bottom-nav',
     icon: '⚡',
     title: '底部主导航与多模式中心',
     badge: '步骤 4 / 8 · 底栏主导航',

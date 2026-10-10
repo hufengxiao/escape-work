@@ -1069,14 +1069,29 @@ export class UIRenderer {
     this.renderTourStep(index);
   }
 
+  getTourTargetElement(selector) {
+    if (!selector) return null;
+    const candidates = document.querySelectorAll(selector);
+    for (const el of candidates) {
+      const r = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      if (r.width > 0 && r.height > 0 && style.display !== 'none' && style.visibility !== 'hidden') {
+        return el;
+      }
+    }
+    return candidates.length > 0 ? candidates[0] : null;
+  }
+
   renderTourStep(index) {
     const step = INTERACTIVE_TOUR_STEPS[index];
     if (!step) return;
 
     if (step.step === 5) {
       this.setActiveTab('map');
-    } else if (step.step >= 6) {
-      this.setActiveTab('action');
+    } else {
+      if (this.activeTab !== 'action' && this.activeTab !== 'all') {
+        this.setActiveTab('action');
+      }
     }
 
     // 1. Update text & metadata
@@ -1131,10 +1146,13 @@ export class UIRenderer {
       });
     }
 
-    // 4. Scroll target into view & update spotlight box & card
-    const targetEl = document.querySelector(step.selector);
+    // 4. Scroll target into view (if not fixed) & update spotlight box & card
+    const targetEl = this.getTourTargetElement(step.selector);
     if (targetEl) {
-      targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const style = window.getComputedStyle(targetEl);
+      if (style.position !== 'fixed') {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
     }
 
     this.updateTourPositions();
@@ -1148,7 +1166,7 @@ export class UIRenderer {
     const step = INTERACTIVE_TOUR_STEPS[this.currentTourStep];
     if (!step) return;
 
-    const targetEl = document.querySelector(step.selector);
+    const targetEl = this.getTourTargetElement(step.selector);
     const spotlight = document.getElementById('tour-spotlight');
     const cardEl = document.getElementById('tour-card');
     if (!spotlight || !cardEl) return;
@@ -1159,12 +1177,17 @@ export class UIRenderer {
     }
 
     const rect = targetEl.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+      spotlight.style.opacity = '0';
+      return;
+    }
+
     const padding = step.padding || 8;
 
     const top = Math.max(2, rect.top - padding);
     const left = Math.max(2, rect.left - padding);
     const width = Math.min(window.innerWidth - left - 4, rect.width + padding * 2);
-    const height = Math.min(window.innerHeight - top - 4, rect.height + padding * 2);
+    const height = Math.min(window.innerHeight - top - 2, rect.height + padding * 2);
 
     spotlight.style.opacity = '1';
     spotlight.style.top = `${Math.round(top)}px`;
