@@ -102,179 +102,162 @@ export class UIRenderer {
           </div>
         </header>
 
-        <!-- Cyber Tactical Quick Hub -->
-        <nav class="cyber-quick-hub" aria-label="快捷战术功能中心">
-          <button id="btn-boss-mode" class="hub-pill pill-boss" title="角色反转：扮演阎总逮捕逃兵">
-            <span class="hub-icon">👑</span>
-            <span class="hub-label">阎总模式</span>
-          </button>
-          <button id="btn-overtime-mode" class="hub-pill pill-overtime" title="无尽生存：周五深夜大逃杀">
-            <span class="hub-icon">🌙</span>
-            <span class="hub-label">深夜逃杀</span>
-          </button>
-          <button id="btn-craft" class="hub-pill pill-craft" title="职场黑产工坊 · 羁绊神装合成">
-            <span class="hub-icon">🧪</span>
-            <span class="hub-label">神装合成</span>
-          </button>
-          <button id="btn-relation" class="hub-pill pill-relation" title="职场人脉网络 · 好感度与送礼">
-            <span class="hub-icon">🤝</span>
-            <span class="hub-label">职场人脉</span>
-          </button>
-          <button id="btn-daily" class="hub-pill pill-daily" title="每日职场黄历 · 天梯挑战">
-            <span class="hub-icon">📅</span>
-            <span class="hub-label">每日黄历</span>
-          </button>
-          <button id="btn-archive" class="hub-pill pill-archive" title="结局与成就全景图鉴">
-            <span class="hub-icon">🏆</span>
-            <span class="hub-label">图鉴成就</span>
-          </button>
-          <button id="btn-role" class="hub-pill pill-role" title="切换职场角色与难度">
-            <span class="hub-icon">🎭</span>
-            <span class="hub-label">角色</span>
-          </button>
-          <button id="btn-talent" class="hub-pill pill-talent" title="摸鱼悟性天赋树">
-            <span class="hub-icon">🧬</span>
-            <span class="hub-label">天赋</span>
-          </button>
-        </nav>
-
-        <!-- Boss Patrol Surveillance Radar -->
-        <div id="radar-slot"></div>
-
-        <!-- Status Dashboard -->
-        <section class="dashboard">
-          <div class="status-card time-card">
-            <div class="status-label">
-              <span>🕒 当前时刻</span>
-              <div class="status-label-right">
-                <button id="btn-quick-guide" class="chip-guide-link" title="点击查看玩法指南">💡 玩法指南</button>
-                <span id="target-time-badge" class="badge-sub">下班目标 18:00</span>
-              </div>
+        <!-- Escape Gameplay View Container (Tab: escape) -->
+        <div id="escape-view-container" class="escape-view-container">
+          <!-- Role & Workplace Environment Meta Bar -->
+          <div class="meta-strip">
+            <button id="strip-role-chip" class="meta-chip chip-role" title="点击切换职场角色">
+              <span id="meta-role-avatar">👨‍💻</span>
+              <span id="meta-role-name">后端攻城狮</span>
+            </button>
+            <div id="strip-mod-chip" class="meta-chip chip-weather" title="今日办公区环境词条 (点击查看每日黄历)">
+              <span id="meta-mod-icon">☀️</span>
+              <span id="meta-mod-name">平静周五</span>
             </div>
-            <div class="time-display" id="time-display">17:45</div>
-            <div class="time-progress-bar">
-              <div class="time-progress-fill" id="time-progress"></div>
-            </div>
+            <button id="strip-exp-chip" class="meta-chip chip-exp" title="点击打开摸鱼悟性天赋树">
+              <span>🧬</span>
+              <span id="meta-exp-val">0 悟性</span>
+            </button>
+            <button id="strip-relation-chip" class="meta-chip chip-relation" title="点击查看职场人脉网络与送礼">
+              <span>🤝</span>
+              <span id="meta-relation-val">职场人脉</span>
+            </button>
+            <span id="strip-hardcore-tag" class="meta-chip chip-hardcore hidden">🔥 修罗场</span>
           </div>
 
-          <div class="status-card metric-card">
-            <div class="metric-item">
-              <div class="metric-header">
-                <span>👁️ 老板怀疑度</span>
-                <span id="suspicion-text" class="metric-val text-safe">15%</span>
-              </div>
-              <div class="meter-bar">
-                <div id="suspicion-bar" class="meter-fill fill-safe" style="width: 15%"></div>
-              </div>
-              <div class="metric-caption">满 100% 将被当场抓获强制加班！</div>
-            </div>
-
-            <div class="metric-item">
-              <div class="metric-header">
-                <span>⚡ 精神体力</span>
-                <span id="energy-text" class="metric-val text-energy">90%</span>
-              </div>
-              <div class="meter-bar">
-                <div id="energy-bar" class="meter-fill fill-energy" style="width: 90%"></div>
-              </div>
-              <div class="metric-caption">归零将累瘫在工位任人宰割</div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Role & Workplace Environment Meta Bar -->
-        <div class="meta-strip">
-          <button id="strip-role-chip" class="meta-chip chip-role" title="点击切换职场角色">
-            <span id="meta-role-avatar">👨‍💻</span>
-            <span id="meta-role-name">后端攻城狮</span>
-          </button>
-          <div id="strip-mod-chip" class="meta-chip chip-weather" title="今日办公区环境词条 (点击查看每日黄历)">
-            <span id="meta-mod-icon">☀️</span>
-            <span id="meta-mod-name">平静周五</span>
-          </div>
-          <button id="strip-exp-chip" class="meta-chip chip-exp" title="点击打开摸鱼天赋树">
-            <span>🧬</span>
-            <span id="meta-exp-val">0 悟性</span>
-          </button>
-          <button id="strip-relation-chip" class="meta-chip chip-relation" title="点击查看职场人脉网络与送礼">
-            <span>🤝</span>
-            <span id="meta-relation-val">职场人脉</span>
-          </button>
-          <span id="strip-hardcore-tag" class="meta-chip chip-hardcore hidden">🔥 修罗场</span>
-        </div>
-
-        <!-- Escape Path Radar (Zone Navigator) -->
-        <nav class="zone-stepper" id="zone-stepper" aria-label="逃脱进度">
-          <!-- Dynamically populated zones -->
-        </nav>
-
-        <!-- Tactical Step Guidance Bar -->
-        <div class="tactical-step-bar" id="tactical-step-bar">
-          <div class="tactical-step-left">
-            <span class="tactical-step-badge" id="tactical-step-badge">第 1 阶段 / 工位潜行</span>
-            <span class="tactical-step-text" id="tactical-step-text">加载提示中...</span>
-          </div>
-          <button id="btn-step-guide-link" class="tactical-step-link" title="点击打开本阶段详细向导">
-            📖 玩法向导
-          </button>
-        </div>
-
-        <!-- Cyber Segmented Navigation for Compact Playability -->
-        <nav class="view-tab-nav" aria-label="主界面视图导航">
-          <button class="view-tab-btn active" data-tab="action" id="tab-btn-action">
-            <span class="tab-icon">🎯</span>
-            <span class="tab-label">现场抉择</span>
-          </button>
-          <button class="view-tab-btn" data-tab="map" id="tab-btn-map">
-            <span class="tab-icon">🗺️</span>
-            <span class="tab-label">逃脱路线</span>
-            <span class="tab-badge hidden" id="map-avail-badge"></span>
-          </button>
-          <button class="view-tab-btn" data-tab="log" id="tab-btn-log">
-            <span class="tab-icon">📜</span>
-            <span class="tab-label">动态通报</span>
-          </button>
-          <button class="view-tab-btn tab-all-view" data-tab="all" id="tab-btn-all" title="全景展开纵览">
-            <span class="tab-icon">📑</span>
-            <span class="tab-label">全景</span>
-          </button>
-        </nav>
-
-        <!-- Tab Panel: DAG Workplace Exploration Map Slot -->
-        <div id="map-view-slot" class="view-tab-panel panel-hidden" data-panel="map"></div>
-
-        <!-- Tab Panel: Main Workspace Screen (Action & Scene) -->
-        <main class="main-screen view-tab-panel" data-panel="action">
-          <!-- Zone Scene Box -->
-          <div class="scene-card" id="scene-card">
-            <div class="scene-header">
-              <div class="scene-title-group">
-                <span class="scene-icon" id="scene-icon">💻</span>
-                <div>
-                  <h2 class="scene-title" id="scene-title">工位核心区</h2>
-                  <span class="scene-sub" id="scene-sub">17:45 - 17:50</span>
+          <!-- Status Dashboard -->
+          <section class="dashboard">
+            <div class="status-card time-card">
+              <div class="status-label">
+                <span>🕒 当前时刻</span>
+                <div class="status-label-right">
+                  <button id="btn-quick-guide" class="chip-guide-link" title="点击查看玩法指南">💡 玩法指南</button>
+                  <span id="target-time-badge" class="badge-sub">下班目标 18:00</span>
                 </div>
               </div>
-              <div class="scene-tag" id="scene-status-tag">安全隐蔽</div>
+              <div class="time-display" id="time-display">17:45</div>
+              <div class="time-progress-bar">
+                <div class="time-progress-fill" id="time-progress"></div>
+              </div>
             </div>
-            <p class="scene-desc" id="scene-desc">
-              正在加载场景……
-            </p>
-          </div>
 
-          <!-- Tactical Action Buttons -->
-          <section class="action-section">
-            <h3 class="section-title">
-              <span>🎯 战术抉择</span>
-              <span class="section-hint">合理规划时间与体力</span>
-            </h3>
-            <div class="action-grid" id="action-grid">
-              <!-- Dynamically populated buttons -->
+            <div class="status-card metric-card">
+              <div class="metric-item">
+                <div class="metric-header">
+                  <span>👁️ 老板怀疑度</span>
+                  <span id="suspicion-text" class="metric-val text-safe">15%</span>
+                </div>
+                <div class="meter-bar">
+                  <div id="suspicion-bar" class="meter-fill fill-safe" style="width: 15%"></div>
+                </div>
+                <div class="metric-caption">满 100% 将被当场抓获强制加班！</div>
+              </div>
+
+              <div class="metric-item">
+                <div class="metric-header">
+                  <span>⚡ 精神体力</span>
+                  <span id="energy-text" class="metric-val text-energy">90%</span>
+                </div>
+                <div class="meter-bar">
+                  <div id="energy-bar" class="meter-fill fill-energy" style="width: 90%"></div>
+                </div>
+                <div class="metric-caption">归零将累瘫在工位任人宰割</div>
+              </div>
             </div>
           </section>
 
-          <!-- Tactical Backpack Items -->
-          <section class="backpack-section">
+          <!-- Escape Path Radar (Zone Navigator) -->
+          <nav class="zone-stepper" id="zone-stepper" aria-label="逃脱进度">
+            <!-- Dynamically populated zones -->
+          </nav>
+
+          <!-- Tactical Step Guidance Bar -->
+          <div class="tactical-step-bar" id="tactical-step-bar">
+            <div class="tactical-step-left">
+              <span class="tactical-step-badge" id="tactical-step-badge">第 1 阶段 / 工位潜行</span>
+              <span class="tactical-step-text" id="tactical-step-text">加载提示中...</span>
+            </div>
+            <button id="btn-step-guide-link" class="tactical-step-link" title="点击打开本阶段详细向导">
+              📖 玩法向导
+            </button>
+          </div>
+
+          <!-- Cyber Segmented Navigation for Compact Playability -->
+          <nav class="view-tab-nav" aria-label="主界面视图导航">
+            <button class="view-tab-btn active" data-tab="action" id="tab-btn-action">
+              <span class="tab-icon">🎯</span>
+              <span class="tab-label">现场抉择</span>
+            </button>
+            <button class="view-tab-btn" data-tab="map" id="tab-btn-map">
+              <span class="tab-icon">🗺️</span>
+              <span class="tab-label">逃脱路线</span>
+              <span class="tab-badge hidden" id="map-avail-badge"></span>
+            </button>
+            <button class="view-tab-btn" data-tab="radar" id="tab-btn-radar">
+              <span class="tab-icon">📡</span>
+              <span class="tab-label">监控雷达</span>
+            </button>
+            <button class="view-tab-btn" data-tab="backpack" id="tab-btn-backpack">
+              <span class="tab-icon">🎒</span>
+              <span class="tab-label">摸鱼背包</span>
+              <span class="tab-badge" id="backpack-tab-badge">0</span>
+            </button>
+            <button class="view-tab-btn" data-tab="log" id="tab-btn-log">
+              <span class="tab-icon">📜</span>
+              <span class="tab-label">动态通报</span>
+            </button>
+            <button class="view-tab-btn tab-all-view" data-tab="all" id="tab-btn-all" title="全景展开纵览">
+              <span class="tab-icon">📑</span>
+              <span class="tab-label">全景</span>
+            </button>
+          </nav>
+
+          <!-- Tab Panel: Main Workspace Screen (Action & Scene) -->
+          <main class="main-screen view-tab-panel" data-panel="action">
+            <!-- Zone Scene Box -->
+            <div class="scene-card" id="scene-card">
+              <div class="scene-header">
+                <div class="scene-title-group">
+                  <span class="scene-icon" id="scene-icon">💻</span>
+                  <div>
+                    <h2 class="scene-title" id="scene-title">工位核心区</h2>
+                    <span class="scene-sub" id="scene-sub">17:45 - 17:50</span>
+                  </div>
+                </div>
+                <div class="scene-tag" id="scene-status-tag">安全隐蔽</div>
+              </div>
+              <p class="scene-desc" id="scene-desc">
+                正在加载场景……
+              </p>
+            </div>
+
+            <!-- Tactical Action Buttons -->
+            <section class="action-section">
+              <h3 class="section-title">
+                <span>🎯 战术抉择</span>
+                <span class="section-hint">合理规划时间与体力</span>
+              </h3>
+              <div class="action-grid" id="action-grid">
+                <!-- Dynamically populated buttons -->
+              </div>
+            </section>
+
+            <!-- Quick Action Log Preview Strip -->
+            <div class="action-log-ticker" id="action-log-ticker" title="点击查看全部通报动态">
+              <span class="action-log-icon">📜</span>
+              <span class="action-log-text" id="action-log-preview">周五 17:45，逃脱战役正式打响！</span>
+              <span class="action-log-more">全部动态 ➡️</span>
+            </div>
+          </main>
+
+          <!-- Tab Panel: DAG Workplace Exploration Map Slot -->
+          <div id="map-view-slot" class="view-tab-panel panel-hidden" data-panel="map"></div>
+
+          <!-- Tab Panel: Boss Surveillance Radar Slot -->
+          <div id="radar-slot" class="view-tab-panel panel-hidden" data-panel="radar"></div>
+
+          <!-- Tab Panel: Tactical Backpack Items -->
+          <section class="backpack-section view-tab-panel panel-hidden" data-panel="backpack">
             <h3 class="section-title">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span>🎒 摸鱼背包 (<span id="backpack-count">0</span>)</span>
@@ -287,24 +270,90 @@ export class UIRenderer {
             </div>
           </section>
 
-          <!-- Quick Action Log Preview Strip -->
-          <div class="action-log-ticker" id="action-log-ticker" title="点击查看全部通报动态">
-            <span class="action-log-icon">📜</span>
-            <span class="action-log-text" id="action-log-preview">周五 17:45，逃脱战役正式打响！</span>
-            <span class="action-log-more">全部动态 ➡️</span>
-          </div>
-        </main>
+          <!-- Tab Panel: Live Event Feed -->
+          <section class="log-section view-tab-panel panel-hidden" data-panel="log">
+            <h3 class="section-title">
+              <span>📜 实时动态通报</span>
+              <span class="section-hint">分秒必争</span>
+            </h3>
+            <div class="log-container" id="log-container">
+              <!-- Dynamic logs -->
+            </div>
+          </section>
+        </div>
 
-        <!-- Tab Panel: Live Event Feed -->
-        <section class="log-section view-tab-panel panel-hidden" data-panel="log">
-          <h3 class="section-title">
-            <span>📜 实时动态通报</span>
-            <span class="section-hint">分秒必争</span>
-          </h3>
-          <div class="log-container" id="log-container">
-            <!-- Dynamic logs -->
+        <!-- Modes Hub Container (Combined Tab: 阎总模式 + 深夜逃杀 + 职场工坊 + 图鉴成就) -->
+        <div id="modes-hub-container" class="modes-hub-container hidden">
+          <div class="modes-hub-view">
+            <div class="modes-hub-header">
+              <div class="modes-hub-title-group">
+                <span class="modes-hub-avatar">🎛️</span>
+                <div>
+                  <h2 class="modes-hub-title">职场多元模式中心</h2>
+                  <span class="modes-hub-subtitle">四大扩展玩法 · 一站式沉浸体验</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="modes-hub-grid">
+              <!-- 1. 阎总模式 -->
+              <div class="mode-portal-card card-boss" id="card-mode-boss" role="button" tabindex="0">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">👑</span>
+                  <span class="mode-card-badge badge-boss">角色反转</span>
+                </div>
+                <h3 class="mode-card-title">阎总模式 · 逮捕摸鱼</h3>
+                <p class="mode-card-desc">反转扮演公司大Boss阎总！巡视 6 大办公区，布控抓捕潜逃员工，守护公司加班秩序！</p>
+                <div class="mode-card-footer">
+                  <span class="mode-card-stat">🏢 6大巡逻区 · 策略布控</span>
+                  <button class="btn btn-primary btn-sm mode-enter-btn" id="btn-enter-boss">立即接管 ➔</button>
+                </div>
+              </div>
+
+              <!-- 2. 深夜逃杀 -->
+              <div class="mode-portal-card card-overtime" id="card-mode-overtime" role="button" tabindex="0">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">🌙</span>
+                  <span class="mode-card-badge badge-overtime">无尽生存</span>
+                </div>
+                <h3 class="mode-card-title">深夜逃杀 · 周五大逃杀</h3>
+                <p class="mode-card-desc">周五深夜被困办公室？极限管控摸鱼度与存在感，熬过 20 个通宵回合迎来周六黎明曙光！</p>
+                <div class="mode-card-footer">
+                  <span class="mode-card-stat">⏳ 20回合 · 极限挑战</span>
+                  <button class="btn btn-primary btn-sm mode-enter-btn" id="btn-enter-overtime">开启大逃杀 ➔</button>
+                </div>
+              </div>
+
+              <!-- 3. 职场工坊 -->
+              <div class="mode-portal-card card-workshop" id="card-mode-workshop" role="button" tabindex="0">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">🧪</span>
+                  <span class="mode-card-badge badge-workshop">神装与人脉</span>
+                </div>
+                <h3 class="mode-card-title">职场工坊 · 妙手合成</h3>
+                <p class="mode-card-desc">探索摸鱼道具无序配方，合成强力羁绊神装；管理 4 位职场同事好感度网络，获取送礼羁绊。</p>
+                <div class="mode-card-footer">
+                  <span class="mode-card-stat">✨ 10款神装 · 4大关系网</span>
+                  <button class="btn btn-primary btn-sm mode-enter-btn" id="btn-enter-workshop">进入工坊 ➔</button>
+                </div>
+              </div>
+
+              <!-- 4. 图鉴与成就 -->
+              <div class="mode-portal-card card-archive" id="card-mode-archive" role="button" tabindex="0">
+                <div class="mode-card-header">
+                  <span class="mode-card-icon">🏆</span>
+                  <span class="mode-card-badge badge-archive">战绩与收藏</span>
+                </div>
+                <h3 class="mode-card-title">图鉴成就 · 档案全览</h3>
+                <p class="mode-card-desc">全景检阅 26 大结局分支、20 枚成就勋章、职业成长记录与官方出逃指南，见证摸鱼传奇。</p>
+                <div class="mode-card-footer">
+                  <span class="mode-card-stat" id="hub-archive-counter">🏆 结局与勋章</span>
+                  <button class="btn btn-primary btn-sm mode-enter-btn" id="btn-enter-archive">查阅图鉴 ➔</button>
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
+        </div>
 
         <!-- Encounters Modal -->
         <div id="encounter-modal" class="modal-backdrop hidden">
@@ -604,23 +653,11 @@ export class UIRenderer {
         <nav class="cyber-bottom-nav" id="cyber-bottom-nav" aria-label="底栏主导航">
           <button class="bottom-tab-btn active" data-tab="escape" id="nav-tab-escape" title="准点下班 · 现场突围">
             <span class="bottom-tab-icon">🏃</span>
-            <span class="bottom-tab-label">准点逃脱</span>
+            <span class="bottom-tab-label">现场突围</span>
           </button>
-          <button class="bottom-tab-btn" data-tab="boss" id="nav-tab-boss" title="角色反转：扮演阎总逮捕逃兵">
-            <span class="bottom-tab-icon">👑</span>
-            <span class="bottom-tab-label">阎总模式</span>
-          </button>
-          <button class="bottom-tab-btn" data-tab="overtime" id="nav-tab-overtime" title="无尽生存：周五深夜大逃杀">
-            <span class="bottom-tab-icon">🌙</span>
-            <span class="bottom-tab-label">深夜逃杀</span>
-          </button>
-          <button class="bottom-tab-btn" data-tab="workshop" id="nav-tab-workshop" title="职场工坊 · 妙手合成与人脉">
-            <span class="bottom-tab-icon">🧪</span>
-            <span class="bottom-tab-label">职场工坊</span>
-          </button>
-          <button class="bottom-tab-btn" data-tab="archive" id="nav-tab-archive" title="全景结局图鉴与成就勋章">
-            <span class="bottom-tab-icon">🏆</span>
-            <span class="bottom-tab-label">图鉴成就</span>
+          <button class="bottom-tab-btn" data-tab="modes" id="nav-tab-modes" title="职场中心 · 阎总/逃杀/工坊/成就">
+            <span class="bottom-tab-icon">🎛️</span>
+            <span class="bottom-tab-label">职场中心</span>
           </button>
         </nav>
       </div>
@@ -839,59 +876,101 @@ export class UIRenderer {
       this.reverseBossView.show();
     });
 
+    // Modes Hub Cards & Buttons
+    const handleEnterBoss = () => {
+      sound.playClick();
+      this.reverseBossView?.show();
+    };
+    document.getElementById('card-mode-boss')?.addEventListener('click', handleEnterBoss);
+    document.getElementById('btn-enter-boss')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleEnterBoss();
+    });
+
+    const handleEnterOvertime = () => {
+      sound.playClick();
+      this.overtimeView?.show();
+    };
+    document.getElementById('card-mode-overtime')?.addEventListener('click', handleEnterOvertime);
+    document.getElementById('btn-enter-overtime')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleEnterOvertime();
+    });
+
+    const handleEnterWorkshop = () => {
+      sound.playClick();
+      this.craftModal?.show();
+    };
+    document.getElementById('card-mode-workshop')?.addEventListener('click', handleEnterWorkshop);
+    document.getElementById('btn-enter-workshop')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleEnterWorkshop();
+    });
+
+    const handleEnterArchive = () => {
+      sound.playClick();
+      this.renderArchiveModal('endings');
+      document.getElementById('archive-modal')?.classList.remove('hidden');
+    };
+    document.getElementById('card-mode-archive')?.addEventListener('click', handleEnterArchive);
+    document.getElementById('btn-enter-archive')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      handleEnterArchive();
+    });
+
     // Top Bar mode buttons
     document.getElementById('btn-boss-mode')?.addEventListener('click', () => {
       sound.playClick();
-      this.reverseBossView.show();
+      this.reverseBossView?.show();
     });
 
     document.getElementById('btn-overtime-mode')?.addEventListener('click', () => {
       sound.playClick();
-      this.overtimeView.show();
+      this.overtimeView?.show();
     });
 
     // Role modal
     const roleModal = document.getElementById('role-modal');
-    document.getElementById('btn-role').addEventListener('click', () => this.openRoleModal());
-    document.getElementById('strip-role-chip').addEventListener('click', () => this.openRoleModal());
-    document.getElementById('btn-close-role').addEventListener('click', () => {
-      roleModal.classList.add('hidden');
-      this.updateBottomTabHighlight('escape');
+    document.getElementById('btn-role')?.addEventListener('click', () => this.openRoleModal());
+    document.getElementById('strip-role-chip')?.addEventListener('click', () => this.openRoleModal());
+    document.getElementById('btn-close-role')?.addEventListener('click', () => {
+      roleModal?.classList.add('hidden');
+      this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape');
     });
 
-    document.getElementById('btn-confirm-role').addEventListener('click', () => {
+    document.getElementById('btn-confirm-role')?.addEventListener('click', () => {
       const selectedRadio = document.querySelector('input[name="role-select"]:checked');
       const roleId = selectedRadio ? selectedRadio.value : this.state.selectedRoleId;
-      const isHardcore = document.getElementById('check-hardcore').checked;
+      const isHardcore = document.getElementById('check-hardcore')?.checked;
       this.engine.restart(roleId, null, isHardcore);
-      roleModal.classList.add('hidden');
+      roleModal?.classList.add('hidden');
       this.updateBottomTabHighlight('escape');
       toast.show(`已化身【${CHARACTERS[roleId].name}】开启逃脱！`, 'success');
     });
 
     // Talent modal
     const talentModal = document.getElementById('talent-modal');
-    document.getElementById('btn-talent').addEventListener('click', () => this.openTalentModal());
-    document.getElementById('strip-exp-chip').addEventListener('click', () => this.openTalentModal());
-    document.getElementById('btn-close-talent').addEventListener('click', () => {
-      talentModal.classList.add('hidden');
-      this.updateBottomTabHighlight('escape');
+    document.getElementById('btn-talent')?.addEventListener('click', () => this.openTalentModal());
+    document.getElementById('strip-exp-chip')?.addEventListener('click', () => this.openTalentModal());
+    document.getElementById('btn-close-talent')?.addEventListener('click', () => {
+      talentModal?.classList.add('hidden');
+      this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape');
     });
 
     // Craft modal
     document.getElementById('btn-craft')?.addEventListener('click', () => {
       sound.playClick();
-      this.craftModal.show();
+      this.craftModal?.show();
     });
     document.getElementById('btn-quick-craft')?.addEventListener('click', () => {
       sound.playClick();
-      this.craftModal.show();
+      this.craftModal?.show();
     });
 
     // Relation panel
     document.getElementById('btn-relation')?.addEventListener('click', () => {
       sound.playClick();
-      this.relationPanel.show();
+      this.relationPanel?.show();
     });
 
     // Daily Almanac modal
@@ -901,15 +980,15 @@ export class UIRenderer {
 
     // Archive Modal
     const archiveModal = document.getElementById('archive-modal');
-    document.getElementById('btn-archive').addEventListener('click', () => {
+    document.getElementById('btn-archive')?.addEventListener('click', () => {
       sound.playClick();
       this.renderArchiveModal('endings');
-      archiveModal.classList.remove('hidden');
+      archiveModal?.classList.remove('hidden');
     });
 
-    document.getElementById('btn-close-archive').addEventListener('click', () => {
-      archiveModal.classList.add('hidden');
-      this.updateBottomTabHighlight('escape');
+    document.getElementById('btn-close-archive')?.addEventListener('click', () => {
+      archiveModal?.classList.add('hidden');
+      this.updateBottomTabHighlight(this.activeBottomNavTab || 'escape');
     });
 
     document.getElementById('tab-endings').addEventListener('click', () => this.renderArchiveModal('endings'));
@@ -1187,8 +1266,17 @@ export class UIRenderer {
     const step = INTERACTIVE_TOUR_STEPS[index];
     if (!step) return;
 
-    if (step.step === 5) {
+    // Ensure main escape screen is active for tour spotlight
+    this.switchBottomNavTab('escape', false);
+
+    if (step.step === 3) {
+      this.setActiveTab('radar');
+    } else if (step.step === 5) {
       this.setActiveTab('map');
+    } else if (step.step === 8) {
+      this.setActiveTab('backpack');
+    } else if (step.step === 6 || step.step === 7) {
+      this.setActiveTab('action');
     } else {
       if (this.activeTab !== 'action' && this.activeTab !== 'all') {
         this.setActiveTab('action');
@@ -1517,7 +1605,22 @@ export class UIRenderer {
     if (playAudio) sound.playClick();
     this.updateBottomTabHighlight(tabId);
 
+    const escapeView = document.getElementById('escape-view-container');
+    const modesHub = document.getElementById('modes-hub-container');
+
     if (tabId === 'escape') {
+      if (escapeView) escapeView.classList.remove('hidden');
+      if (modesHub) modesHub.classList.add('hidden');
+      this.reverseBossView?.hide();
+      this.overtimeView?.hide();
+      this.craftModal?.close();
+      document.getElementById('archive-modal')?.classList.add('hidden');
+      document.getElementById('role-modal')?.classList.add('hidden');
+      document.getElementById('talent-modal')?.classList.add('hidden');
+    } else if (tabId === 'modes') {
+      if (escapeView) escapeView.classList.add('hidden');
+      if (modesHub) modesHub.classList.remove('hidden');
+      this.updateModesHubStats();
       this.reverseBossView?.hide();
       this.overtimeView?.hide();
       this.craftModal?.close();
@@ -1525,32 +1628,29 @@ export class UIRenderer {
       document.getElementById('role-modal')?.classList.add('hidden');
       document.getElementById('talent-modal')?.classList.add('hidden');
     } else if (tabId === 'boss') {
-      this.overtimeView?.hide();
-      this.craftModal?.close();
-      document.getElementById('archive-modal')?.classList.add('hidden');
-      document.getElementById('role-modal')?.classList.add('hidden');
-      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.switchBottomNavTab('modes', false);
       this.reverseBossView?.show();
     } else if (tabId === 'overtime') {
-      this.reverseBossView?.hide();
-      this.craftModal?.close();
-      document.getElementById('archive-modal')?.classList.add('hidden');
-      document.getElementById('role-modal')?.classList.add('hidden');
-      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.switchBottomNavTab('modes', false);
       this.overtimeView?.show();
     } else if (tabId === 'workshop') {
-      this.reverseBossView?.hide();
-      this.overtimeView?.hide();
-      document.getElementById('archive-modal')?.classList.add('hidden');
-      document.getElementById('role-modal')?.classList.add('hidden');
-      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.switchBottomNavTab('modes', false);
       this.craftModal?.show();
     } else if (tabId === 'archive') {
-      this.reverseBossView?.hide();
-      this.overtimeView?.hide();
-      this.craftModal?.close();
+      this.switchBottomNavTab('modes', false);
       this.renderArchiveModal('endings');
       document.getElementById('archive-modal')?.classList.remove('hidden');
+    }
+  }
+
+  updateModesHubStats() {
+    const archiveCounter = document.getElementById('hub-archive-counter');
+    if (archiveCounter) {
+      const unlockedEndings = this.state.unlockedEndings ? this.state.unlockedEndings.length : 0;
+      const totalEndings = Object.keys(ENDINGS).length;
+      const unlockedAchievements = this.state.unlockedAchievements ? this.state.unlockedAchievements.length : 0;
+      const totalAchievements = ACHIEVEMENTS.length;
+      archiveCounter.textContent = `🏆 结局 ${unlockedEndings}/${totalEndings} · 勋章 ${unlockedAchievements}/${totalAchievements}`;
     }
   }
 
@@ -1610,6 +1710,17 @@ export class UIRenderer {
         mapBadge.classList.remove('hidden');
       } else {
         mapBadge.classList.add('hidden');
+      }
+    }
+
+    const backpackBadge = document.getElementById('backpack-tab-badge');
+    if (backpackBadge) {
+      const count = this.state.inventory ? this.state.inventory.length : 0;
+      backpackBadge.textContent = count;
+      if (count > 0) {
+        backpackBadge.classList.remove('hidden');
+      } else {
+        backpackBadge.classList.add('hidden');
       }
     }
 

@@ -137,4 +137,33 @@ test('T5.8 CURRENT_VERSION sync with CHANGELOGS and package.json', async (t) => 
   assert.equal(latestCount, 1, 'Only one changelog entry may be flagged as isLatest');
 });
 
+test('T5.9 Consolidated 2-tab bottom navigation and Modes Hub card architecture', async (t) => {
+  const fs = await import('node:fs');
+  const rendererCode = fs.readFileSync(new URL('../src/ui/renderer.js', import.meta.url), 'utf-8');
+
+  // Verify bottom nav contains the two consolidated tabs
+  assert.ok(rendererCode.includes('id="nav-tab-escape"'), 'Must have escape tab button');
+  assert.ok(rendererCode.includes('id="nav-tab-modes"'), 'Must have modes hub tab button');
+  assert.ok(!rendererCode.includes('id="nav-tab-boss"'), 'Separate boss bottom tab must be removed');
+  assert.ok(!rendererCode.includes('id="nav-tab-overtime"'), 'Separate overtime bottom tab must be removed');
+  assert.ok(!rendererCode.includes('id="nav-tab-workshop"'), 'Separate workshop bottom tab must be removed');
+  assert.ok(!rendererCode.includes('id="nav-tab-archive"'), 'Separate archive bottom tab must be removed');
+
+  // Verify Modes Hub view and 4 portal cards
+  assert.ok(rendererCode.includes('id="modes-hub-container"'), 'Must have modes-hub-container');
+  assert.ok(rendererCode.includes('id="card-mode-boss"'), 'Must have boss mode portal card');
+  assert.ok(rendererCode.includes('id="card-mode-overtime"'), 'Must have overtime mode portal card');
+  assert.ok(rendererCode.includes('id="card-mode-workshop"'), 'Must have workshop mode portal card');
+  assert.ok(rendererCode.includes('id="card-mode-archive"'), 'Must have archive mode portal card');
+
+  // Verify Tour Step 3, 5, 8 targets for refactored tabs
+  const { INTERACTIVE_TOUR_STEPS } = await import('../src/data/guide.js');
+  const step3 = INTERACTIVE_TOUR_STEPS.find((s) => s.step === 3);
+  assert.ok(step3.selector.includes('#tab-btn-radar') || step3.selector.includes('#radar-slot'), 'Step 3 must target radar');
+
+  const step8 = INTERACTIVE_TOUR_STEPS.find((s) => s.step === 8);
+  assert.ok(step8.selector.includes('#tab-btn-backpack') || step8.selector.includes('.backpack-section'), 'Step 8 must target backpack');
+});
+
+
 

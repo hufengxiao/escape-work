@@ -442,11 +442,11 @@ export const INTERACTIVE_TOUR_STEPS = [
   },
   {
     step: 3,
-    selector: '#radar-slot',
+    selector: '#radar-slot, #tab-btn-radar',
     icon: '📡',
     title: '高管动向监控雷达与声东击西',
     badge: '步骤 3 / 8 · 监控雷达',
-    desc: '顶部雷达实时追踪大Boss阎总的楼层与巡视动向（🟢安全/🟡警戒/🔴极度危险）！\n右侧【🎭 声东击西】按钮可在危机时刻制造假火警或假会议，引开老板 3 个回合！',
+    desc: '雷达实时追踪大Boss阎总的楼层与巡视动向（🟢安全/🟡警戒/🔴极度危险）！\n右侧【🎭 声东击西】按钮可在危机时刻制造假火警或假会议，引开老板 3 个回合！',
     tip: '💡 看到红色高危警报时，立刻点击【声东击西】调虎离山！',
     padding: 8
   },
@@ -454,15 +454,15 @@ export const INTERACTIVE_TOUR_STEPS = [
     step: 4,
     selector: '#cyber-bottom-nav, .cyber-bottom-nav',
     icon: '⚡',
-    title: '底部主导航与多模式中心',
+    title: '底部主导航与职场中心',
     badge: '步骤 4 / 8 · 底栏主导航',
-    desc: '底栏聚合全部核心模式与系统：\n• 🏃 准点逃脱：主线地下城潜行\n• 👑 阎总模式：角色反转当老板抓逃兵\n• 🌙 深夜逃杀：20 回合通宵生存大逃杀\n• 🧪 职场工坊：神装合成与职场化学反应\n• 🏆 图鉴成就：26大结局与成就勋章全览',
-    tip: '💡 随时轻触底栏在各大核心玩法间无缝穿梭！',
+    desc: '底栏双主线架构，一键高效切换：\n• 🏃 现场突围：主线 15 分钟高压逃脱行动\n• 🎛️ 职场中心：一站式聚合【👑 阎总模式】角色反转、【🌙 深夜逃杀】通宵生存、【🧪 职场工坊】神装合成与【🏆 图鉴成就】全览！',
+    tip: '💡 轻触【🎛️ 职场中心】即可畅玩角色反转与神装合成！',
     padding: 6
   },
   {
     step: 5,
-    selector: '#map-view-container, #map-view-slot, .map-view-container, #dag-map-container',
+    selector: '#map-view-container, #map-view-slot, .map-view-container, #dag-map-container, #tab-btn-map',
     icon: '🗺️',
     title: '5 层 DAG 拓扑逃生路线图',
     badge: '步骤 5 / 8 · 路线网络',
@@ -492,7 +492,7 @@ export const INTERACTIVE_TOUR_STEPS = [
   },
   {
     step: 8,
-    selector: '.backpack-section',
+    selector: '.backpack-section, #tab-btn-backpack, .item-tray',
     icon: '🎒',
     title: '随身摸鱼神器背包',
     badge: '步骤 8 / 8 · 保命道具',
