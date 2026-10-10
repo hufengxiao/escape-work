@@ -357,9 +357,105 @@ body {
   line-height: 1.2;
 }
 
+.time-display-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.metric-val-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stat-delta-chip {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+  display: inline-flex;
+  align-items: center;
+  animation: deltaBadgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.stat-delta-chip.delta-danger {
+  background: rgba(244, 63, 94, 0.22);
+  color: #f43f5e;
+  border: 1px solid rgba(244, 63, 94, 0.55);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.35);
+}
+
+.stat-delta-chip.delta-safe {
+  background: rgba(16, 185, 129, 0.22);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.55);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+}
+
+.stat-delta-chip.delta-time {
+  background: rgba(56, 189, 248, 0.22);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+}
+
+@keyframes deltaBadgePop {
+  0% { transform: scale(0.5); opacity: 0; }
+  70% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Stat Flash Highlight Animations */
+.stat-flash-danger {
+  animation: flashTextDanger 1.2s ease forwards !important;
+}
+@keyframes flashTextDanger {
+  0% { transform: scale(1.35); color: #ff4d6d !important; text-shadow: 0 0 16px rgba(244, 63, 94, 0.95); }
+  50% { transform: scale(1.15); color: #f43f5e !important; text-shadow: 0 0 8px rgba(244, 63, 94, 0.5); }
+  100% { transform: scale(1); }
+}
+
+.stat-flash-safe {
+  animation: flashTextSafe 1.2s ease forwards !important;
+}
+@keyframes flashTextSafe {
+  0% { transform: scale(1.35); color: #34d399 !important; text-shadow: 0 0 16px rgba(16, 185, 129, 0.95); }
+  50% { transform: scale(1.15); color: #10b981 !important; text-shadow: 0 0 8px rgba(16, 185, 129, 0.5); }
+  100% { transform: scale(1); }
+}
+
+.stat-flash-time {
+  animation: flashTextTime 1s ease forwards !important;
+}
+@keyframes flashTextTime {
+  0% { transform: scale(1.15); color: #7dd3fc !important; text-shadow: 0 0 18px rgba(56, 189, 248, 0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Card / Box Border Glow Pulses */
+.box-pulse-danger {
+  animation: boxPulseRed 1.2s ease forwards;
+}
+@keyframes boxPulseRed {
+  0% { border-color: rgba(244, 63, 94, 0.85); box-shadow: 0 0 14px rgba(244, 63, 94, 0.45); }
+  100% { border-color: var(--border-subtle); box-shadow: none; }
+}
+
+.box-pulse-safe {
+  animation: boxPulseGreen 1.2s ease forwards;
+}
+@keyframes boxPulseGreen {
+  0% { border-color: rgba(16, 185, 129, 0.85); box-shadow: 0 0 14px rgba(16, 185, 129, 0.45); }
+  100% { border-color: var(--border-subtle); box-shadow: none; }
+}
+
 .metric-val {
   font-weight: 700;
   font-size: 12px;
+  display: inline-block;
+  transition: transform 0.2s ease;
 }
 
 .meter-bar {

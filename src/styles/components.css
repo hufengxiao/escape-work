@@ -495,7 +495,7 @@
 }
 
 .log-container {
-  background: rgba(11, 15, 25, 0.85);
+  background: rgba(11, 15, 25, 0.88);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 12px 14px;
@@ -505,33 +505,102 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 12px;
+  font-size: 13.5px;
   box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .log-entry {
   display: flex;
-  gap: 6px;
-  line-height: 1.45;
-  padding-bottom: 4px;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 1.5;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(15, 23, 42, 0.55);
+  border-left: 3px solid rgba(148, 163, 184, 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.2s ease;
+}
+
+.log-entry:hover {
+  background: rgba(30, 41, 59, 0.7);
 }
 
 .log-time {
-  color: var(--text-dim);
-  font-family: monospace;
+  color: #94a3b8;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
 .log-text {
-  color: #cbd5e1;
+  color: #e2e8f0;
+  font-size: 13px;
+  flex: 1;
+  word-break: break-word;
 }
 
-.log-alert .log-text { color: #f87171; font-weight: 600; }
-.log-warning .log-text { color: #facc15; }
-.log-success .log-text { color: #4ade80; }
-.log-item .log-text { color: #38bdf8; }
-.log-achievement .log-text { color: #c084fc; font-weight: 700; }
+.log-alert {
+  background: rgba(239, 68, 68, 0.12);
+  border-left-color: #f87171;
+}
+.log-alert .log-text { color: #fca5a5; font-weight: 700; }
+
+.log-warning {
+  background: rgba(245, 158, 11, 0.12);
+  border-left-color: #facc15;
+}
+.log-warning .log-text { color: #fde047; font-weight: 600; }
+
+.log-success {
+  background: rgba(16, 185, 129, 0.1);
+  border-left-color: #4ade80;
+}
+.log-success .log-text { color: #86efac; font-weight: 500; }
+
+.log-item {
+  background: rgba(56, 189, 248, 0.1);
+  border-left-color: #38bdf8;
+}
+.log-item .log-text { color: #7dd3fc; font-weight: 600; }
+
+.log-achievement {
+  background: rgba(168, 85, 247, 0.12);
+  border-left-color: #c084fc;
+}
+.log-achievement .log-text { color: #e9d5ff; font-weight: 700; }
+
+/* In-log Stat Highlight Chips */
+.log-stat-chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin: 0 2px;
+  line-height: 1.25;
+}
+.log-stat-chip.chip-danger {
+  background: rgba(244, 63, 94, 0.28);
+  color: #fecdd3;
+  border: 1px solid rgba(244, 63, 94, 0.55);
+}
+.log-stat-chip.chip-safe {
+  background: rgba(16, 185, 129, 0.28);
+  color: #a7f3d0;
+  border: 1px solid rgba(16, 185, 129, 0.55);
+}
+.log-stat-chip.chip-warn {
+  background: rgba(245, 158, 11, 0.28);
+  color: #fef08a;
+  border: 1px solid rgba(245, 158, 11, 0.55);
+}
+.log-stat-chip.chip-energy {
+  background: rgba(56, 189, 248, 0.28);
+  color: #bae6fd;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+}
 
 /* Modals */
 .modal-backdrop {
@@ -1772,25 +1841,26 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid var(--border-subtle);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(99, 102, 241, 0.35);
   border-radius: var(--radius-sm);
-  padding: 6px 10px;
-  font-size: 11px;
+  padding: 7px 12px;
+  font-size: 12.5px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   margin-top: 2px;
 }
 
 .action-log-ticker:hover {
-  background: rgba(30, 41, 59, 0.85);
+  background: rgba(30, 41, 59, 0.95);
   border-color: var(--accent-primary);
   color: #fff;
+  transform: translateY(-1px);
 }
 
 .action-log-icon {
-  font-size: 13px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 
@@ -1799,14 +1869,50 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #cbd5e1;
+  color: #f1f5f9;
+  font-weight: 500;
+  font-size: 12.5px;
 }
 
 .action-log-more {
-  color: var(--accent-primary);
-  font-size: 10px;
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+/* Action Ticker Flash Animations */
+.ticker-flash-alert {
+  animation: tickerPulseAlert 1.5s ease;
+  border-color: rgba(244, 63, 94, 0.8) !important;
+  background: rgba(244, 63, 94, 0.18) !important;
+}
+@keyframes tickerPulseAlert {
+  0% { transform: scale(1.02); box-shadow: 0 0 16px rgba(244, 63, 94, 0.7); }
+  50% { box-shadow: 0 0 8px rgba(244, 63, 94, 0.35); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+.ticker-flash-warning {
+  animation: tickerPulseWarn 1.5s ease;
+  border-color: rgba(245, 158, 11, 0.8) !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+}
+@keyframes tickerPulseWarn {
+  0% { transform: scale(1.02); box-shadow: 0 0 16px rgba(245, 158, 11, 0.7); }
+  50% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.35); }
+  100% { transform: scale(1); box-shadow: none; }
+}
+
+.ticker-flash-info {
+  animation: tickerPulseInfo 1.2s ease;
+  border-color: rgba(99, 102, 241, 0.8) !important;
+  background: rgba(30, 41, 59, 0.95) !important;
+}
+@keyframes tickerPulseInfo {
+  0% { transform: scale(1.01); box-shadow: 0 0 14px rgba(99, 102, 241, 0.5); }
+  100% { transform: scale(1); box-shadow: none; }
 }
 
 /* Step-by-Step Guide Modal (Wizard) */

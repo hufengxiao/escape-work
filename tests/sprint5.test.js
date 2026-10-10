@@ -210,6 +210,32 @@ test('T5.11 Backpack 2-column grid, synergy portal & Live log padding layout ver
   assert.ok(cssCode.includes('min-height: 320px;'), 'Log container must have comfortable expanded height');
 });
 
+test('T5.12 Stat delta highlight, encounter toast feedback & enlarged dynamic log layout verification', async (t) => {
+  const fs = await import('node:fs');
+  const rendererCode = fs.readFileSync(new URL('../src/ui/renderer.js', import.meta.url), 'utf-8');
+  const engineCode = fs.readFileSync(new URL('../src/engine/gameEngine.js', import.meta.url), 'utf-8');
+  const componentsCss = fs.readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf-8');
+  const mainCss = fs.readFileSync(new URL('../src/styles/main.css', import.meta.url), 'utf-8');
+
+  // 1. Verify stat delta chips in dashboard markup & logic
+  assert.ok(rendererCode.includes('id="suspicion-delta"'), 'Must have suspicion delta chip');
+  assert.ok(rendererCode.includes('id="energy-delta"'), 'Must have energy delta chip');
+  assert.ok(rendererCode.includes('id="time-delta"'), 'Must have time delta chip');
+  assert.ok(rendererCode.includes('stat-flash-danger'), 'Must support stat-flash-danger animation');
+
+  // 2. Verify encounter choice toast feedback in engine
+  assert.ok(engineCode.includes('toast.show(result.msg, result.type || \'info\');'), 'Must toast encounter result');
+
+  // 3. Verify enlarged log entries & stat highlight chips
+  assert.ok(componentsCss.includes('.log-stat-chip'), 'Must have log stat highlight chip styles');
+  assert.ok(componentsCss.includes('.ticker-flash-warning'), 'Must have ticker flash animations');
+  assert.ok(mainCss.includes('.stat-delta-chip'), 'Must have stat delta chip styles');
+  assert.ok(mainCss.includes('@keyframes flashTextDanger'), 'Must have flashTextDanger animation');
+
+  // 4. Verify intern contextual hint
+  assert.ok(rendererCode.includes('非实习生装嫩将+8%怀疑度'), 'Must display non-intern risk warning in encounter choices');
+});
+
 
 
 

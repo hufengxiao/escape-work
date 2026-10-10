@@ -4,10 +4,31 @@
 
 export const CHANGELOGS = [
   {
+    version: '3.3.3',
+    title: '数值变化高亮反馈与动态通报字体升级：即时Delta跳字、偶遇Toast直达与大字号战况流',
+    date: '2026-10-10',
+    isLatest: true,
+    badge: '体验专项升级 v3.3.3',
+    items: [
+      {
+        title: '⚡ 老板怀疑度/体力/时间 数值变化高亮跳字',
+        desc: '当老板怀疑度、体力或当前时刻发生变动时，实时触发霓虹跳字徽章（如 +8% ⚠️、-5% 🛡️、+5分），配合数值放大闪烁与面板呼吸光效，数值增减一目了然。'
+      },
+      {
+        title: '💬 偶遇事件结算结果全屏 Toast 即时弹窗',
+        desc: '彻底根除偶遇抉择（如突遭抓壮丁）后反馈过轻问题；选项点击后立即在屏幕居中弹出醒目 Toast 提醒与判定结果，杜绝漏看被白眼或怀疑度增减。'
+      },
+      {
+        title: '📜 动态通报字号全面放大与关键词胶囊高亮',
+        desc: '大幅提升动态通报与现场走马灯字号至 13.5px，日志卡片升级为微暗底色 + 警报色边框；自动对 (怀疑度 +8%)、(体力 -10) 等战况关键词加装荧光胶囊，清晰易读。'
+      }
+    ]
+  },
+  {
     version: '3.3.2',
     title: '背包空间利用与布局优化：2列响应式道具网格、快捷合成工坊与动态通报边距重构',
     date: '2026-10-10',
-    isLatest: true,
+    isLatest: false,
     badge: '体验深度优化 v3.3.2',
     items: [
       {
@@ -364,4 +385,4 @@ export const CHANGELOGS = [
   }
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.2';
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.3';

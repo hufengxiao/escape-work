@@ -127,22 +127,28 @@ export class UIRenderer {
 
           <!-- Status Dashboard -->
           <section class="dashboard">
-            <div class="status-card time-card">
+            <div class="status-card time-card" id="status-card-time">
               <div class="status-label">
                 <span class="status-label-title">🕒 当前时刻</span>
                 <span id="target-time-badge" class="badge-sub">18:00打卡</span>
               </div>
-              <div class="time-display" id="time-display">17:45</div>
+              <div class="time-display-row">
+                <div class="time-display" id="time-display">17:45</div>
+                <span id="time-delta" class="stat-delta-chip delta-time hidden"></span>
+              </div>
               <div class="time-progress-bar">
                 <div class="time-progress-fill" id="time-progress"></div>
               </div>
             </div>
 
-            <div class="status-card metric-card">
-              <div class="metric-item">
+            <div class="status-card metric-card" id="status-card-metrics">
+              <div class="metric-item" id="metric-item-suspicion">
                 <div class="metric-header">
                   <span>👁️ 老板怀疑度</span>
-                  <span id="suspicion-text" class="metric-val text-safe">15%</span>
+                  <div class="metric-val-wrapper">
+                    <span id="suspicion-delta" class="stat-delta-chip hidden"></span>
+                    <span id="suspicion-text" class="metric-val text-safe">15%</span>
+                  </div>
                 </div>
                 <div class="meter-bar">
                   <div id="suspicion-bar" class="meter-fill fill-safe" style="width: 15%"></div>
@@ -150,10 +156,13 @@ export class UIRenderer {
                 <div class="metric-caption">满 100% 将被当场抓获强制加班！</div>
               </div>
 
-              <div class="metric-item">
+              <div class="metric-item" id="metric-item-energy">
                 <div class="metric-header">
                   <span>⚡ 精神体力</span>
-                  <span id="energy-text" class="metric-val text-energy">90%</span>
+                  <div class="metric-val-wrapper">
+                    <span id="energy-delta" class="stat-delta-chip hidden"></span>
+                    <span id="energy-text" class="metric-val text-energy">90%</span>
+                  </div>
                 </div>
                 <div class="meter-bar">
                   <div id="energy-bar" class="meter-fill fill-energy" style="width: 90%"></div>
@@ -883,6 +892,9 @@ export class UIRenderer {
       document.getElementById('ending-modal')?.classList.add('hidden');
       document.getElementById('poster-modal')?.classList.add('hidden');
       document.getElementById('encounter-modal')?.classList.add('hidden');
+      this.prevSusp = undefined;
+      this.prevEnergy = undefined;
+      this.prevTimeMinutes = undefined;
       this.engine.restart();
       toast.show('时间已重置为 17:45，新的一局开始！', 'info');
     };
@@ -902,6 +914,9 @@ export class UIRenderer {
       document.getElementById('ending-modal')?.classList.add('hidden');
       document.getElementById('poster-modal')?.classList.add('hidden');
       document.getElementById('encounter-modal')?.classList.add('hidden');
+      this.prevSusp = undefined;
+      this.prevEnergy = undefined;
+      this.prevTimeMinutes = undefined;
       this.engine.restart();
       toast.show('时间已重置为 17:45，新的一局开始！', 'info');
     });
@@ -1788,9 +1803,23 @@ export class UIRenderer {
     }
 
     const logPreview = document.getElementById('action-log-preview');
+    const ticker = document.getElementById('action-log-ticker');
     if (logPreview && this.state.logs && this.state.logs.length > 0) {
       const latest = this.state.logs[0];
-      logPreview.textContent = `[${latest.time}] ${latest.text}`;
+      const newText = `[${latest.time}] ${latest.text}`;
+      if (this.lastLogText !== newText) {
+        logPreview.textContent = newText;
+        if (ticker) {
+          ticker.classList.remove('ticker-flash-alert', 'ticker-flash-warning', 'ticker-flash-info');
+          void ticker.offsetWidth;
+          if (latest.type === 'alert' || latest.type === 'warning') {
+            ticker.classList.add(`ticker-flash-${latest.type}`);
+          } else {
+            ticker.classList.add('ticker-flash-info');
+          }
+        }
+        this.lastLogText = newText;
+      }
     }
   }
 
@@ -1916,7 +1945,9 @@ export class UIRenderer {
   renderHeaderAndMetrics() {
     // 1. Time display
     const timeStr = this.state.getTimeString();
-    document.getElementById('time-display').textContent = timeStr;
+    const timeDisplayEl = document.getElementById('time-display');
+    const timeDeltaEl = document.getElementById('time-delta');
+    if (timeDisplayEl) timeDisplayEl.textContent = timeStr;
 
     // Time progress (from 17:45 to 18:05)
     const totalMinutes = (this.state.currentHour - 17) * 60 + (this.state.currentMinute - 45);
@@ -1932,32 +1963,119 @@ export class UIRenderer {
       targetBadge.className = 'badge-sub';
     }
 
+    if (this.prevTimeMinutes !== undefined && totalMinutes !== this.prevTimeMinutes) {
+      const minDiff = totalMinutes - this.prevTimeMinutes;
+      if (minDiff > 0 && timeDeltaEl && timeDisplayEl) {
+        timeDeltaEl.textContent = `+${minDiff}分`;
+        timeDeltaEl.className = 'stat-delta-chip delta-time';
+        timeDeltaEl.classList.remove('hidden');
+        timeDisplayEl.classList.remove('stat-flash-time');
+        void timeDisplayEl.offsetWidth;
+        timeDisplayEl.classList.add('stat-flash-time');
+        clearTimeout(this.timeDeltaTimer);
+        this.timeDeltaTimer = setTimeout(() => {
+          timeDeltaEl?.classList.add('hidden');
+        }, 2200);
+      }
+    }
+    this.prevTimeMinutes = totalMinutes;
+
     // 2. Suspicion Bar
     const susp = Math.min(100, Math.max(0, this.state.suspicion));
     const suspText = document.getElementById('suspicion-text');
     const suspBar = document.getElementById('suspicion-bar');
-    suspText.textContent = `${susp}%`;
-    suspBar.style.width = `${susp}%`;
+    const suspDeltaEl = document.getElementById('suspicion-delta');
+    const suspItemEl = document.getElementById('metric-item-suspicion');
+    if (suspText) suspText.textContent = `${susp}%`;
+    if (suspBar) suspBar.style.width = `${susp}%`;
 
-    suspBar.className = 'meter-fill';
-    suspText.className = 'metric-val';
-    if (susp < 40) {
-      suspBar.classList.add('fill-safe');
-      suspText.classList.add('text-safe');
-    } else if (susp < 75) {
-      suspBar.classList.add('fill-warn');
-      suspText.classList.add('text-warn');
-    } else {
-      suspBar.classList.add('fill-danger');
-      suspText.classList.add('text-danger');
+    if (suspBar && suspText) {
+      suspBar.className = 'meter-fill';
+      suspText.className = 'metric-val';
+      if (susp < 40) {
+        suspBar.classList.add('fill-safe');
+        suspText.classList.add('text-safe');
+      } else if (susp < 75) {
+        suspBar.classList.add('fill-warn');
+        suspText.classList.add('text-warn');
+      } else {
+        suspBar.classList.add('fill-danger');
+        suspText.classList.add('text-danger');
+      }
     }
+
+    if (this.prevSusp !== undefined && this.prevSusp !== susp) {
+      const suspDiff = susp - this.prevSusp;
+      if (suspDeltaEl && suspText) {
+        if (suspDiff > 0) {
+          suspDeltaEl.textContent = `+${suspDiff}%`;
+          suspDeltaEl.className = 'stat-delta-chip delta-danger';
+          suspDeltaEl.classList.remove('hidden');
+          suspText.classList.remove('stat-flash-danger', 'stat-flash-safe');
+          void suspText.offsetWidth;
+          suspText.classList.add('stat-flash-danger');
+          suspItemEl?.classList.remove('box-pulse-danger', 'box-pulse-safe');
+          void suspItemEl?.offsetWidth;
+          suspItemEl?.classList.add('box-pulse-danger');
+        } else {
+          suspDeltaEl.textContent = `${suspDiff}%`;
+          suspDeltaEl.className = 'stat-delta-chip delta-safe';
+          suspDeltaEl.classList.remove('hidden');
+          suspText.classList.remove('stat-flash-danger', 'stat-flash-safe');
+          void suspText.offsetWidth;
+          suspText.classList.add('stat-flash-safe');
+          suspItemEl?.classList.remove('box-pulse-danger', 'box-pulse-safe');
+          void suspItemEl?.offsetWidth;
+          suspItemEl?.classList.add('box-pulse-safe');
+        }
+        clearTimeout(this.suspDeltaTimer);
+        this.suspDeltaTimer = setTimeout(() => {
+          suspDeltaEl?.classList.add('hidden');
+        }, 2500);
+      }
+    }
+    this.prevSusp = susp;
 
     // 3. Energy Bar
     const energy = Math.min(100, Math.max(0, this.state.energy));
     const energyText = document.getElementById('energy-text');
     const energyBar = document.getElementById('energy-bar');
-    energyText.textContent = `${energy}%`;
-    energyBar.style.width = `${energy}%`;
+    const energyDeltaEl = document.getElementById('energy-delta');
+    const energyItemEl = document.getElementById('metric-item-energy');
+    if (energyText) energyText.textContent = `${energy}%`;
+    if (energyBar) energyBar.style.width = `${energy}%`;
+
+    if (this.prevEnergy !== undefined && this.prevEnergy !== energy) {
+      const energyDiff = energy - this.prevEnergy;
+      if (energyDeltaEl && energyText) {
+        if (energyDiff > 0) {
+          energyDeltaEl.textContent = `+${energyDiff}`;
+          energyDeltaEl.className = 'stat-delta-chip delta-safe';
+          energyDeltaEl.classList.remove('hidden');
+          energyText.classList.remove('stat-flash-safe', 'stat-flash-danger');
+          void energyText.offsetWidth;
+          energyText.classList.add('stat-flash-safe');
+          energyItemEl?.classList.remove('box-pulse-safe', 'box-pulse-danger');
+          void energyItemEl?.offsetWidth;
+          energyItemEl?.classList.add('box-pulse-safe');
+        } else {
+          energyDeltaEl.textContent = `${energyDiff}`;
+          energyDeltaEl.className = 'stat-delta-chip delta-danger';
+          energyDeltaEl.classList.remove('hidden');
+          energyText.classList.remove('stat-flash-safe', 'stat-flash-danger');
+          void energyText.offsetWidth;
+          energyText.classList.add('stat-flash-danger');
+          energyItemEl?.classList.remove('box-pulse-safe', 'box-pulse-danger');
+          void energyItemEl?.offsetWidth;
+          energyItemEl?.classList.add('box-pulse-danger');
+        }
+        clearTimeout(this.energyDeltaTimer);
+        this.energyDeltaTimer = setTimeout(() => {
+          energyDeltaEl?.classList.add('hidden');
+        }, 2500);
+      }
+    }
+    this.prevEnergy = energy;
   }
 
   renderZoneNavigator() {
@@ -2095,10 +2213,15 @@ export class UIRenderer {
     }
     if (!container) return;
     container.innerHTML = this.state.logs.map((log) => {
+      const textHtml = log.text
+        .replace(/(\(怀疑度\s*\+\d+%\))/g, '<span class="log-stat-chip chip-danger">$1</span>')
+        .replace(/(\(怀疑度\s*-\d+%\))/g, '<span class="log-stat-chip chip-safe">$1</span>')
+        .replace(/(\(体力\s*-\d+\))/g, '<span class="log-stat-chip chip-warn">$1</span>')
+        .replace(/(\(体力\s*\+\d+\))/g, '<span class="log-stat-chip chip-energy">$1</span>');
       return `
         <div class="log-entry log-${log.type}">
           <span class="log-time">[${log.time}]</span>
-          <span class="log-text">${log.text}</span>
+          <span class="log-text">${textHtml}</span>
         </div>
       `;
     }).join('');
@@ -2119,9 +2242,20 @@ export class UIRenderer {
         const hasReq = !choice.requireItem || this.state.hasItem(choice.requireItem);
         const disabled = hasReq ? '' : 'disabled';
         const reqHint = choice.requireItem && !hasReq ? ' (缺少对应道具)' : '';
+
+        // Dynamic contextual hint for internship halo option
+        let displayText = choice.text;
+        if (choice.text.includes('实习生萌新光环')) {
+          if (!this.state.flags.isIntern) {
+            displayText = '【实习生萌新光环】“周姐，其实我也是刚来的实习生……” (⚠️ 非实习生装嫩将+8%怀疑度)';
+          } else {
+            displayText = '【实习生萌新光环】“周姐，其实我也是刚来的实习生，我不会面呀……” (✨ 实习生专属免祸)';
+          }
+        }
+
         return `
           <button class="choice-btn ${disabled ? 'choice-disabled' : ''}" data-idx="${idx}" ${disabled}>
-            ${choice.text}${reqHint}
+            ${displayText}${reqHint}
           </button>
         `;
       }).join('');

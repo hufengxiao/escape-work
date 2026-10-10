@@ -256,16 +256,18 @@ export class GameEngine {
     if (result) {
       if (result.msg) {
         this.state.addLog(result.msg, result.type || 'info');
+        toast.show(result.msg, result.type || 'info');
       }
       if (result.triggerEnding) {
         this.triggerEnding(result.triggerEnding);
-        return;
+        return result;
       }
     }
 
     // Check vitals again
     this.checkVitalConditions();
     this.state.notify();
+    return result;
   }
 
   triggerEnding(endingId) {
