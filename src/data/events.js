@@ -181,6 +181,56 @@ export const ZONE_ACTIONS = {
       }
     },
     {
+      id: 'keyboard_frenzy_pretend',
+      name: '狂暴假装敲代码',
+      icon: '⌨️',
+      costTime: 1,
+      costEnergy: 3,
+      desc: '双手在键盘上疯狂飞舞敲击，假装正在抢修生产P0核心故障！（进入手速敲击 Mini-Game）',
+      handler: (state) => {
+        if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+          setTimeout(() => {
+            import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+              MiniGameUI.showKeyboardFrenzy(state, window.__GAME__.engine);
+            });
+          }, 50);
+          return { msg: '你深吸一口气，双手如闪电般搭在机械键盘上！', type: 'info' };
+        }
+        state.suspicion = Math.max(0, state.suspicion - 15);
+        state.energy = Math.min(100, state.energy + 5);
+        return { msg: '噼里啪啦的狂暴敲击声震慑了全场，老板路过以为你在抢修核心集群，怀疑度 -15%！', type: 'success' };
+      }
+    },
+    {
+      id: 'cable_tray_search',
+      name: '勘测工位走线槽',
+      icon: '🔌',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '弯腰假装插电源线，翻找工位走线槽下的暗藏物资。',
+      handler: (state) => {
+        if (!state.hasItem('ghost_keyboard')) {
+          state.addItem('ghost_keyboard');
+          return {
+            msg: '在走线槽里发现了一把老员工遗留的【自动幽灵机械键盘】！已收入背包。',
+            type: 'item'
+          };
+        } else if (!state.hasItem('intern_guide')) {
+          state.addItem('intern_guide');
+          return {
+            msg: '翻出了一本实习生小陈落下的【00后职场整顿指南】！已收入背包。',
+            type: 'item'
+          };
+        } else {
+          state.energy = Math.min(100, state.energy + 10);
+          return {
+            msg: '你在走线槽角落摸到了一罐未开封的红牛，一饮而尽，体力 +10！',
+            type: 'success'
+          };
+        }
+      }
+    },
+    {
       id: 'leave_desk_zone',
       name: '迈出工位，前往走廊',
       icon: '🚶',
@@ -297,6 +347,29 @@ export const ZONE_ACTIONS = {
           msg: `你顺走了一块提拉米苏和一罐无糖红茶，能量瞬间恢复 +${bonus}！`,
           type: 'success'
         };
+      }
+    },
+    {
+      id: 'pantry_secret_raid',
+      name: '突袭茶水间冷柜',
+      icon: '🥤',
+      costTime: 1,
+      costEnergy: 2,
+      desc: '打开茶水间双开门大冰箱深处，搜寻高能物资。',
+      handler: (state) => {
+        if (!state.hasItem('energy_potion')) {
+          state.addItem('energy_potion');
+          return {
+            msg: '在冷柜顶层翻出了一瓶冰镇的【魔爪超能电解质水】！已收入背包。',
+            type: 'item'
+          };
+        } else {
+          state.energy = Math.min(100, state.energy + 15);
+          return {
+            msg: '你顺走了一盒行政刚切好的哈密瓜，大快朵颐，体力 +15！',
+            type: 'success'
+          };
+        }
       }
     },
     {
@@ -424,6 +497,29 @@ export const ZONE_ACTIONS = {
           msg: '冰镇汽水咕噜下肚，清凉直冲天灵盖！精神体力 +15！',
           type: 'success'
         };
+      }
+    },
+    {
+      id: 'fire_hydrant_stash',
+      name: '搜查消火栓暗格',
+      icon: '🧯',
+      costTime: 1,
+      costEnergy: 3,
+      desc: '检查红色消火栓箱背后的隐秘空间。',
+      handler: (state) => {
+        if (!state.hasItem('master_keycard')) {
+          state.addItem('master_keycard');
+          return {
+            msg: '在消火栓水带后摸到了一张保洁阿姨藏在此处的【万能后勤特权卡】！直通所有通道！',
+            type: 'item'
+          };
+        } else {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return {
+            msg: '消火栓内视野隐蔽，你在此躲避片刻，高管巡查脚步声渐渐远去。怀疑度 -10%',
+            type: 'success'
+          };
+        }
       }
     }
   ],
@@ -1151,5 +1247,303 @@ export const RANDOM_ENCOUNTERS = [
         }
       }
     ]
+  },
+
+  {
+    id: 'encounter_taichi_clash',
+    zones: [1, 2, 3],
+    title: '🤺 跨部门飞锅：P0级紧急需求空降拦截！',
+    character: '产品总监 / 运维VP',
+    avatar: '🤺',
+    description: '对方捧着发烫的电脑神色慌张地将你堵在拐角：“线上突发紧急阻断，下班前务必帮忙合入主干排查！”',
+    choices: [
+      {
+        text: '☯️ 施展职场太极·推诿对决（限时 8 秒对策 Mini-Game）',
+        outcome: (state) => {
+          if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+            setTimeout(() => {
+              import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+                MiniGameUI.showTaiChiBattle(state, window.__GAME__.engine);
+              });
+            }, 50);
+            return { msg: '你运起丹田之气，准备施展四两拨千斤的太极绝技！', type: 'info' };
+          }
+          state.suspicion = Math.max(0, state.suspicion - 15);
+          return { msg: '你一套合规太极把锅甩给了架构组，成功脱身！', type: 'success' };
+        }
+      },
+      {
+        text: '🛡️ 亮出【甩锅紧急工单】：“我已经给运维专家组拉通单子了，别急！”',
+        requireItem: 'panic_ticket',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return { msg: '你把红头工单拍在对方眼前，对方无言以对，赶紧跑回工位自查去了！', type: 'success' };
+        }
+      },
+      {
+        text: '🏃 假装赶去核心机房查看冷水机，低头快步溜走',
+        outcome: (state) => {
+          state.suspicion += 8;
+          state.energy = Math.max(0, state.energy - 6);
+          return { msg: '你步伐飞快擦肩而过，对方愣在原地，但你耗费了部分体力。(怀疑度 +8%, 体力 -6)', type: 'warning' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_elevator_overload',
+    zones: [3],
+    title: '🛗 17:58 电梯超载危机：生死对视！',
+    character: '满员电梯的12名同事',
+    avatar: '🛗',
+    description: '你刚踏进电梯，蜂鸣器瞬间刺耳尖叫“滴——滴——超载！请最后一位乘客退出！”。所有人的目光齐刷刷刺向你。',
+    choices: [
+      {
+        text: '🎒 闪电将背包扔出电梯，身体紧贴轿厢内壁（体重减轻，刚好不超载！）',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          state.energy = Math.min(100, state.energy + 5);
+          return { msg: '超载蜂鸣器奇迹般停了！电梯门稳稳合上直奔一楼！(怀疑度 -10%)', type: 'success' };
+        }
+      },
+      {
+        text: '👓 指向门外：“阿强，阎总刚才在走廊喊你改Bug！”（忽悠阿强退出）',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 5);
+          return { msg: '阿强吓得魂飞魄散连滚带爬冲出电梯，门迅速合上下行！', type: 'success' };
+        }
+      },
+      {
+        text: '🏃 潇洒后撤：“各位先走，我走消防安全梯锻炼身体！”（切入安全通道）',
+        outcome: (state) => {
+          state.energy = Math.max(0, state.energy - 8);
+          return { msg: '你从容退步推开防火门，直接化身楼梯特工狂奔下楼！(体力 -8)', type: 'info' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_intern_rescue',
+    zones: [1, 2],
+    title: '🐣 00后实习生整顿职场：求救与支援！',
+    character: '清澈实习生小陈 vs HR总监刘姐',
+    avatar: '🐣',
+    description: '刘姐正拿着绩效面谈表拦住小陈：“小陈，今晚跟师兄们一起留下来把下周的方案打磨好，年轻人要多奉献。” 小陈眼神倔强，悄悄朝你投来求助目光！',
+    choices: [
+      {
+        text: '📘 递上《00后职场整顿指南》：“小陈，按第二章第四节给领导拉通！”',
+        requireItem: 'intern_guide',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 15);
+          if (state.npcRelations?.intern_chen) {
+            import('../engine/npcManager.js').then(({ NPCManager }) => {
+              NPCManager.adjustFavorability(state, 'intern_chen', 35, '支援整顿职场');
+            });
+          }
+          return { msg: '小陈心领神会，朗声背诵反PUA金句！刘姐瞠目结舌落荒而逃！小陈好感度飙升！', type: 'success' };
+        }
+      },
+      {
+        text: '⚖️ 挺身而出引用劳动法第四十一条帮小陈解围！',
+        requireItem: 'labor_law',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 20);
+          return { msg: '浩然正气降维打击！刘姐尴尬地合上面谈本，小陈两眼放光对你佩服得五体投地！', type: 'success' };
+        }
+      },
+      {
+        text: '🍿 悄悄递给小陈一包大面筋，示意他找借口去洗手间溜走',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 5);
+          return { msg: '小陈借口肚子疼捂着肚子飞奔洗手间，刘姐无奈叹气离去。', type: 'info' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_cloud_crash',
+    zones: [1, 2],
+    title: '🌩️ 突发全网宕机雪崩：核心集群告警！',
+    character: '运维大群全员报警',
+    avatar: '🌩️',
+    description: '手机与工位电脑同时响起刺耳的钉钉警报音：“[P0警报] 核心数据库连接池暴涨至99.8%！” 阎总在千人大群里连续连麦语音：“所有人不准走！立刻连线排查！”',
+    choices: [
+      {
+        text: '⌨️ 现场狂暴装忙敲键盘（进入手速敲击 Mini-Game，假装正在编写救援补丁！）',
+        outcome: (state) => {
+          if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+            setTimeout(() => {
+              import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+                MiniGameUI.showKeyboardFrenzy(state, window.__GAME__.engine);
+              });
+            }, 50);
+            return { msg: '你坐定工位，手指在键盘上划出残影！', type: 'info' };
+          }
+          state.suspicion = Math.max(0, state.suspicion - 20);
+          return { msg: '你噼里啪啦狂敲代码，老板以为你已在紧急发布热修复，感动得不行！', type: 'success' };
+        }
+      },
+      {
+        text: '📴 火速拔掉网线切换移动热点：“网络中断，我立刻到一楼车里连移动网络排查！”',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return { msg: '借口去车里连网络，名正言顺冲向一楼大堂！', type: 'success' };
+        }
+      },
+      {
+        text: '🚨 亮出【P0级核聚变工单】：“架构组已全面接管，其余人员撤离现场！”',
+        requireItem: 'p0_panic_overload',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 30);
+          return { msg: '【神装爆发】顶格安全响应启动，全员紧急疏散，你大摇大摆走向闸机！', type: 'success' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_airdrop_leak',
+    zones: [2, 3],
+    title: '📡 隔空投送：匿名摸鱼小分队的绝密情报！',
+    character: '神秘匿名AirDrop',
+    avatar: '📡',
+    description: 'iPhone 屏幕突然弹窗：“‘摸鱼不灭者’请求通过隔空投送发送一张照片”。点击预览，赫然是一张阎总刚踏入18楼高管专梯的监控偷拍照！附言：“老板下楼查岗了，走西区货梯！”',
+    choices: [
+      {
+        text: '📲 信任情报：果断转向西区后勤货梯避开正梯！',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 12);
+          return { msg: '情报完全属实！你刚拐入货梯，身后正梯大门正好打开，阎总怒气冲冲走出！', type: 'success' };
+        }
+      },
+      {
+        text: '🕵️ 保持警惕：反手给阿伟发微信核实真实动向',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 5);
+          return { msg: '阿伟秒回：“是真的！我在货梯口给你掩护，快来！” 安全感爆棚！', type: 'info' };
+        }
+      },
+      {
+        text: '💨 趁老板还在专梯内，加速疾走穿越走廊！',
+        outcome: (state) => {
+          state.energy = Math.max(0, state.energy - 10);
+          state.suspicion = Math.max(0, state.suspicion - 8);
+          return { msg: '争分夺秒！你狂奔抢在电梯开门前穿过了走廊！(体力 -10, 怀疑度 -8%)', type: 'info' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_cleaning_auntie',
+    zones: [2, 3],
+    title: '🧹 扫地僧指引：保洁张阿姨的暗道密报！',
+    character: '保洁张阿姨',
+    avatar: '🧹',
+    description: '张阿姨推着满满当当的布草清洁车从防火门拐出，一把拉住你的衣袖低声道：“小伙子，走廊东边刘姐正带着人查工位呢，阿姨看你天天有礼貌，布草间后面有一道直通负一楼车库的滑道，快走！”',
+    choices: [
+      {
+        text: '🚪 听从阿姨指引，钻入布草间直降通道！',
+        outcome: (state) => {
+          state.zone = 4;
+          state.suspicion = Math.max(0, state.suspicion - 20);
+          return { msg: '从布草间滑梯顺畅溜到底层，瞬间避开了所有楼层眼线，直达一楼！', type: 'success' };
+        }
+      },
+      {
+        text: '🎁 赠送阿姨一包零食点心致谢，获取阿姨的备用万能工卡！',
+        requireItem: 'bag_snack',
+        outcome: (state) => {
+          state.addItem('cleaner_badge');
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return { msg: '阿姨笑逐颜开，悄悄塞给你一张【保洁万能工卡】：“下楼刷这个，哪个门都能开！”', type: 'item' };
+        }
+      },
+      {
+        text: '🚶 婉拒好意，继续观察走廊正道动向',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 5);
+          return { msg: '你谢过阿姨，贴着走廊墙角潜行前进。', type: 'info' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_meeting_hostage',
+    zones: [2],
+    title: '🚪 走廊横祸：惨遭一把拽进神仙打架会议室！',
+    character: '红着眼睛的业务甲乙双方',
+    avatar: '🚪',
+    description: '路过‘格陵兰岛’会议室门口时，房门猛地被推开，运营总监一把拽住你的胳膊：“小李来得正好！你来给评评理，这个需求延期到底算谁的责任？！” 屋内十几个双眼睛通红注视着你！',
+    choices: [
+      {
+        text: '☯️ 开启职场太极推诿，四两拨千斤（触发太极 Mini-Game）！',
+        outcome: (state) => {
+          if (typeof window !== 'undefined' && window.__GAME__?.ui) {
+            setTimeout(() => {
+              import('../ui/miniGames.js').then(({ MiniGameUI }) => {
+                MiniGameUI.showTaiChiBattle(state, window.__GAME__.engine);
+              });
+            }, 50);
+            return { msg: '你神情肃穆，双手微抬准备开讲方法论！', type: 'info' };
+          }
+          state.suspicion = Math.max(0, state.suspicion - 12);
+          return { msg: '你一套颗粒度与解耦理论把全屋人说得连连点头，趁乱溜出房门！', type: 'success' };
+        }
+      },
+      {
+        text: '📱 假装手机震动高举耳边：“喂？阎总！对对，我现在就送合同到您办公室！”',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 10);
+          return { msg: '一听“阎总”两个字，总监立马松手：“快去快去别耽误事！” 你闪电脱身！', type: 'success' };
+        }
+      },
+      {
+        text: '☕ 举起温热马克杯：“各位领导先喝口水消消气，我马上泡壶好茶”，闪身溜之大吉！',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 8);
+          return { msg: '你从容退步顺手带上会议室大门，屋里重新响起了激烈的争吵声。好险！', type: 'info' };
+        }
+      }
+    ]
+  },
+
+  {
+    id: 'encounter_express_locker_boss',
+    zones: [3, 4],
+    title: '📦 丰巢智能柜前偶遇阎总偷偷取生发水！',
+    character: '略显尴尬的大Boss阎总',
+    avatar: '📦',
+    description: '你在地下通道拐角的丰巢快递柜前输入取件码，身旁的柜门“啪”地弹开。阎总正好戴着墨镜站在旁边，手中正拿着一盒写着“强根健发防脱生发液（尊享装）”的快递！两人四目相对，空气瞬间凝固！',
+    choices: [
+      {
+        text: '🤝 假装视而不见，淡定取件并主动夸赞：“阎总，您今天的发量真精神，完全看不出熬夜！”',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 25);
+          state.energy = Math.min(100, state.energy + 10);
+          return { msg: '阎总心花怒放，迅速把快递塞进口袋，亲切拍肩：“小李有眼光！下周提拔名单有你！”(怀疑度 -25%)', type: 'success' };
+        }
+      },
+      {
+        text: '🕶️ 摘下自己的防蓝光墨镜：“阎总好巧！我也经常在这里取技术图书！”',
+        requireItem: 'sunglasses',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 20);
+          return { msg: '两人相视一笑，心照不宣。阎总甚至主动替你刷开了一楼侧门！', type: 'success' };
+        }
+      },
+      {
+        text: '🤐 一言不发默默递上一盒薄荷糖，两人达成中年男人的职场默契！',
+        outcome: (state) => {
+          state.suspicion = Math.max(0, state.suspicion - 15);
+          return { msg: '阎总接过薄荷糖嚼了一颗，长叹一口气：“都不容易啊，快回去陪家里人吧。”', type: 'info' };
+        }
+      }
+    ]
   }
 ];
+

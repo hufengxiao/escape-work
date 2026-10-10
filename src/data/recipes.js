@@ -74,5 +74,33 @@ export const RECIPES = [
     rarity: 'SSR',
     synergyDesc: '双重不可抗力护体，秒杀任何会议强制拉扯与下班阻拦！',
     unlockAchievement: 'ach_craft_p0'
+  },
+  {
+    id: 'recipe_ghost_keyboard',
+    resultItemId: 'ghost_matrix',
+    name: '👻 幽灵工位自动化矩阵',
+    ingredients: ['ghost_keyboard', 'chair_jacket'],
+    rarity: 'SSR',
+    synergyDesc: '工位绝对神隐：老板巡查怀疑度锁定为 0，且每回合怀疑度额外 -8%！',
+    unlockAchievement: 'ach_craft_ghost'
+  },
+  {
+    id: 'recipe_intern_alliance',
+    resultItemId: 'intern_alliance',
+    name: '✊ 00后整顿职场终极阵线',
+    ingredients: ['intern_guide', 'labor_law'],
+    rarity: 'SSR',
+    synergyDesc: '面对任何管理层盘问，直接触发整顿神仙降维暴击，怀疑度骤降 40%！',
+    unlockAchievement: 'ach_craft_intern'
+  },
+  {
+    id: 'recipe_energy_burst',
+    resultItemId: 'hyper_stamina_brew',
+    name: '🧪 终极超频续命魔水',
+    ingredients: ['energy_potion', 'warm_coffee'],
+    rarity: 'SR',
+    synergyDesc: '立即恢复 35 点体力，且后续 3 次行动免除体力消耗！',
+    unlockAchievement: 'ach_craft_energy'
   }
 ];
+

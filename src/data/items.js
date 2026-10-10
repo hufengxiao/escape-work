@@ -423,5 +423,128 @@ export const ITEMS = {
         message: '【神装激活】“线上机房与本人身体同时发生特大紧急情况！” 领导双手合十恭送你离开！'
       };
     }
+  },
+
+  intern_guide: {
+    id: 'intern_guide',
+    name: '00后职场整顿指南',
+    icon: '📘',
+    category: 'diplomacy',
+    description: '写满反PUA语录与劳动法精髓的袖珍手册。赠予清澈实习生小陈可大幅增加好感度。',
+    effectText: '提升反PUA抗性，面对盘问怀疑度增长减半',
+    onUse: (state) => {
+      state.flags.hasInternGuide = true;
+      state.suspicion = Math.max(0, state.suspicion - 12);
+      return {
+        success: true,
+        message: '你快速翻阅手册中的金句：“上班是为了赚钱，不是为了当孙子！” 内心瞬间充满正气，怀疑度 -12%'
+      };
+    }
+  },
+
+  energy_potion: {
+    id: 'energy_potion',
+    name: '魔爪超能电解质水',
+    icon: '🥤',
+    category: 'recovery',
+    description: '茶水间冰箱冷藏的超能电解质功能水。一口下肚，浑身细胞瞬间被唤醒。',
+    effectText: '立即恢复 25 点体力，消除疲劳状态',
+    onUse: (state) => {
+      state.energy = Math.min(100, state.energy + 25);
+      return {
+        success: true,
+        message: '你大口灌下冰爽的电解质水，强效提神物质注入血液，体力 +25！'
+      };
+    }
+  },
+
+  master_keycard: {
+    id: 'master_keycard',
+    name: '万能后勤特权卡',
+    icon: '💳',
+    category: 'stealth',
+    description: '物业与后勤部门通用的最高权限金卡，能刷开大厦所有防火常闭门与后勤升降机。',
+    effectText: '全通道通行无阻，楼梯与货梯体力消耗降为 0',
+    onUse: (state) => {
+      state.flags.hasMasterKey = true;
+      state.suspicion = Math.max(0, state.suspicion - 15);
+      return {
+        success: true,
+        message: '你将万能特权卡贴在大门感应区，提示音清脆响起：“特权验证通过，请通行！” 怀疑度 -15%'
+      };
+    }
+  },
+
+  ghost_keyboard: {
+    id: 'ghost_keyboard',
+    name: '自动幽灵机械键盘',
+    icon: '⌨️',
+    category: 'decoy',
+    description: '内置高频宏脚本的定制键盘，放在桌上可全自动敲击出黑客代码，伪装度拉满。',
+    effectText: '工位离席后自动敲代码，每回合自然衰减 5% 怀疑度',
+    onUse: (state) => {
+      state.flags.hasGhostKeyboard = true;
+      state.suspicion = Math.max(0, state.suspicion - 15);
+      return {
+        success: true,
+        message: '你开启键盘的幽灵模式，按键开始噼里啪啦自动飞速跳动，任谁看都在疯狂抢修！怀疑度 -15%'
+      };
+    }
+  },
+
+  ghost_matrix: {
+    id: 'ghost_matrix',
+    name: '👻 幽灵工位自动化矩阵',
+    icon: '👻',
+    category: 'synergy',
+    rarity: 'SSR',
+    description: '【神装】幽灵机械键盘与替身外套共鸣打造的终极伪装。工位形成绝对自动化抢修力场。',
+    effectText: '工位绝对神隐：老板巡查怀疑度锁定为 0，且每回合怀疑度 -8%',
+    onUse: (state) => {
+      state.flags.hasDecoyJacket = true;
+      state.flags.hasGhostKeyboard = true;
+      state.flags.hasGhostMatrix = true;
+      state.suspicion = Math.max(0, state.suspicion - 30);
+      return {
+        success: true,
+        message: '【神装激活】外套在椅背，键盘在狂敲，杯子冒热气！整个工位宛如有一位隐形架构师在玩命通宵，怀疑度 -30%！'
+      };
+    }
+  },
+
+  intern_alliance: {
+    id: 'intern_alliance',
+    name: '✊ 00后整顿职场终极阵线',
+    icon: '✊',
+    category: 'synergy',
+    rarity: 'SSR',
+    description: '【神装】整顿指南与劳动法典共鸣的至尊神器。实习生小陈誓死保送，管理层退避三舍。',
+    effectText: '面对任何管理层盘问，直接触发整顿神仙降维暴击，怀疑度骤降 40%',
+    onUse: (state) => {
+      state.flags.hasInternAlliance = true;
+      state.suspicion = Math.max(0, state.suspicion - 40);
+      return {
+        success: true,
+        message: '【神装激活】“根据劳动法与八小时工作制，下班时间到了！” 浩然正气化作冲击波席卷整个大开间，怀疑度 -40%！'
+      };
+    }
+  },
+
+  hyper_stamina_brew: {
+    id: 'hyper_stamina_brew',
+    name: '🧪 终极超频续命魔水',
+    icon: '🧪',
+    category: 'synergy',
+    rarity: 'SR',
+    description: '【神装】电解质魔爪与温热咖啡完美交融的提神灵药。体力直接拉满，移动神速。',
+    effectText: '立即恢复 35 点体力，且后续 3 次行动免除体力消耗',
+    onUse: (state) => {
+      state.energy = Math.min(100, state.energy + 35);
+      state.flags.cyberStimulantActive = (state.flags.cyberStimulantActive || 0) + 3;
+      return {
+        success: true,
+        message: '【神装激活】超频能量流过全身经脉！体力 +35，接下来 3 次穿行行动耗能降为 0！'
+      };
+    }
   }
 };

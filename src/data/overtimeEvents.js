@@ -59,6 +59,54 @@ export const OVERTIME_EVENTS = [
     text: '窗外高架桥上的路灯陆续熄灭，天边泛起了微弱的青白色。阎总的声音已经逐渐沙哑变弱。',
     effect: { sanity: 20, energy: -10 },
     narrative: '黎明前的至暗时刻即将过去！胜利的曙光就在前方！'
+  },
+  {
+    id: 'ot_whiteboard_loop',
+    minHour: 1,
+    title: '白板上的第8个生态闭环',
+    text: '阎总在会议室白板上用马克笔疯狂画圆：“底层逻辑必须打通，形成全链路生态闭环！”',
+    effect: { sanity: -15, presenceMod: 5 },
+    narrative: '白板上密密麻麻的同心圆像黑洞一样吸食着众人的神智。'
+  },
+  {
+    id: 'ot_coffee_bean_crisis',
+    minHour: 2,
+    title: '全自动咖啡机红灯报警',
+    text: '茶水间传来“嘟嘟嘟”的尖锐蜂鸣，液晶屏无情闪烁着【咖啡豆已耗尽，请联系前台】！',
+    effect: { sanity: -10, energy: -15 },
+    narrative: '打工人的赛博生命源泉宣告枯竭，全场哈欠连天。'
+  },
+  {
+    id: 'ot_ghost_script',
+    minHour: 3,
+    title: '隔壁工位幽灵键盘自响',
+    text: '开间角落里，阿伟空无一人的工位上，机械键盘突然啪啪啪飞速自敲，终端光标高速翻滚！',
+    effect: { sanity: 15, energy: 5 },
+    narrative: '原来是阿伟下班前启动的挂机压秤脚本，令人忍俊不禁，困意消散了大半。'
+  },
+  {
+    id: 'ot_projector_crash',
+    minHour: 4,
+    title: '高清投影仪过热休眠蓝屏',
+    text: '风扇狂转的投影仪终于不堪重负，“啪”地一声灭掉，天花板幕布上显示出大大的蓝色“NO SIGNAL”！',
+    effect: { sanity: 10, presenceMod: -10 },
+    narrative: '会议室集体陷入黑暗与沉寂，大家趁机趴在桌上悄悄闭目养神。'
+  },
+  {
+    id: 'ot_guard_porridge',
+    minHour: 4,
+    title: '保安老王夜巡送温暖',
+    text: '老王推门而入，提着一只大不锈钢保温桶：“娃儿们辛苦了，保安亭煮的热红枣枸杞甜粥，趁热喝点！”',
+    effect: { sanity: 20, energy: 20 },
+    narrative: '滚烫浓稠的甜粥下肚，胃部暖洋洋的，整个人重新焕发出战斗力！'
+  },
+  {
+    id: 'ot_morning_cleaning',
+    minHour: 5,
+    title: '保洁阿姨推着吸尘器入场',
+    text: '走廊外传来吸尘器的嗡嗡声与阿姨哼唱的江南小调，新的一天已经悄然降临！',
+    effect: { sanity: 15, energy: 10 },
+    narrative: '晨曦的光芒透过玻璃幕墙洒在会议桌上，通宵战役即将迎来最终胜利！'
   }
 ];
 
@@ -107,5 +155,33 @@ export const OVERTIME_ACTIONS = [
     energy: 10,
     presence: -18,
     log: '你把身子缩在发财树的阴影下，大脑处于低功耗待机状态。（存在感 -18，体能 +10）'
+  },
+  {
+    id: 'act_keyboard_pretend',
+    name: '狂暴敲击假装救火',
+    desc: '在笔记本上疯狂敲写无害日志',
+    sanity: -8,
+    energy: -5,
+    presence: 20,
+    log: '你噼里啪啦狂按键盘，满屏幕代码狂滚，阎总投来极其赞许的目光！（存在感 +20，清醒 -8）'
+  },
+  {
+    id: 'act_tea_brewing',
+    name: '慢品热枸杞菊花茶',
+    desc: '小口啜饮温热草本茶饮',
+    sanity: 18,
+    energy: 12,
+    presence: -10,
+    log: '温热的菊花枸杞茶顺喉而下，心神瞬间安定，清肝明目！（清醒 +18，体能 +12，存在感 -10）'
+  },
+  {
+    id: 'act_slacker_telepathy',
+    name: '难友小群发疯表情包',
+    desc: '与通宵战友在暗群狂发吐槽',
+    sanity: 20,
+    energy: 5,
+    presence: -12,
+    log: '你在【通宵修仙渡劫群】狂甩打工人发疯表情包，精神瞬间满血复活！（清醒 +20，存在感 -12）'
   }
 ];
+

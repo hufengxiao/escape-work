@@ -71,5 +71,20 @@ export const NPCS = {
     perkTitle: '文化觉悟背书',
     perkDesc: '好感度≥80：高度认可你的价值观，在阎总面前力荐并亲自开门放行！',
     breakPenalty: '好感度<-50：强制拉入会议室谈心拷问，怀疑度飙升且无法轻易撤退。'
+  },
+
+  intern_chen: {
+    id: 'intern_chen',
+    name: '清澈大学生小陈',
+    avatar: '🐣',
+    title: '00后整顿职场先锋 · 清澈实习生',
+    defaultFavorability: 25,
+    faction: 'friendly',
+    description: '刚入职两周的应届实习生，眼里闪烁着清澈的愚蠢与对劳动法的无限敬畏。上班不内耗，下班准点走，大不了回去继承家产。',
+    favoriteItems: ['bag_snack', 'labor_law', 'intern_guide'],
+    perkTitle: '整顿职场神仙助攻',
+    perkDesc: '好感度≥80：在关键拦截中，小陈直接当面掏出劳动法理直气壮发言，为你吸引100%全场火力！',
+    breakPenalty: '好感度<-50：小陈在全员群艾特“前辈好像包都收拾好了”，引发管理层大搜查。'
   }
 };
+

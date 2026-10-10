@@ -3,6 +3,7 @@
  */
 
 import { calculateBuzzwordScore } from '../data/buzzwords.js';
+import { TAICHI_SCENARIOS } from '../data/taichi.js';
 
 export class MiniGameRunner {
   /**
@@ -148,4 +149,92 @@ export class MiniGameRunner {
       };
     }
   }
+
+  /**
+   * Evaluate Workplace Tai-Chi deflection choice
+   * @param {string} scenarioId
+   * @param {string} chosenCardId
+   * @returns {Object}
+   */
+  static evaluateTaiChiBattle(scenarioId, chosenCardId) {
+    const scenario = TAICHI_SCENARIOS.find((s) => s.id === scenarioId) || TAICHI_SCENARIOS[0];
+    const card = scenario.cards.find((c) => c.id === chosenCardId) || scenario.cards[scenario.cards.length - 1];
+
+    if (card.score >= 90) {
+      return {
+        grade: 'PERFECT',
+        score: card.score,
+        suspicionDelta: -20,
+        energyDelta: 10,
+        cardText: card.text,
+        feedback: card.feedback,
+        msg: `☯️【太极宗师·借力打力】反制成功！${card.feedback} 怀疑度 -20%，体能 +10！`
+      };
+    } else if (card.score >= 70) {
+      return {
+        grade: 'PASS',
+        score: card.score,
+        suspicionDelta: -5,
+        energyDelta: 0,
+        cardText: card.text,
+        feedback: card.feedback,
+        msg: `👌【太极化解·战略推诿】${card.feedback} 怀疑度 -5%，成功脱身！`
+      };
+    } else {
+      return {
+        grade: 'FAIL',
+        score: card.score,
+        suspicionDelta: 20,
+        energyDelta: -10,
+        cardText: card.text,
+        feedback: card.feedback,
+        msg: `💥【太极失误·接锅上身】${card.feedback} 怀疑度 +20%，体能 -10！`
+      };
+    }
+  }
+
+  /**
+   * Evaluate speed typing / keyboard pretender frenzy
+   * @param {number} hits
+   * @param {number} durationSeconds
+   * @returns {Object}
+   */
+  static evaluateKeyboardFrenzy(hits, durationSeconds = 5) {
+    const cps = Number((hits / durationSeconds).toFixed(1));
+
+    if (hits >= 25) {
+      return {
+        grade: 'FIRE',
+        hits,
+        cps,
+        percent: 100,
+        suspicionDelta: -20,
+        energyDelta: 10,
+        msg: `🔥【满负荷救火大仙】${durationSeconds}秒极速敲击 ${hits} 次（${cps} CPS）！键盘打出火星！老板屏住呼吸悄悄退回办公室，怀疑度 -20%，体能 +10！`
+      };
+    } else if (hits >= 15) {
+      const pct = Math.round((hits / 25) * 100);
+      return {
+        grade: 'STEADY',
+        hits,
+        cps,
+        percent: pct,
+        suspicionDelta: -10,
+        energyDelta: 5,
+        msg: `⚡【沉浸式救火专家】${durationSeconds}秒敲击 ${hits} 次（${cps} CPS）！噼里啪啦的敲击声营造出强烈的危机抢修感，怀疑度 -10%，体能 +5！`
+      };
+    } else {
+      const pct = Math.round((hits / 25) * 100);
+      return {
+        grade: 'SLACK',
+        hits,
+        cps,
+        percent: pct,
+        suspicionDelta: 15,
+        energyDelta: -5,
+        msg: `💤【手速疲软露馅】${durationSeconds}秒仅敲击 ${hits} 次（${cps} CPS），被路过主管看出在慢吞吞假装摸鱼，怀疑度 +15%！`
+      };
+    }
+  }
 }
+

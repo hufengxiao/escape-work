@@ -6,6 +6,7 @@
  */
 
 import { BUZZWORDS, BUZZWORD_PROMPTS } from '../data/buzzwords.js';
+import { getRandomTaiChiScenario } from '../data/taichi.js';
 import { MiniGameRunner } from '../engine/miniGameRunner.js';
 import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
@@ -606,5 +607,387 @@ export class MiniGameUI {
     });
 
     animId = requestAnimationFrame(updateLoop);
+  }
+
+  /**
+   * 4. Workplace Tai-Chi Deflection (职场太极·推诿对决)
+   */
+  static showTaiChiBattle(state, engine, onComplete) {
+    const scenario = getRandomTaiChiScenario();
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop fade-in';
+    overlay.id = 'taichi-game-modal';
+
+    let timeLeft = 8;
+    let timerId = null;
+    let isFinished = false;
+
+    overlay.innerHTML = `
+      <div class="modal-card minigame-card slide-up taichi-modal-card">
+        <div class="minigame-header">
+          <div class="minigame-title-group">
+            <span class="minigame-avatar">${scenario.avatar}</span>
+            <div>
+              <h3 class="minigame-title">职场太极 · 借力打力</h3>
+              <span class="minigame-sub">${scenario.opponent} · ${scenario.title}</span>
+            </div>
+          </div>
+          <div class="minigame-timer-badge" id="tc-timer">⏳ 8s</div>
+        </div>
+
+        <div class="minigame-timer-bar-track">
+          <div class="minigame-timer-bar-fill" id="tc-timer-fill" style="width: 100%"></div>
+        </div>
+
+        <div class="minigame-question-box taichi-dialogue-box">
+          <p class="boss-question-text">${scenario.dialogue}</p>
+        </div>
+
+        <div class="taichi-instruction-tip">
+          <span>🎯 限时 8 秒：选择最佳太极推诿神策，借力打力化解危机！</span>
+        </div>
+
+        <div class="taichi-cards-grid" id="tc-cards-grid">
+          ${scenario.cards
+            .map(
+              (card) => `
+            <button class="taichi-card-btn" data-card-id="${card.id}">
+              <span class="taichi-card-text">${card.text}</span>
+            </button>
+          `
+            )
+            .join('')}
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const timerBadge = overlay.querySelector('#tc-timer');
+    const timerFill = overlay.querySelector('#tc-timer-fill');
+    const cardEl = overlay.querySelector('.modal-card');
+
+    const finishGame = (cardId = null) => {
+      if (isFinished) return;
+      isFinished = true;
+      clearInterval(timerId);
+
+      const evalResult = MiniGameRunner.evaluateTaiChiBattle(scenario.id, cardId);
+
+      // Apply deltas
+      if (evalResult.suspicionDelta) {
+        state.suspicion = Math.max(0, Math.min(100, state.suspicion + evalResult.suspicionDelta));
+      }
+      if (evalResult.energyDelta) {
+        state.energy = Math.max(0, Math.min(100, state.energy + evalResult.energyDelta));
+      }
+      state.flags.lastTaiChiGrade = evalResult.grade;
+      if (evalResult.grade === 'PERFECT') {
+        state.flags.taichiMaster = true;
+      }
+
+      state.addLog(evalResult.msg, evalResult.grade === 'PERFECT' ? 'achievement' : evalResult.grade === 'PASS' ? 'info' : 'alert');
+
+      if (evalResult.grade === 'PERFECT') {
+        sound.playSuccess();
+        toast.show(evalResult.msg, 'success', 3500);
+      } else if (evalResult.grade === 'PASS') {
+        sound.playClick();
+        toast.show(evalResult.msg, 'info', 3000);
+      } else {
+        sound.playFail();
+        toast.show(evalResult.msg, 'warning', 3500);
+      }
+
+      // Show settlement
+      cardEl.classList.add('settled');
+      const isPerf = evalResult.grade === 'PERFECT';
+      const isPass = evalResult.grade === 'PASS';
+
+      const settleEl = document.createElement('div');
+      settleEl.className = 'settlement-overlay taichi-settlement-overlay slide-up';
+      settleEl.innerHTML = `
+        <div class="settlement-card-inner">
+          <div class="qte-settle-head">
+            <div class="qte-settle-titles">
+              <span class="qte-settle-badge">☯️ 职场太极推诿结算</span>
+              <span class="qte-settle-sub">${scenario.opponent} 面对你的回应</span>
+            </div>
+          </div>
+
+          <div class="qte-receipt-paper" style="margin-top: 10px;">
+            <div class="receipt-header-row">
+              <span>推诿心法评级</span>
+              <strong class="${isPerf ? 'text-success' : isPass ? 'text-warning' : 'text-danger'}">
+                ${isPerf ? '🌟 完美推诿 (PERFECT)' : isPass ? '👌 合格化解 (PASS)' : '💥 惨遭甩锅 (FAIL)'}
+              </strong>
+            </div>
+
+            <div class="rcpt-footer-dashed" style="margin: 12px 0; font-size: 0.95rem; line-height: 1.5;">
+              ${evalResult.msg}
+            </div>
+
+            <div class="receipt-header-row receipt-meta-row">
+              <span>老板怀疑度: <strong class="${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%</strong></span>
+              <span>身心体能: <strong class="${evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'}">${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}</strong></span>
+            </div>
+          </div>
+
+          <div class="settle-actions-row" style="margin-top: 14px;">
+            <button id="btn-close-taichi-settle" class="btn btn-primary" style="width:100%;">
+              💨 乘胜追击 · 继续逃脱！
+            </button>
+          </div>
+        </div>
+      `;
+      cardEl.appendChild(settleEl);
+
+      settleEl.querySelector('#btn-close-taichi-settle')?.addEventListener('click', () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        if (typeof onComplete === 'function') onComplete(evalResult);
+        if (engine && engine.checkVictoryConditions) engine.checkVictoryConditions();
+      });
+    };
+
+    // Timer loop
+    timerId = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        timerBadge.textContent = '⏳ 0.0s';
+        timerFill.style.width = '0%';
+        finishGame(null); // Timeout
+        return;
+      }
+      timerBadge.textContent = `⏳ ${timeLeft.toFixed(1)}s`;
+      timerFill.style.width = `${(timeLeft / 8) * 100}%`;
+    }, 100);
+
+    // Cards click
+    overlay.querySelectorAll('.taichi-card-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const cardId = btn.getAttribute('data-card-id');
+        finishGame(cardId);
+      });
+    });
+  }
+
+  /**
+   * 5. Keyboard Pretender / Frenzy (工位狂暴装忙敲键盘)
+   */
+  static showKeyboardFrenzy(state, engine, onComplete) {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-backdrop fade-in';
+    overlay.id = 'keyboard-game-modal';
+
+    let timeLeft = 5.0;
+    let timerId = null;
+    let isFinished = false;
+    let hits = 0;
+
+    const fakeCodeSnippets = [
+      'git checkout -b hotfix/rescue-prod-db',
+      'SELECT * FROM orders WHERE status = "pending" FOR UPDATE;',
+      'sudo systemctl restart cluster-worker.service',
+      'docker logs -f core-engine-gateway --tail 50',
+      'kubectl scale deployment/pay-api --replicas=32',
+      'grep -rn "NullPointerException" /var/log/app.log',
+      'npm run build -- --mode=production --optimize',
+      'curl -X POST https://api.internal/v1/failover -d \'{"force":true}\'',
+      '[INFO] Memory heap garbage collected: freed 4.2GB',
+      'chmod +x /deploy/emergency_rollback.sh && ./emergency_rollback.sh',
+      'cargo test --release --all-features -- --nocapture',
+      'ssh root@node-master-01 "sync && echo 3 > /proc/sys/vm/drop_caches"'
+    ];
+
+    overlay.innerHTML = `
+      <div class="modal-card minigame-card slide-up keyboard-modal-card">
+        <div class="minigame-header">
+          <div class="minigame-title-group">
+            <span class="minigame-avatar">⌨️</span>
+            <div>
+              <h3 class="minigame-title">工位狂暴装忙敲击 · 终端救火</h3>
+              <span class="minigame-sub">狂敲任意键或高频点击，假装正在抢修生产P0！</span>
+            </div>
+          </div>
+          <div class="minigame-timer-badge" id="kb-timer">⏳ 5.0s</div>
+        </div>
+
+        <div class="minigame-timer-bar-track">
+          <div class="minigame-timer-bar-fill" id="kb-timer-fill" style="width: 100%"></div>
+        </div>
+
+        <div class="keyboard-stats-bar">
+          <div class="kb-stat-col">
+            <span class="kb-stat-lbl">敲击次数</span>
+            <strong class="kb-stat-val" id="kb-hit-count">0</strong>
+          </div>
+          <div class="kb-stat-col">
+            <span class="kb-stat-lbl">装忙充能</span>
+            <strong class="kb-stat-val" id="kb-frenzy-pct">0%</strong>
+          </div>
+          <div class="kb-stat-col">
+            <span class="kb-stat-lbl">手速频率</span>
+            <strong class="kb-stat-val" id="kb-cps-val">0.0 CPS</strong>
+          </div>
+        </div>
+
+        <div class="cyber-terminal-screen" id="kb-terminal-screen">
+          <div class="terminal-line text-muted">// 正在捕获按键与终端高频指令...</div>
+          <div class="terminal-line text-info">$ init emergency-work-mode --speed=max</div>
+        </div>
+
+        <div class="keyboard-action-zone">
+          <button id="btn-mash-keyboard" class="btn btn-mash-giant">
+            ⚡ 狂暴敲键盘！(或直接按键盘任意键) ⚡
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const timerBadge = overlay.querySelector('#kb-timer');
+    const timerFill = overlay.querySelector('#kb-timer-fill');
+    const hitCountEl = overlay.querySelector('#kb-hit-count');
+    const frenzyPctEl = overlay.querySelector('#kb-frenzy-pct');
+    const cpsValEl = overlay.querySelector('#kb-cps-val');
+    const terminalScreen = overlay.querySelector('#kb-terminal-screen');
+    const mashBtn = overlay.querySelector('#btn-mash-keyboard');
+    const cardEl = overlay.querySelector('.modal-card');
+
+    const registerHit = () => {
+      if (isFinished) return;
+      hits++;
+      sound.playClick();
+
+      const elapsed = Math.max(0.1, 5.0 - timeLeft);
+      const cps = (hits / elapsed).toFixed(1);
+      const pct = Math.min(100, Math.round((hits / 25) * 100));
+
+      hitCountEl.textContent = hits;
+      frenzyPctEl.textContent = `${pct}%`;
+      cpsValEl.textContent = `${cps} CPS`;
+
+      // Append terminal line
+      const snippet = fakeCodeSnippets[Math.floor(Math.random() * fakeCodeSnippets.length)];
+      const line = document.createElement('div');
+      line.className = 'terminal-line terminal-line-live';
+      line.textContent = `> [${new Date().toTimeString().slice(0, 8)}] ${snippet}`;
+      terminalScreen.appendChild(line);
+      terminalScreen.scrollTop = terminalScreen.scrollHeight;
+
+      // Animate mash button
+      mashBtn.classList.remove('btn-mash-pulse');
+      void mashBtn.offsetWidth; // re-flow
+      mashBtn.classList.add('btn-mash-pulse');
+    };
+
+    const onKeyDown = (e) => {
+      if (isFinished) return;
+      // Filter out modifier keys if alone
+      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) return;
+      registerHit();
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    mashBtn.addEventListener('click', registerHit);
+
+    const finishGame = () => {
+      if (isFinished) return;
+      isFinished = true;
+      clearInterval(timerId);
+      window.removeEventListener('keydown', onKeyDown);
+
+      const evalResult = MiniGameRunner.evaluateKeyboardFrenzy(hits, 5);
+
+      if (evalResult.suspicionDelta) {
+        state.suspicion = Math.max(0, Math.min(100, state.suspicion + evalResult.suspicionDelta));
+      }
+      if (evalResult.energyDelta) {
+        state.energy = Math.max(0, Math.min(100, state.energy + evalResult.energyDelta));
+      }
+      state.flags.lastKeyboardGrade = evalResult.grade;
+      state.flags.lastKeyboardHits = hits;
+      if (evalResult.grade === 'FIRE') {
+        state.flags.hasKeyboardGod = true;
+      }
+
+      state.addLog(evalResult.msg, evalResult.grade === 'FIRE' ? 'achievement' : 'info');
+
+      if (evalResult.grade === 'FIRE') {
+        sound.playSuccess();
+        toast.show(evalResult.msg, 'success', 3500);
+      } else if (evalResult.grade === 'STEADY') {
+        sound.playClick();
+        toast.show(evalResult.msg, 'info', 3000);
+      } else {
+        sound.playFail();
+        toast.show(evalResult.msg, 'warning', 3500);
+      }
+
+      // Settle overlay
+      cardEl.classList.add('settled');
+      const isFire = evalResult.grade === 'FIRE';
+      const isSteady = evalResult.grade === 'STEADY';
+
+      const settleEl = document.createElement('div');
+      settleEl.className = 'settlement-overlay keyboard-settlement-overlay slide-up';
+      settleEl.innerHTML = `
+        <div class="settlement-card-inner">
+          <div class="qte-settle-head">
+            <div class="qte-settle-titles">
+              <span class="qte-settle-badge">⌨️ 工位敲击装忙战报</span>
+              <span class="qte-settle-sub">总敲击 ${hits} 次 · 频率 ${evalResult.cps} CPS</span>
+            </div>
+          </div>
+
+          <div class="qte-receipt-paper" style="margin-top: 10px;">
+            <div class="receipt-header-row">
+              <span>装忙气场评级</span>
+              <strong class="${isFire ? 'text-success' : isSteady ? 'text-warning' : 'text-danger'}">
+                ${isFire ? '🔥 满负荷救火大仙 (100%)' : isSteady ? '⚡ 沉浸式救火专家' : '💤 手速疲软摸鱼露馅'}
+              </strong>
+            </div>
+
+            <div class="rcpt-footer-dashed" style="margin: 12px 0; font-size: 0.95rem; line-height: 1.5;">
+              ${evalResult.msg}
+            </div>
+
+            <div class="receipt-header-row receipt-meta-row">
+              <span>老板怀疑度: <strong class="${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%</strong></span>
+              <span>身心体能: <strong class="${evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'}">${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}</strong></span>
+            </div>
+          </div>
+
+          <div class="settle-actions-row" style="margin-top: 14px;">
+            <button id="btn-close-keyboard-settle" class="btn btn-primary" style="width:100%;">
+              🏃 带着救火光环 · 趁机撤退！
+            </button>
+          </div>
+        </div>
+      `;
+      cardEl.appendChild(settleEl);
+
+      settleEl.querySelector('#btn-close-keyboard-settle')?.addEventListener('click', () => {
+        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        if (typeof onComplete === 'function') onComplete(evalResult);
+        if (engine && engine.checkVictoryConditions) engine.checkVictoryConditions();
+      });
+    };
+
+    // Timer loop
+    timerId = setInterval(() => {
+      timeLeft -= 0.1;
+      if (timeLeft <= 0) {
+        timeLeft = 0;
+        timerBadge.textContent = '⏳ 0.0s';
+        timerFill.style.width = '0%';
+        finishGame();
+        return;
+      }
+      timerBadge.textContent = `⏳ ${timeLeft.toFixed(1)}s`;
+      timerFill.style.width = `${(timeLeft / 5) * 100}%`;
+    }, 100);
   }
 }

@@ -1,16 +1,16 @@
 # 🏃‍♂️《准点下班大作战：逃离老板视线》
-### Escape from Work: The 18:00 Run (v3.2.0)
+### Escape from Work: The 18:00 Run (v3.4.0)
 
 > **周五 17:45，距离 18:00 准点下班仅剩最后 15 分钟！**  
 > 在大Boss阎总的鹰眼巡视、产品经理阿强的需求背刺与HR刘姐的价值观盘问下，合理利用摸鱼神器、合成黑产神装、拉拢职场盟友、识破红包陷阱，分秒必争逃离写字楼！
 
-[![Release](https://img.shields.io/badge/release-v3.2.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Release](https://img.shields.io/badge/release-v3.4.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![CI/CD](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml)
-[![Tests](https://img.shields.io/badge/tests-20%2F20%20passed-success.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Tests](https://img.shields.io/badge/tests-41%2F41%20passed-success.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![Platform](https://img.shields.io/badge/platform-H5%20%7C%20PWA%20%7C%20Cloudflare%20Pages-orange.svg?style=flat-square)](https://pages.cloudflare.com/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Endings](https://img.shields.io/badge/endings-26%20endings-purple.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
-[![Achievements](https://img.shields.io/badge/achievements-25%20badges-gold.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Endings](https://img.shields.io/badge/endings-30%20endings-purple.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Achievements](https://img.shields.io/badge/achievements-31%20badges-gold.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![Stack](https://img.shields.io/badge/tech%20stack-Vanilla%20JS%20%7C%20Vite%20%7C%20Web%20Audio-informational.svg?style=flat-square)](https://vitejs.dev/)
 
 ---

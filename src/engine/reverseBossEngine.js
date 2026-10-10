@@ -221,6 +221,28 @@ export class ReverseBossEngine {
   }
 
   /**
+   * Skill 4: 【紧急拉会】
+   * Costs 25 majesty. Summons an emergency meeting, stunning all escaping employees for 1 turn.
+   */
+  useSkillEmergencyMeeting() {
+    if (this.isFinished) return { success: false, message: '行动已结束' };
+    if (this.majesty < 25) return { success: false, message: '威严值不足 25 点！' };
+
+    this.majesty -= 25;
+    this.isEmployeesStunned = true;
+
+    this.logs.push({
+      time: this.getTimeString(),
+      type: 'skill',
+      text: '阎总在全员群发出一键召集令：【全员紧急碰头会】！刺耳警报在各区域回荡，所有正在撤退的员工步伐被迫定身 1 回合！'
+    });
+
+    this.stepTurn(false);
+    return { success: true, state: this.getState() };
+  }
+
+
+  /**
    * Step world turn, advance employees AI, and check game outcome
    */
   stepTurn(allowEmployeeMove = true) {

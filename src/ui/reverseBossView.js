@@ -100,6 +100,10 @@ export class ReverseBossView {
                 <div class="skill-name">🛗 专梯伏击</div>
                 <div class="skill-cost">直降1楼大堂截门 (-30)</div>
               </button>
+              <button id="btn-boss-meeting" class="skill-btn">
+                <div class="skill-name">⚡ 紧急拉会</div>
+                <div class="skill-cost">全员定身暂停前进 (-25)</div>
+              </button>
             </div>
           </div>
 
@@ -185,6 +189,17 @@ export class ReverseBossView {
 
     this.container.querySelector('#btn-boss-lift-ambush')?.addEventListener('click', () => {
       const res = this.engine.useSkillLiftAmbush();
+      if (!res.success) {
+        toast.show(res.message, 'warning', 2500);
+        sound.playAlert();
+      } else {
+        sound.playDing();
+      }
+      this.render();
+    });
+
+    this.container.querySelector('#btn-boss-meeting')?.addEventListener('click', () => {
+      const res = this.engine.useSkillEmergencyMeeting();
       if (!res.success) {
         toast.show(res.message, 'warning', 2500);
         sound.playAlert();

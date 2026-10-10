@@ -21,16 +21,19 @@ export class NPCManager {
       if (roleId === 'backend_dev') {
         if (npc.id === 'ah_wei') initialFavor += 15;
         if (npc.id === 'ah_qiang') initialFavor -= 15;
+        if (npc.id === 'intern_chen') initialFavor += 10;
       } else if (roleId === 'product_manager' || roleId === 'product_mgr') {
         if (npc.id === 'ah_qiang') initialFavor += 35;
         if (npc.id === 'ah_wei') initialFavor -= 20;
       } else if (roleId === 'ui_designer') {
         if (npc.id === 'admin_team') initialFavor += 20;
+        if (npc.id === 'intern_chen') initialFavor += 15;
       } else if (roleId === 'senior_slacker') {
         if (npc.id === 'ah_wei') initialFavor += 25;
         if (npc.id === 'lao_wang') initialFavor += 25;
-      } else if (roleId === 'intern') {
+      } else if (roleId === 'fresh_intern' || roleId === 'intern') {
         if (npc.id === 'lao_wang') initialFavor += 20;
+        if (npc.id === 'intern_chen') initialFavor += 35;
       }
 
       initialFavor = Math.max(-100, Math.min(100, initialFavor));

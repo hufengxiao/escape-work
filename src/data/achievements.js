@@ -177,5 +177,48 @@ export const ACHIEVEMENTS = [
     icon: '🏆',
     description: '累计解锁至少 22 个不同结局，受万人打工人敬仰！',
     condition: (history) => history.unlockedEndings && history.unlockedEndings.length >= 22
+  },
+  {
+    id: 'ach_taichi_master',
+    title: '太极推诿大宗师',
+    icon: '☯️',
+    description: '在职场太极推诿对决中斩获 PERFECT 完美借力打力！',
+    condition: (history, state) => Boolean(state && state.flags && (state.flags.taichiMaster || state.flags.lastTaiChiGrade === 'PERFECT'))
+  },
+  {
+    id: 'ach_keyboard_god',
+    title: '键盘机械降神',
+    icon: '⚡',
+    description: '在工位狂暴装忙敲键盘挑战中达成 100% 满负荷救火大仙！',
+    condition: (history, state) => Boolean(state && state.flags && (state.flags.hasKeyboardGod || state.flags.lastKeyboardGrade === 'FIRE'))
+  },
+  {
+    id: 'ach_intern_mentor',
+    title: '00后职场守护神',
+    icon: '🐣',
+    description: '与清澈实习生小陈的好感度达到【盟友(≥80)】状态！',
+    condition: (history, state) => Boolean(state && state.npcRelations && state.npcRelations.intern_chen && state.npcRelations.intern_chen.favorability >= 80)
+  },
+  {
+    id: 'ach_craft_ghost',
+    title: '幽灵工位架构师',
+    icon: '👻',
+    description: '成功合成神装【幽灵工位自动化矩阵】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_ghost_keyboard'))
+  },
+  {
+    id: 'ach_craft_intern',
+    title: '整顿职场总司令',
+    icon: '✊',
+    description: '成功合成神装【00后整顿职场终极阵线】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_intern_alliance'))
+  },
+  {
+    id: 'ach_craft_energy',
+    title: '赛博续命炼金术',
+    icon: '🧪',
+    description: '成功合成神装【终极超频续命魔水】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_energy_burst'))
   }
 ];
+
