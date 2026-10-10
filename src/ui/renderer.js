@@ -93,10 +93,10 @@ export class UIRenderer {
             <button id="btn-sound" class="btn-icon" title="音效开关" aria-label="音效开关">
               ${this.state.history && sound.isMuted ? '🔇' : '🔊'}
             </button>
-            <button id="btn-bgm" class="btn-icon" title="背景紧张音效" aria-label="紧张旋律">
+            <button id="btn-bgm" class="btn-icon" title="紧张氛围音乐：已关闭 (点击开启)" aria-label="开启背景氛围音乐">
               🎵
             </button>
-            <button id="btn-restart" class="btn-icon" title="重新开始" aria-label="重来">
+            <button id="btn-restart" class="btn-icon" title="重新开始游戏" aria-label="重新开始">
               🔄
             </button>
           </div>
@@ -516,6 +516,57 @@ export class UIRenderer {
           </div>
         </div>
 
+        <!-- Custom Cyberpunk Restart Confirmation Modal -->
+        <div id="restart-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="restart-modal-title">
+          <div class="modal-box restart-modal-box slide-up">
+            <div class="modal-header">
+              <div class="modal-title-group">
+                <span class="modal-avatar">🔄</span>
+                <div>
+                  <h3 class="modal-title" id="restart-modal-title">放弃进度 · 重新开始？</h3>
+                  <span class="modal-subtitle">即将重置本轮局内时间与摸鱼状态</span>
+                </div>
+              </div>
+              <button id="btn-close-restart-x" class="modal-close-btn" aria-label="关闭">&times;</button>
+            </div>
+
+            <div class="modal-body restart-modal-body">
+              <div class="restart-info-card">
+                <div class="restart-status-row">
+                  <div class="restart-stat-item">
+                    <span class="stat-lbl">当前时刻</span>
+                    <strong class="stat-val text-warning" id="restart-curr-time">17:45</strong>
+                  </div>
+                  <div class="restart-stat-item">
+                    <span class="stat-lbl">老板怀疑度</span>
+                    <strong class="stat-val text-danger" id="restart-curr-susp">0%</strong>
+                  </div>
+                  <div class="restart-stat-item">
+                    <span class="stat-lbl">已行动步数</span>
+                    <strong class="stat-val text-info" id="restart-curr-turns">0 步</strong>
+                  </div>
+                </div>
+                <p class="restart-desc">
+                  重新开始将把当前时间重置回 <strong>17:45</strong>，背包道具与局内进度清空。
+                </p>
+                <div class="restart-safe-notice">
+                  <span class="safe-badge">🛡️ 战绩保险</span>
+                  <span>已解锁的结局图鉴、勋章成就与档案悟性将<strong>完整保留</strong>，不会丢失。</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-footer restart-modal-footer">
+              <button id="btn-cancel-restart" class="btn btn-secondary">
+                🏃 继续当前逃脱
+              </button>
+              <button id="btn-confirm-restart" class="btn btn-danger">
+                🔄 确认重开新局
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Interactive UI Spotlight Tour Overlay -->
         <div id="tour-overlay" class="tour-overlay hidden" aria-modal="true" role="dialog">
           <div class="tour-backdrop" id="tour-backdrop"></div>
@@ -677,36 +728,87 @@ export class UIRenderer {
       changelogModal.classList.remove('hidden');
     });
 
-    // Sound toggle
+    // Sound & BGM toggles
     const btnSound = document.getElementById('btn-sound');
-    btnSound.addEventListener('click', () => {
-      const isMuted = sound.toggleMute();
-      btnSound.textContent = isMuted ? '🔇' : '🔊';
-      toast.show(isMuted ? '音效已静音' : '音效已开启', 'info');
-    });
-
-    // BGM toggle
     const btnBgm = document.getElementById('btn-bgm');
-    btnBgm.addEventListener('click', () => {
-      if (sound.bgmPlaying) {
-        sound.stopBgm();
-        btnBgm.classList.remove('active');
-        toast.show('紧张氛围音乐已暂停', 'info');
-      } else {
-        sound.startBgm();
+
+    const updateBgmUI = (isPlaying = sound.bgmPlaying) => {
+      if (!btnBgm) return;
+      if (isPlaying) {
         btnBgm.classList.add('active');
-        toast.show('紧张下班倒计时氛围乐开启', 'info');
+        btnBgm.textContent = '🎶';
+        btnBgm.title = '紧张氛围音乐：播放中 (点击关闭)';
+        btnBgm.setAttribute('aria-label', '关闭背景氛围音乐');
+      } else {
+        btnBgm.classList.remove('active');
+        btnBgm.textContent = '🎵';
+        btnBgm.title = '紧张氛围音乐：已关闭 (点击开启)';
+        btnBgm.setAttribute('aria-label', '开启背景氛围音乐');
       }
+    };
+
+    const updateSoundUI = () => {
+      if (!btnSound) return;
+      btnSound.textContent = sound.isMuted ? '🔇' : '🔊';
+      btnSound.title = sound.isMuted ? '音效：已静音 (点击开启)' : '音效：已开启 (点击静音)';
+      btnSound.setAttribute('aria-label', sound.isMuted ? '开启音效' : '关闭音效');
+    };
+
+    btnBgm?.addEventListener('click', () => {
+      const isPlaying = sound.toggleBgm();
+      updateBgmUI(isPlaying);
+      updateSoundUI();
+      toast.show(isPlaying ? '🎶 紧张下班倒计时氛围乐已开启' : '🎵 紧张氛围音乐已关闭', 'info');
     });
 
-    // Restart button
-    document.getElementById('btn-restart').addEventListener('click', () => {
-      if (confirm('确定要放弃当前进度重新开始吗？')) {
-        document.getElementById('ending-modal')?.classList.add('hidden');
-        document.getElementById('poster-modal')?.classList.add('hidden');
-        document.getElementById('encounter-modal')?.classList.add('hidden');
-        this.engine.restart();
-        toast.show('时间已重置为 17:45，新的一局开始！', 'info');
+    btnSound?.addEventListener('click', () => {
+      const isMuted = sound.toggleMute();
+      updateSoundUI();
+      updateBgmUI(sound.bgmPlaying);
+      toast.show(isMuted ? '🔇 音效已静音' : '🔊 音效已开启', 'info');
+    });
+
+    // Initialize audio buttons state
+    updateBgmUI(sound.bgmPlaying);
+    updateSoundUI();
+
+    // Custom Restart Confirmation Modal
+    const restartModal = document.getElementById('restart-modal');
+    const openRestartModal = () => {
+      sound.playClick();
+      const currTimeEl = document.getElementById('restart-curr-time');
+      const currSuspEl = document.getElementById('restart-curr-susp');
+      const currTurnsEl = document.getElementById('restart-curr-turns');
+      if (currTimeEl) currTimeEl.textContent = this.state.getTimeString();
+      if (currSuspEl) currSuspEl.textContent = `${Math.min(100, Math.max(0, this.state.suspicion))}%`;
+      if (currTurnsEl) currTurnsEl.textContent = `${this.state.turns || 0} 步`;
+
+      restartModal?.classList.remove('hidden');
+    };
+
+    const closeRestartModal = () => {
+      sound.playClick();
+      restartModal?.classList.add('hidden');
+    };
+
+    const confirmRestart = () => {
+      sound.playClick();
+      restartModal?.classList.add('hidden');
+      document.getElementById('ending-modal')?.classList.add('hidden');
+      document.getElementById('poster-modal')?.classList.add('hidden');
+      document.getElementById('encounter-modal')?.classList.add('hidden');
+      this.engine.restart();
+      toast.show('时间已重置为 17:45，新的一局开始！', 'info');
+    };
+
+    document.getElementById('btn-restart')?.addEventListener('click', openRestartModal);
+    document.getElementById('btn-close-restart-x')?.addEventListener('click', closeRestartModal);
+    document.getElementById('btn-cancel-restart')?.addEventListener('click', closeRestartModal);
+    document.getElementById('btn-confirm-restart')?.addEventListener('click', confirmRestart);
+
+    restartModal?.addEventListener('click', (e) => {
+      if (e.target === restartModal) {
+        closeRestartModal();
       }
     });
 

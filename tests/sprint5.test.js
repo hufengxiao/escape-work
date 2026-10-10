@@ -94,3 +94,34 @@ test('T5.6 Tour Step 4 targets bottom nav and CraftModal supports onClose', asyn
   assert.equal(closed, true, 'CraftModal close must invoke onClose callback');
 });
 
+test('T5.7 SoundEngine toggleBgm, startBgm, stopBgm and auto-unmute behavior', async (t) => {
+  const { sound } = await import('../src/audio/sound.js');
+  
+  // Ensure clean initial state
+  sound.stopBgm();
+  assert.equal(sound.bgmPlaying, false, 'BGM should initially be stopped');
+
+  // 1. Toggle ON
+  const started = sound.toggleBgm();
+  assert.equal(started, true, 'toggleBgm should return true when starting');
+  assert.equal(sound.bgmPlaying, true, 'sound.bgmPlaying should be true');
+
+  // 2. Toggle OFF
+  const stopped = sound.toggleBgm();
+  assert.equal(stopped, false, 'toggleBgm should return false when stopping');
+  assert.equal(sound.bgmPlaying, false, 'sound.bgmPlaying should be false');
+  assert.equal(sound.bgmInterval, null, 'bgmInterval should be cleared');
+
+  // 3. Muted state auto-unmute on toggleBgm
+  sound.isMuted = true;
+  const startedFromMute = sound.toggleBgm();
+  assert.equal(startedFromMute, true, 'toggleBgm should start even if previously muted');
+  assert.equal(sound.isMuted, false, 'isMuted should be reset to false so BGM is audible');
+  assert.equal(sound.bgmPlaying, true, 'BGM should be playing');
+
+  // Clean up
+  sound.stopBgm();
+  assert.equal(sound.bgmPlaying, false);
+});
+
+

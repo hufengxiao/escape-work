@@ -128,15 +128,30 @@ class SoundEngine {
 
   // Tension Lo-fi BGM (Subtle pulsing rhythm)
   startBgm() {
-    if (this.isMuted || this.bgmPlaying) return;
+    if (this.bgmPlaying) return;
     this.init();
+    if (this.bgmInterval) {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
+    }
+    // If sound was muted, un-mute so BGM is audible
+    if (this.isMuted) {
+      this.isMuted = false;
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('escape_work_muted', 'false');
+      }
+    }
     this.bgmPlaying = true;
     this.bgmStep = 0;
 
     const baseFrequencies = [110, 110, 130.81, 98]; // A2, A2, C3, G2
 
     this.bgmInterval = setInterval(() => {
-      if (this.isMuted || !this.bgmPlaying) return;
+      if (!this.bgmPlaying) {
+        this.stopBgm();
+        return;
+      }
+      if (this.isMuted) return;
       const freq = baseFrequencies[this.bgmStep % baseFrequencies.length];
       this.playTone(freq, 'triangle', 0.2, 0.05);
 
@@ -153,6 +168,16 @@ class SoundEngine {
     if (this.bgmInterval) {
       clearInterval(this.bgmInterval);
       this.bgmInterval = null;
+    }
+  }
+
+  toggleBgm() {
+    if (this.bgmPlaying) {
+      this.stopBgm();
+      return false;
+    } else {
+      this.startBgm();
+      return true;
     }
   }
 }

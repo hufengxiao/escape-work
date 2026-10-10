@@ -4875,6 +4875,115 @@
   }
 }
 
+/* ==========================================================================
+   Ambient BGM & Custom Cyberpunk Restart Confirmation Modal
+   ========================================================================== */
+
+/* BGM Button Active Pulse */
+.btn-icon#btn-bgm.active {
+  background: rgba(99, 102, 241, 0.35);
+  border-color: #818cf8;
+  color: #fff;
+  box-shadow: 0 0 14px rgba(99, 102, 241, 0.5);
+  animation: pulseMusicNote 2s infinite ease-in-out;
+}
+
+@keyframes pulseMusicNote {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(129, 140, 248, 0.7);
+  }
+}
+
+/* Restart Confirmation Modal */
+.restart-modal-box {
+  max-width: 420px;
+  width: 92%;
+  padding: 18px 20px;
+  background: linear-gradient(170deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.96));
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 24px rgba(239, 68, 68, 0.15);
+  border-radius: var(--radius-lg);
+}
+
+.restart-modal-body {
+  margin: 12px 0 16px;
+}
+
+.restart-info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.restart-status-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.restart-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.restart-stat-item .stat-lbl {
+  font-size: 10.5px;
+  color: #94a3b8;
+}
+
+.restart-stat-item .stat-val {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.restart-desc {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.restart-safe-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-size: 11px;
+  color: #a7f3d0;
+  line-height: 1.4;
+}
+
+.safe-badge {
+  flex-shrink: 0;
+  font-weight: 700;
+}
+
+.restart-modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.restart-modal-footer .btn {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
 
 
 
