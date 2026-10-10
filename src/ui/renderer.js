@@ -379,7 +379,7 @@ export class UIRenderer {
                   <span class="mode-card-icon">🌙</span>
                   <span class="mode-card-badge badge-overtime">无尽生存</span>
                 </div>
-                <h3 class="mode-card-title">深夜逃杀 · 周五大逃杀</h3>
+                <h3 class="mode-card-title">深夜大逃杀 · 绝地生存</h3>
                 <p class="mode-card-desc">周五深夜被困办公室？极限管控摸鱼度与存在感，熬过 20 个通宵回合迎来周六黎明曙光！</p>
                 <div class="mode-card-footer">
                   <span class="mode-card-stat">⏳ 20回合 · 极限挑战</span>

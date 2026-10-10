@@ -30,8 +30,8 @@ export class OvertimeView {
           <div class="modal-title-group">
             <span class="modal-icon">🌙</span>
             <div>
-              <h3 class="modal-title">周五深夜大逃杀：绝地熬夜生存</h3>
-              <span class="modal-subtitle">无尽附加关 · 从 20:00 熬至明晨 06:00 破晓加冕</span>
+              <h3 class="modal-title ot-title">深夜大逃杀 · 周五通宵生存</h3>
+              <span class="modal-subtitle ot-subtitle">绝地熬夜生存 · 坚守至 06:00 黎明破晓加冕！</span>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-overtime" aria-label="关闭">&times;</button>
@@ -41,12 +41,17 @@ export class OvertimeView {
           <!-- Time & Turn Progress Banner -->
           <div class="ot-clock-banner">
             <div class="clock-banner-left">
-              <span class="clock-label">当前时刻：</span>
-              <strong id="ot-clock" class="clock-time">20:00</strong>
+              <span class="clock-icon">🕒</span>
+              <div class="clock-info-col">
+                <span class="clock-label">闭门会当前时刻</span>
+                <strong id="ot-clock" class="clock-time">20:00</strong>
+              </div>
             </div>
             <div class="clock-banner-right">
-              <span class="progress-label">破晓进度：</span>
-              <span id="ot-progress" class="progress-val">0 / 20 回合</span>
+              <div class="progress-info-col">
+                <span class="progress-label">破晓倒计时</span>
+                <span id="ot-progress" class="progress-val">0 / 20 回合</span>
+              </div>
             </div>
           </div>
 
@@ -55,7 +60,7 @@ export class OvertimeView {
             <!-- Sanity -->
             <div class="meter-group">
               <div class="meter-head">
-                <span class="meter-title title-sanity">🧠 清醒值 (Sanity)</span>
+                <span class="meter-title title-sanity">🧠 精神清醒度</span>
                 <span id="ot-sanity-val" class="meter-num num-sanity">100%</span>
               </div>
               <div class="meter-track">
@@ -66,7 +71,7 @@ export class OvertimeView {
             <!-- Energy -->
             <div class="meter-group">
               <div class="meter-head">
-                <span class="meter-title title-energy">⚡ 体能值 (Energy)</span>
+                <span class="meter-title title-energy">⚡ 身体机能值</span>
                 <span id="ot-energy-val" class="meter-num num-energy">100%</span>
               </div>
               <div class="meter-track">
@@ -77,8 +82,11 @@ export class OvertimeView {
             <!-- Presence with Safe Zone 20-60% -->
             <div class="meter-group">
               <div class="meter-head">
-                <span class="meter-title title-presence">👁️ 存在感 (Presence · 需保持 20%~60%)</span>
-                <span id="ot-presence-val" class="meter-num num-presence">40% (🟢 安全)</span>
+                <div class="presence-title-wrap">
+                  <span class="meter-title title-presence">👁️ 摸鱼存在感</span>
+                  <span class="presence-safe-hint">安全区间 20%~60%</span>
+                </div>
+                <span id="ot-presence-val" class="meter-num num-presence">40% · 🟢 安全</span>
               </div>
               <div class="meter-track track-presence">
                 <!-- Highlight Safe Zone: 20% to 60% -->
@@ -92,28 +100,51 @@ export class OvertimeView {
           <div class="ot-actions-section">
             <div class="actions-section-title">🛠️ 深夜熬会自救对策</div>
             <div id="ot-actions-grid" class="ot-actions-grid">
-              ${OVERTIME_ACTIONS.map(
-                (act) => `
-                <button class="action-btn ot-act-btn" data-act="${act.id}">
-                  <div class="ot-act-name">${act.name}</div>
-                  <div class="ot-act-desc">${act.desc}</div>
-                </button>
-              `
-              ).join('')}
+              ${OVERTIME_ACTIONS.map((act) => {
+                const icons = {
+                  act_nod_listen: '🙇‍♂️',
+                  act_drink_coffee: '☕',
+                  act_wash_face: '💧',
+                  act_order_takeout: '🥟',
+                  act_hide_backrow: '🪴'
+                };
+                const icon = icons[act.id] || '⚡';
+                const tags = [];
+                if (act.sanity) tags.push(`<span class="ot-tag ${act.sanity > 0 ? 'tag-pos' : 'tag-neg'}">🧠 ${act.sanity > 0 ? '+' : ''}${act.sanity}</span>`);
+                if (act.energy) tags.push(`<span class="ot-tag ${act.energy > 0 ? 'tag-pos' : 'tag-neg'}">⚡ ${act.energy > 0 ? '+' : ''}${act.energy}</span>`);
+                if (act.presence) tags.push(`<span class="ot-tag ${act.presence > 0 ? 'tag-warn' : 'tag-stealth'}">👁️ ${act.presence > 0 ? '+' : ''}${act.presence}</span>`);
+
+                return `
+                  <button class="action-btn ot-act-btn" data-act="${act.id}">
+                    <div class="ot-act-top">
+                      <span class="ot-act-icon">${icon}</span>
+                      <strong class="ot-act-name">${act.name}</strong>
+                    </div>
+                    <div class="ot-act-desc">${act.desc}</div>
+                    <div class="ot-act-tags">${tags.join('')}</div>
+                  </button>
+                `;
+              }).join('')}
             </div>
           </div>
 
           <!-- Narrative Log Terminal -->
           <div class="ot-log-box">
-            <div class="log-box-header">📜 会议室现场实况</div>
+            <div class="log-box-header">
+              <span class="log-header-title">📜 会议室现场实况</span>
+              <span class="log-header-badge">通宵播报</span>
+            </div>
             <div id="ot-logs" class="ot-logs-scroll"></div>
           </div>
         </div>
 
         <div class="modal-footer ot-modal-footer">
-          <span class="footer-note">准点下班大作战 · 绝地求生DLC (v3.0.0)</span>
+          <div class="ot-footer-status">
+            <span class="ot-status-dot"></span>
+            <span class="ot-status-text">通宵目标：坚持 20 回合熬至 06:00 黎明</span>
+          </div>
           <div class="footer-actions">
-            <button id="btn-ot-restart" class="btn btn-secondary" style="padding:6px 14px; font-size:12px;">重新挑战</button>
+            <button id="btn-ot-restart" class="btn btn-secondary btn-restart-action">🔄 重新挑战</button>
           </div>
         </div>
       </div>
@@ -204,7 +235,7 @@ export class OvertimeView {
         statusText = '⚠️ 极高危险 (接盘重活)';
         color = '#f97316';
       }
-      presenceVal.innerHTML = `<span style="color:${color}; font-weight:bold;">${s.presence}% (${statusText})</span>`;
+      presenceVal.innerHTML = `<span style="color:${color}; font-weight:bold;">${s.presence}% · ${statusText}</span>`;
     }
     if (presenceBar) {
       presenceBar.style.width = `${s.presence}%`;

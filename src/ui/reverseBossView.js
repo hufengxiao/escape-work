@@ -39,8 +39,8 @@ export class ReverseBossView {
           <div class="modal-title-group">
             <span class="modal-icon">👑</span>
             <div>
-              <h3 class="modal-title">阎总的一天：逮捕准点逃兵</h3>
-              <span class="modal-subtitle">角色反转模式 · 18:05 前阻截至少 3 名员工通宵加班</span>
+              <h3 class="modal-title boss-title">阎总模式 · 逮捕准点逃兵</h3>
+              <span class="modal-subtitle boss-subtitle">管理层视角 · 18:05 前阻截至少 3 名员工通宵加班</span>
             </div>
           </div>
           <button class="modal-close-btn" id="btn-close-reverse-boss" aria-label="关闭">&times;</button>
@@ -116,15 +116,21 @@ export class ReverseBossView {
 
           <!-- Action Log Terminal -->
           <div class="boss-log-box">
-            <div class="log-box-header">📋 抓捕行动简报</div>
+            <div class="log-box-header">
+              <span class="log-header-title">📋 抓捕行动简报</span>
+              <span class="log-header-badge">实时监控通报</span>
+            </div>
             <div id="boss-logs" class="boss-logs-scroll"></div>
           </div>
         </div>
 
         <div class="modal-footer boss-modal-footer">
-          <span class="footer-note">准点下班大作战 · 阎总反转DLC (v3.0.0)</span>
+          <div class="boss-footer-status">
+            <span class="boss-status-dot"></span>
+            <span class="boss-status-text">抓捕目标：18:05 前阻截 ≥3 人</span>
+          </div>
           <div class="footer-actions">
-            <button id="btn-boss-restart" class="btn btn-secondary" style="padding:6px 14px; font-size:12px;">重置本局</button>
+            <button id="btn-boss-restart" class="btn btn-secondary btn-restart-action">🔄 重置战局</button>
           </div>
         </div>
       </div>

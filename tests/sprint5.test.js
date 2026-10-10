@@ -288,3 +288,41 @@ test('T5.13 DAG map travel zone synchronization & Zone 4 turnstile action verifi
   assert.ok(html.includes('id="map-boss-banner"'), 'MapView must render boss banner when at gate node');
   assert.ok(html.includes('id="btn-map-go-action"'), 'MapView must render button to switch to action tab');
 });
+
+test('T5.14 Reverse Boss and Overtime typography, briefing layout and footer redesign verification', async (t) => {
+  const fs = await import('node:fs');
+  const bossViewCode = fs.readFileSync(new URL('../src/ui/reverseBossView.js', import.meta.url), 'utf-8');
+  const otViewCode = fs.readFileSync(new URL('../src/ui/overtimeView.js', import.meta.url), 'utf-8');
+  const componentsCss = fs.readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf-8');
+
+  // 1. Verify redundant DLC text is removed
+  assert.ok(!bossViewCode.includes('阎总反转DLC'), 'Must not have redundant 阎总反转DLC text');
+  assert.ok(!bossViewCode.includes('(v3.0.0)'), 'Must not have hardcoded v3.0.0 in reverseBossView');
+  assert.ok(!otViewCode.includes('绝地求生DLC'), 'Must not have redundant 绝地求生DLC text');
+  assert.ok(!otViewCode.includes('(v3.0.0)'), 'Must not have hardcoded v3.0.0 in overtimeView');
+
+  // 2. Verify footer status badges & restart action buttons
+  assert.ok(bossViewCode.includes('class="boss-footer-status"'), 'Must have boss-footer-status');
+  assert.ok(bossViewCode.includes('id="btn-boss-restart"'), 'Must have btn-boss-restart');
+  assert.ok(otViewCode.includes('class="ot-footer-status"'), 'Must have ot-footer-status');
+  assert.ok(otViewCode.includes('id="btn-ot-restart"'), 'Must have btn-ot-restart');
+
+  // 3. Verify clean Chinese labels in Overtime meters (no raw English in parens)
+  assert.ok(otViewCode.includes('精神清醒度'), 'Must use 精神清醒度');
+  assert.ok(otViewCode.includes('身体机能值'), 'Must use 身体机能值');
+  assert.ok(otViewCode.includes('摸鱼存在感'), 'Must use 摸鱼存在感');
+  assert.ok(!otViewCode.includes('清醒值 (Sanity)'), 'Must not have raw English Sanity');
+  assert.ok(!otViewCode.includes('体能值 (Energy)'), 'Must not have raw English Energy');
+
+  // 4. Verify action delta preview tags & icons in Overtime
+  assert.ok(otViewCode.includes('ot-act-tags'), 'Must render ot-act-tags for action previews');
+  assert.ok(otViewCode.includes('ot-act-icon'), 'Must render ot-act-icon for action cards');
+
+  // 5. Verify CSS rules for footers, brief header and logs
+  assert.ok(componentsCss.includes('.boss-modal-footer {'), 'Must define boss-modal-footer styles');
+  assert.ok(componentsCss.includes('.ot-modal-footer {'), 'Must define ot-modal-footer styles');
+  assert.ok(componentsCss.includes('.boss-footer-status {'), 'Must define boss-footer-status styles');
+  assert.ok(componentsCss.includes('.ot-footer-status {'), 'Must define ot-footer-status styles');
+  assert.ok(componentsCss.includes('.log-header-title {'), 'Must define log-header-title styles');
+});
+
