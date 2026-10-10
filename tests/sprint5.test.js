@@ -124,4 +124,17 @@ test('T5.7 SoundEngine toggleBgm, startBgm, stopBgm and auto-unmute behavior', a
   assert.equal(sound.bgmPlaying, false);
 });
 
+test('T5.8 CURRENT_VERSION sync with CHANGELOGS and package.json', async (t) => {
+  const { CURRENT_VERSION, CHANGELOGS } = await import('../src/data/changelog.js');
+  const fs = await import('node:fs');
+  const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
+
+  assert.equal(CURRENT_VERSION, pkg.version, 'CURRENT_VERSION must match package.json version');
+  assert.equal(CURRENT_VERSION, CHANGELOGS[0].version, 'CURRENT_VERSION must match CHANGELOGS[0].version');
+  assert.equal(CHANGELOGS[0].isLatest, true, 'Latest changelog item must have isLatest = true');
+
+  const latestCount = CHANGELOGS.filter((c) => c.isLatest).length;
+  assert.equal(latestCount, 1, 'Only one changelog entry may be flagged as isLatest');
+});
+
 

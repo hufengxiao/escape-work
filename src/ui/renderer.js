@@ -11,7 +11,7 @@ import { PERKS } from '../data/perks.js';
 import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 import { generatePoster } from './poster.js';
-import { CHANGELOGS } from '../data/changelog.js';
+import { CHANGELOGS, CURRENT_VERSION } from '../data/changelog.js';
 import { TUTORIAL_STEPS, ZONE_STEP_TIPS, GUIDE_SECTIONS, INTERACTIVE_TOUR_STEPS } from '../data/guide.js';
 import { MapView } from './mapView.js';
 import { CraftModal } from './craftModal.js';
@@ -78,7 +78,7 @@ export class UIRenderer {
             <div class="header-title-box">
               <div class="header-title-row">
                 <h1 class="header-title">准点下班大作战</h1>
-                <span class="header-version-pill">v3.2.0</span>
+                <span class="header-version-pill">v${CURRENT_VERSION}</span>
               </div>
               <span class="header-subtitle">逃离老板视线 · 职场摸鱼生存记</span>
             </div>
@@ -436,7 +436,7 @@ export class UIRenderer {
                 <span class="changelog-icon">🎉</span>
                 <div>
                   <h3 class="changelog-title">版本更新日志</h3>
-                  <span class="changelog-badge">当前最新 v3.1.0 · 历史版本全览</span>
+                  <span class="changelog-badge">当前最新 v${CURRENT_VERSION} · 历史版本全览</span>
                 </div>
               </div>
               <button id="btn-close-changelog" class="btn-icon" aria-label="关闭">&times;</button>
@@ -689,8 +689,7 @@ export class UIRenderer {
       }
     });
 
-    // Changelog Notice (v3.2.0) & First-time onboarding check
-    const CURRENT_VERSION = '3.2.0';
+    // Changelog Notice (Auto-sync with CURRENT_VERSION) & First-time onboarding check
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
     const hasSeenTour = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_tour') : null;

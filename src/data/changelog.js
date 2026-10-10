@@ -296,3 +296,5 @@ export const CHANGELOGS = [
     ]
   }
 ];
+
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.2.1';
