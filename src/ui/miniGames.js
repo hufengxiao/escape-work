@@ -122,42 +122,43 @@ export class MiniGameUI {
         ? `“我们通过 <strong>${words.join('</strong>，打通 <strong>')}</strong>，形成全矩阵赋能！”`
         : '“……（对线超时，支支吾吾未能成句）”';
 
-      // Dedicated Settlement Card Overlay
+      // Dedicated Settlement Card Overlay (Compact, fit without scrolling)
       const card = overlay.querySelector('.minigame-card');
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay minigame-settlement-overlay slide-up';
       settleEl.innerHTML = `
-        <div class="settlement-card-inner">
-          <div>
-            <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
-              ${isWin ? '🏆 降维打击达成 (VICTORY)' : '⚠️ 逻辑露怯崩塌 (FAIL)'}
-            </span>
+        <div class="settlement-card-inner buzzword-settlement-inner">
+          <div class="settle-compact-head">
+            <span class="settle-compact-icon">${isWin ? '🗣️' : '😵'}</span>
+            <div class="settle-compact-titles">
+              <h3 class="settlement-title">${isWin ? '气场全开 · 震撼全场！' : '词锋不逮 · 考核失利'}</h3>
+              <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
+                ${isWin ? '🏆 降维打击达成 (VICTORY)' : '⚠️ 逻辑露怯崩塌 (FAIL)'}
+              </span>
+            </div>
           </div>
-
-          <div class="settlement-icon">${isWin ? '🗣️' : '😵'}</div>
-          <h3 class="settlement-title">${isWin ? '气场全开 · 震撼全场！' : '词锋不逮 · 考核失利'}</h3>
 
           <div class="res-quote-box">
-            <span class="res-quote-label" style="font-size:10.5px;color:#94a3b8;font-weight:700;">🗣️ 发言实录：</span>
-            <div style="margin-top:2px;">${quoteText}</div>
+            <span class="res-quote-label" style="font-size:10px;color:#94a3b8;font-weight:700;">🗣️ 发言实录：</span>
+            <div class="res-quote-text" style="margin-top:2px;font-size:11px;line-height:1.4;">${quoteText}</div>
           </div>
 
-          <div class="settle-stats-grid">
-            <div class="settle-stat-item">
+          <div class="settle-stats-bar">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">对线评分</span>
               <strong class="settle-stat-val ${isWin ? 'text-success' : 'text-danger'}">${evalResult.score} 分</strong>
             </div>
-            <div class="settle-stat-item">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">考核判定</span>
               <strong class="settle-stat-val">${evalResult.grade}</strong>
             </div>
-            <div class="settle-stat-item">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">摸鱼嫌疑</span>
               <strong class="settle-stat-val ${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
                 ${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta || 0}%
               </strong>
             </div>
-            <div class="settle-stat-item">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">剩余体能</span>
               <strong class="settle-stat-val ${evalResult.energyDelta < 0 ? 'text-danger' : 'text-success'}">
                 ${evalResult.energyDelta > 0 ? '+' : ''}${evalResult.energyDelta || 0}
@@ -168,7 +169,7 @@ export class MiniGameUI {
           <div class="res-msg-box">${evalResult.msg}</div>
 
           <div class="settle-actions-row">
-            <button id="btn-close-buzzword-settle" class="btn btn-primary" style="width:100%;">
+            <button id="btn-close-buzzword-settle" class="btn btn-primary btn-block">
               ✨ 确认对线战果 · 继续逃跑
             </button>
           </div>
@@ -334,28 +335,29 @@ export class MiniGameUI {
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay redpacket-settlement-overlay slide-up';
       settleEl.innerHTML = `
-        <div class="settlement-card-inner">
-          <div>
-            <span class="settlement-stamp-badge ${stampCls}">
-              ${stampText}
-            </span>
+        <div class="settlement-card-inner redpacket-settlement-inner">
+          <div class="settle-compact-head">
+            <span class="settle-compact-icon">${icon}</span>
+            <div class="settle-compact-titles">
+              <h3 class="settlement-title">${title}</h3>
+              <span class="settlement-stamp-badge ${stampCls}">
+                ${stampText}
+              </span>
+            </div>
           </div>
 
-          <div class="settlement-icon">${icon}</div>
-          <h3 class="settlement-title">${title}</h3>
-
-          <div class="rp-amount-display" style="font-size:24px;font-weight:900;color:#fbbf24;margin:4px 0;">
+          <div class="rp-amount-display" style="font-size:22px;font-weight:900;color:#fbbf24;margin:4px 0;">
             ${result.amount > 0 ? `¥${result.amount.toFixed(2)}` : '¥0.00'}
           </div>
 
-          <div class="settle-stats-grid">
-            <div class="settle-stat-item">
+          <div class="settle-stats-bar" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">摸鱼嫌疑变动</span>
               <strong class="settle-stat-val ${result.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
                 ${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%
               </strong>
             </div>
-            <div class="settle-stat-item">
+            <div class="settle-stat-compact">
               <span class="settle-stat-label">体能恢复变动</span>
               <strong class="settle-stat-val ${result.energyDelta < 0 ? 'text-danger' : 'text-success'}">
                 ${result.energyDelta > 0 ? '+' : ''}${result.energyDelta || 0}
@@ -366,7 +368,7 @@ export class MiniGameUI {
           <div class="res-msg-box">${result.msg}</div>
 
           <div class="settle-actions-row">
-            <button id="btn-close-rp-settle" class="btn btn-primary" style="width:100%;">
+            <button id="btn-close-rp-settle" class="btn btn-primary btn-block">
               👌 收下战果 · 继续溜走
             </button>
           </div>

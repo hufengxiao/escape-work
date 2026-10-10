@@ -131,6 +131,9 @@ export class OvertimeView {
       this.container.remove();
       this.container = null;
     }
+    if (this.onFinishCallback) {
+      this.onFinishCallback();
+    }
   }
 
   bindEvents() {

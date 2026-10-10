@@ -452,12 +452,12 @@ export const INTERACTIVE_TOUR_STEPS = [
   },
   {
     step: 4,
-    selector: '.cyber-quick-hub',
+    selector: '.cyber-bottom-nav, .bottom-nav-bar, .cyber-quick-hub',
     icon: '⚡',
-    title: '赛博战术中心与模式入口',
-    badge: '步骤 4 / 8 · 战术面板',
-    desc: '快捷访问全部核心系统：\n• 👑 阎总反转模式 & 🌙 深夜逃杀生存\n• 🧪 职场神装合成 & 🤝 同事人脉网络\n• 📅 每日黄历挑战 & 🏆 26大结局图鉴',
-    tip: '💡 随时点击对应按钮查看羁绊合成或送礼拉拢盟友！',
+    title: '底部主导航与多模式中心',
+    badge: '步骤 4 / 8 · 底栏主导航',
+    desc: '底栏聚合全部核心模式与系统：\n• 🏃 准点逃脱：主线地下城潜行\n• 👑 阎总模式：角色反转当老板抓逃兵\n• 🌙 深夜逃杀：20 回合通宵生存大逃杀\n• 🧪 职场工坊：神装合成与职场化学反应\n• 🏆 图鉴成就：26大结局与成就勋章全览',
+    tip: '💡 随时轻触底栏在各大核心玩法间无缝穿梭！',
     padding: 6
   },
   {

@@ -31,11 +31,22 @@ export class UIRenderer {
       this.setActiveTab('action');
     });
     this.activeTab = 'action';
-    this.craftModal = new CraftModal(this.state, () => this.render());
+    this.activeBottomNavTab = 'escape';
+    this.craftModal = new CraftModal(
+      this.state,
+      () => this.render(),
+      () => this.updateBottomTabHighlight('escape')
+    );
     this.relationPanel = new RelationPanel(this.state, () => this.render());
     this.radarView = new RadarView(this.state, () => this.render());
-    this.reverseBossView = new ReverseBossView(this.state, () => this.render());
-    this.overtimeView = new OvertimeView(this.state, () => this.render());
+    this.reverseBossView = new ReverseBossView(this.state, () => {
+      this.updateBottomTabHighlight('escape');
+      this.render();
+    });
+    this.overtimeView = new OvertimeView(this.state, () => {
+      this.updateBottomTabHighlight('escape');
+      this.render();
+    });
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
@@ -67,7 +78,7 @@ export class UIRenderer {
             <div class="header-title-box">
               <div class="header-title-row">
                 <h1 class="header-title">准点下班大作战</h1>
-                <span class="header-version-pill">v3.1.0</span>
+                <span class="header-version-pill">v3.2.0</span>
               </div>
               <span class="header-subtitle">逃离老板视线 · 职场摸鱼生存记</span>
             </div>
@@ -177,13 +188,17 @@ export class UIRenderer {
             <span id="meta-role-avatar">👨‍💻</span>
             <span id="meta-role-name">后端攻城狮</span>
           </button>
-          <div id="strip-mod-chip" class="meta-chip chip-weather" title="今日办公区环境词条">
+          <div id="strip-mod-chip" class="meta-chip chip-weather" title="今日办公区环境词条 (点击查看每日黄历)">
             <span id="meta-mod-icon">☀️</span>
             <span id="meta-mod-name">平静周五</span>
           </div>
           <button id="strip-exp-chip" class="meta-chip chip-exp" title="点击打开摸鱼天赋树">
             <span>🧬</span>
             <span id="meta-exp-val">0 悟性</span>
+          </button>
+          <button id="strip-relation-chip" class="meta-chip chip-relation" title="点击查看职场人脉网络与送礼">
+            <span>🤝</span>
+            <span id="meta-relation-val">职场人脉</span>
           </button>
           <span id="strip-hardcore-tag" class="meta-chip chip-hardcore hidden">🔥 修罗场</span>
         </div>
@@ -533,6 +548,30 @@ export class UIRenderer {
             </div>
           </div>
         </div>
+
+        <!-- Cyber Bottom Navigation Bar -->
+        <nav class="cyber-bottom-nav" id="cyber-bottom-nav" aria-label="底栏主导航">
+          <button class="bottom-tab-btn active" data-tab="escape" id="nav-tab-escape" title="准点下班 · 现场突围">
+            <span class="bottom-tab-icon">🏃</span>
+            <span class="bottom-tab-label">准点逃脱</span>
+          </button>
+          <button class="bottom-tab-btn" data-tab="boss" id="nav-tab-boss" title="角色反转：扮演阎总逮捕逃兵">
+            <span class="bottom-tab-icon">👑</span>
+            <span class="bottom-tab-label">阎总模式</span>
+          </button>
+          <button class="bottom-tab-btn" data-tab="overtime" id="nav-tab-overtime" title="无尽生存：周五深夜大逃杀">
+            <span class="bottom-tab-icon">🌙</span>
+            <span class="bottom-tab-label">深夜逃杀</span>
+          </button>
+          <button class="bottom-tab-btn" data-tab="workshop" id="nav-tab-workshop" title="职场工坊 · 妙手合成与人脉">
+            <span class="bottom-tab-icon">🧪</span>
+            <span class="bottom-tab-label">职场工坊</span>
+          </button>
+          <button class="bottom-tab-btn" data-tab="archive" id="nav-tab-archive" title="全景结局图鉴与成就勋章">
+            <span class="bottom-tab-icon">🏆</span>
+            <span class="bottom-tab-label">图鉴成就</span>
+          </button>
+        </nav>
       </div>
     `;
   }
@@ -599,8 +638,8 @@ export class UIRenderer {
       }
     });
 
-    // Changelog Notice (v3.1.0) & First-time onboarding check
-    const CURRENT_VERSION = '3.1.0';
+    // Changelog Notice (v3.2.0) & First-time onboarding check
+    const CURRENT_VERSION = '3.2.0';
     const changelogModal = document.getElementById('changelog-modal');
     const savedVer = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_changelog_ver') : null;
     const hasSeenTour = typeof localStorage !== 'undefined' ? localStorage.getItem('escape_work_has_seen_tour') : null;
@@ -714,7 +753,10 @@ export class UIRenderer {
     const roleModal = document.getElementById('role-modal');
     document.getElementById('btn-role').addEventListener('click', () => this.openRoleModal());
     document.getElementById('strip-role-chip').addEventListener('click', () => this.openRoleModal());
-    document.getElementById('btn-close-role').addEventListener('click', () => roleModal.classList.add('hidden'));
+    document.getElementById('btn-close-role').addEventListener('click', () => {
+      roleModal.classList.add('hidden');
+      this.updateBottomTabHighlight('escape');
+    });
 
     document.getElementById('btn-confirm-role').addEventListener('click', () => {
       const selectedRadio = document.querySelector('input[name="role-select"]:checked');
@@ -722,6 +764,7 @@ export class UIRenderer {
       const isHardcore = document.getElementById('check-hardcore').checked;
       this.engine.restart(roleId, null, isHardcore);
       roleModal.classList.add('hidden');
+      this.updateBottomTabHighlight('escape');
       toast.show(`已化身【${CHARACTERS[roleId].name}】开启逃脱！`, 'success');
     });
 
@@ -729,7 +772,10 @@ export class UIRenderer {
     const talentModal = document.getElementById('talent-modal');
     document.getElementById('btn-talent').addEventListener('click', () => this.openTalentModal());
     document.getElementById('strip-exp-chip').addEventListener('click', () => this.openTalentModal());
-    document.getElementById('btn-close-talent').addEventListener('click', () => talentModal.classList.add('hidden'));
+    document.getElementById('btn-close-talent').addEventListener('click', () => {
+      talentModal.classList.add('hidden');
+      this.updateBottomTabHighlight('escape');
+    });
 
     // Craft modal
     document.getElementById('btn-craft')?.addEventListener('click', () => {
@@ -762,6 +808,7 @@ export class UIRenderer {
 
     document.getElementById('btn-close-archive').addEventListener('click', () => {
       archiveModal.classList.add('hidden');
+      this.updateBottomTabHighlight('escape');
     });
 
     document.getElementById('tab-endings').addEventListener('click', () => this.renderArchiveModal('endings'));
@@ -820,6 +867,24 @@ export class UIRenderer {
     document.getElementById('action-log-ticker')?.addEventListener('click', () => {
       sound.playClick();
       this.setActiveTab('log');
+    });
+
+    // Cyber Bottom Tab Navigation events
+    document.querySelectorAll('.bottom-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        this.switchBottomNavTab(tab);
+      });
+    });
+
+    // Meta strip relation & weather chips
+    document.getElementById('strip-relation-chip')?.addEventListener('click', () => {
+      sound.playClick();
+      this.relationPanel.show();
+    });
+
+    document.getElementById('strip-mod-chip')?.addEventListener('click', () => {
+      this.openDailyModal();
     });
   }
 
@@ -1324,6 +1389,56 @@ export class UIRenderer {
     this.syncActiveTabUI();
   }
 
+  switchBottomNavTab(tabId, playAudio = true) {
+    if (playAudio) sound.playClick();
+    this.updateBottomTabHighlight(tabId);
+
+    if (tabId === 'escape') {
+      this.reverseBossView?.hide();
+      this.overtimeView?.hide();
+      this.craftModal?.close();
+      document.getElementById('archive-modal')?.classList.add('hidden');
+      document.getElementById('role-modal')?.classList.add('hidden');
+      document.getElementById('talent-modal')?.classList.add('hidden');
+    } else if (tabId === 'boss') {
+      this.overtimeView?.hide();
+      this.craftModal?.close();
+      document.getElementById('archive-modal')?.classList.add('hidden');
+      document.getElementById('role-modal')?.classList.add('hidden');
+      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.reverseBossView?.show();
+    } else if (tabId === 'overtime') {
+      this.reverseBossView?.hide();
+      this.craftModal?.close();
+      document.getElementById('archive-modal')?.classList.add('hidden');
+      document.getElementById('role-modal')?.classList.add('hidden');
+      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.overtimeView?.show();
+    } else if (tabId === 'workshop') {
+      this.reverseBossView?.hide();
+      this.overtimeView?.hide();
+      document.getElementById('archive-modal')?.classList.add('hidden');
+      document.getElementById('role-modal')?.classList.add('hidden');
+      document.getElementById('talent-modal')?.classList.add('hidden');
+      this.craftModal?.show();
+    } else if (tabId === 'archive') {
+      this.reverseBossView?.hide();
+      this.overtimeView?.hide();
+      this.craftModal?.close();
+      this.renderArchiveModal('endings');
+      document.getElementById('archive-modal')?.classList.remove('hidden');
+    }
+  }
+
+  updateBottomTabHighlight(tabId) {
+    this.activeBottomNavTab = tabId;
+    const tabBtns = document.querySelectorAll('.bottom-tab-btn');
+    tabBtns.forEach((btn) => {
+      const isMatch = btn.getAttribute('data-tab') === tabId;
+      btn.classList.toggle('active', isMatch);
+    });
+  }
+
   setActiveTab(tabName) {
     this.activeTab = tabName;
     this.syncActiveTabUI();
@@ -1620,6 +1735,19 @@ export class UIRenderer {
     const tray = document.getElementById('item-tray');
     const countEl = document.getElementById('backpack-count');
     countEl.textContent = this.state.inventory.length;
+
+    const quickCraftBtn = document.getElementById('btn-quick-craft');
+    if (quickCraftBtn) {
+      if (this.state.inventory.length >= 2) {
+        quickCraftBtn.classList.add('has-craftable');
+        quickCraftBtn.innerHTML = '🧪 妙手合成 ✨';
+        quickCraftBtn.title = '当前持有 2+ 道具，可进入工坊合成羁绊神装！';
+      } else {
+        quickCraftBtn.classList.remove('has-craftable');
+        quickCraftBtn.innerHTML = '🧪 妙手合成';
+        quickCraftBtn.title = '合成羁绊神装 · 探索职场化学反应';
+      }
+    }
 
     if (this.state.inventory.length === 0) {
       tray.innerHTML = '<div class="empty-tray">背包空空如也，可在工位和走廊寻找摸鱼神器……</div>';

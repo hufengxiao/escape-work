@@ -1,10 +1,10 @@
 # 🏃‍♂️《准点下班大作战：逃离老板视线》
-### Escape from Work: The 18:00 Run (v3.1.0)
+### Escape from Work: The 18:00 Run (v3.2.0)
 
 > **周五 17:45，距离 18:00 准点下班仅剩最后 15 分钟！**  
 > 在大Boss阎总的鹰眼巡视、产品经理阿强的需求背刺与HR刘姐的价值观盘问下，合理利用摸鱼神器、合成黑产神装、拉拢职场盟友、识破红包陷阱，分秒必争逃离写字楼！
 
-[![Release](https://img.shields.io/badge/release-v3.1.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
+[![Release](https://img.shields.io/badge/release-v3.2.0-blue.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![CI/CD](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml/badge.svg)](https://github.com/hufengxiao/escape-work/actions/workflows/deploy-cloudflare.yml)
 [![Tests](https://img.shields.io/badge/tests-20%2F20%20passed-success.svg?style=flat-square)](https://github.com/hufengxiao/escape-work)
 [![Platform](https://img.shields.io/badge/platform-H5%20%7C%20PWA%20%7C%20Cloudflare%20Pages-orange.svg?style=flat-square)](https://pages.cloudflare.com/)
@@ -275,6 +275,12 @@ npx wrangler pages deploy dist --project-name=escape-work
 ---
 
 ## 📝 完整版本演进足迹 (Changelog)
+
+### [v3.2.0] - 2026-10-10 (赛博底栏主导航与体验革新)
+- 📱 **底部常驻赛博主导航栏 (Bottom Tab Bar)**：告别拥挤顶栏！新增固定底栏主导航：【🏃 准点逃脱】【👑 阎总模式】【🌙 深夜逃杀】【🧪 职场工坊】【🏆 图鉴成就】，拇指轻触即可在逃脱主线与各大特色模式间无缝丝滑穿梭；
+- 🧪 **摸鱼背包【妙手合成】高光徽章焕新**：彻底根治原生灰阶按钮显示问题，重构为高亮霓虹赛博渐变徽章；持有 2+ 道具时触发专属【✨ 可合成】呼吸辉光动效，直达职场黑产工坊探索神装化学反应；
+- 🗣️ **对话 Minigame 结算面板超紧凑化（免滚动一屏尽览）**：重构大厂黑话对决与微信群红包排雷结算视窗！引入一体化紧凑战果抬头与 4 列横向数值条，战果实录、评分、数值变动与确认逃跑按钮完全免滚动，一屏全览；
+- 🤝 **职场生态快览条与黄历交互联动**：快捷状态栏新增【🤝 职场人脉】直达入口，轻触【☀️ 平静周五】词条直接开启今日职场老黄历与宜忌挑战。
 
 ### [v3.1.0] - 2026-10-10 (界面交互专项革新)
 - 🎯 **操作浮动提示与顶栏向导精准居中**：重构现代 Popover 顶层容器定位机制，彻底解决反馈提示偏向屏幕左上角的问题，浮动气泡与战术向导栏均实现视口正中高光居中；

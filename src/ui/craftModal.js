@@ -8,9 +8,10 @@ import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
 
 export class CraftModal {
-  constructor(state, onUpdate) {
+  constructor(state, onUpdate, onClose = null) {
     this.state = state;
     this.onUpdate = onUpdate;
+    this.onClose = onClose;
     this.selectedItemIds = [];
     this.activeTab = 'craft'; // 'craft' | 'book'
     this.modalEl = null;
@@ -25,6 +26,9 @@ export class CraftModal {
     if (this.modalEl && this.modalEl.parentNode) {
       this.modalEl.parentNode.removeChild(this.modalEl);
       this.modalEl = null;
+    }
+    if (this.onClose) {
+      this.onClose();
     }
   }
 

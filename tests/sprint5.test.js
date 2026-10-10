@@ -80,3 +80,17 @@ test('T5.5 All INTERACTIVE_TOUR_STEPS selectors integrity & Step 5 highlight ver
     'Step 5 selector must target map-view-container for highlight spotlight'
   );
 });
+
+test('T5.6 Tour Step 4 targets bottom nav and CraftModal supports onClose', async (t) => {
+  const { INTERACTIVE_TOUR_STEPS } = await import('../src/data/guide.js');
+  const step4 = INTERACTIVE_TOUR_STEPS.find((s) => s.step === 4);
+  assert.ok(step4, 'Step 4 must exist');
+  assert.ok(step4.selector.includes('.cyber-bottom-nav'), 'Step 4 must target cyber-bottom-nav');
+
+  const { CraftModal } = await import('../src/ui/craftModal.js');
+  let closed = false;
+  const craft = new CraftModal({}, () => {}, () => { closed = true; });
+  craft.close();
+  assert.equal(closed, true, 'CraftModal close must invoke onClose callback');
+});
+

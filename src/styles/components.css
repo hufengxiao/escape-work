@@ -246,6 +246,54 @@
   border: 1px dashed var(--border-subtle);
 }
 
+/* Backpack Quick Craft Badge */
+.btn-craft-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #e9d5ff;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(99, 102, 241, 0.28));
+  border: 1px solid rgba(192, 132, 252, 0.6);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  outline: none;
+  line-height: 1.2;
+}
+
+.btn-craft-badge:hover {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.48), rgba(99, 102, 241, 0.48));
+  border-color: #d8b4fe;
+  color: #fff;
+  transform: translateY(-1px) scale(1.04);
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.btn-craft-badge:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.btn-craft-badge.has-craftable {
+  animation: craftPulseGlow 2s infinite ease-in-out;
+  border-color: #34d399;
+  color: #a7f3d0;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(168, 85, 247, 0.35));
+}
+
+@keyframes craftPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(52, 211, 153, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(52, 211, 153, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+}
+
 /* Event Logs Feed */
 .log-container {
   background: rgba(11, 15, 25, 0.85);
@@ -821,13 +869,29 @@
   background: rgba(245, 158, 11, 0.12);
   border-color: rgba(245, 158, 11, 0.35);
   color: #fbbf24;
-  cursor: default;
+  cursor: pointer;
+}
+
+.chip-weather:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: #f59e0b;
 }
 
 .chip-exp {
   background: rgba(168, 85, 247, 0.12);
   border-color: rgba(168, 85, 247, 0.35);
   color: #c084fc;
+}
+
+.chip-relation {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(52, 211, 153, 0.35);
+  color: #6ee7b7;
+}
+
+.chip-relation:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #34d399;
 }
 
 .chip-hardcore {
@@ -3120,21 +3184,97 @@
 }
 
 /* ==========================================================================
-   Cyber Tactical Quick Hub & Top Systems Bar
+   Cyber Tactical Bottom Navigation Bar & Systems Hub
    ========================================================================== */
 
 .cyber-quick-hub {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 12px 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  display: none !important;
 }
 
-.cyber-quick-hub::-webkit-scrollbar {
-  display: none;
+.cyber-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 540px;
+  height: 56px;
+  z-index: 105;
+  background: rgba(11, 15, 25, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.bottom-tab-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  outline: none;
+  padding: 4px 0;
+}
+
+.bottom-tab-icon {
+  font-size: 19px;
+  line-height: 1;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bottom-tab-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.bottom-tab-btn:hover {
+  color: #cbd5e1;
+}
+
+.bottom-tab-btn:hover .bottom-tab-icon {
+  transform: translateY(-2px);
+}
+
+.bottom-tab-btn.active {
+  color: #38bdf8;
+}
+
+.bottom-tab-btn.active .bottom-tab-icon {
+  transform: scale(1.15);
+}
+
+.bottom-tab-btn.active .bottom-tab-label {
+  color: #38bdf8;
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+.bottom-tab-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2.5px;
+  background: linear-gradient(90deg, #38bdf8, #818cf8);
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
 }
 
 .hub-pill {
@@ -4235,6 +4375,80 @@
   gap: 12px;
   text-align: center;
   padding: 6px 4px;
+}
+
+/* Compact Settlement Layout for Minigames (No-Scroll) */
+.settle-compact-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  padding: 2px 4px;
+}
+
+.settle-compact-icon {
+  font-size: 32px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.settle-compact-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.settle-compact-titles .settlement-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.settle-compact-titles .settlement-stamp-badge {
+  margin: 0;
+  padding: 2px 10px;
+  font-size: 10.5px;
+  align-self: flex-start;
+}
+
+.settle-stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.settle-stat-compact {
+  background: rgba(30, 41, 59, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 5px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  text-align: center;
+}
+
+.settle-stat-compact .settle-stat-label {
+  font-size: 9.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.settle-stat-compact .settle-stat-val {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.buzzword-settlement-inner,
+.redpacket-settlement-inner {
+  gap: 8px;
+  padding: 4px;
+  max-height: 100%;
 }
 
 .settlement-stamp-badge {
