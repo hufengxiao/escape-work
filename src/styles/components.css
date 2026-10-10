@@ -1,6 +1,7 @@
 /* Scene Card & Workplace Atmosphere - Compact High Efficiency */
 .main-screen {
-  padding: 0 12px 14px;
+  padding: 0 12px 16px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -166,84 +167,271 @@
   border: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-/* Item Tray & Backpack */
+/* Item Tray & Backpack: 2-Column Responsive Grid, Zero Horizontal Scrolling */
 .item-tray {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: thin;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 520px) {
+  .item-tray {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 .item-card {
-  min-width: 145px;
-  max-width: 165px;
+  width: 100%;
+  box-sizing: border-box;
   background: rgba(15, 23, 42, 0.85);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 8px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex-shrink: 0;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 125px;
+  transition: all 0.2s ease;
+}
+
+.item-card:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(20, 30, 55, 0.9);
+  transform: translateY(-1px);
 }
 
 .item-head {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .item-icon {
-  font-size: 17px;
+  font-size: 20px;
+  line-height: 1;
 }
 
 .item-name {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: #38bdf8;
+  word-break: break-word;
 }
 
 .item-desc {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
-  line-height: 1.3;
+  line-height: 1.35;
+  flex: 1;
 }
 
 .item-effect {
-  font-size: 9.5px;
+  font-size: 10px;
   color: #fbbf24;
-  background: rgba(245, 158, 11, 0.1);
-  padding: 2px 4px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 3px 6px;
   border-radius: 4px;
+  font-weight: 500;
+  line-height: 1.3;
 }
 
 .btn-use-item {
-  margin-top: auto;
+  margin-top: 4px;
   background: linear-gradient(135deg, #4f46e5, #6366f1);
   border: none;
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 3px 6px;
+  padding: 5px 8px;
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  width: 100%;
+  text-align: center;
 }
 
 .btn-use-item:hover {
-  opacity: 0.9;
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
 }
 
-.empty-tray {
+.empty-tray-box {
+  grid-column: 1 / -1;
   width: 100%;
-  font-size: 12px;
-  color: var(--text-dim);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 16px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px dashed rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-md);
   text-align: center;
-  padding: 18px 0;
-  background: rgba(15, 23, 42, 0.5);
+}
+
+.empty-tray-icon {
+  font-size: 32px;
+  opacity: 0.7;
+}
+
+.empty-tray-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.empty-tray-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  max-width: 280px;
+  line-height: 1.4;
+}
+
+/* Backpack Crafting Synergy Quick Portal */
+.backpack-craft-portal {
+  background: linear-gradient(145deg, rgba(30, 27, 75, 0.45), rgba(15, 23, 42, 0.85));
+  border: 1px solid rgba(168, 85, 247, 0.28);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.craft-portal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.craft-portal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.craft-portal-icon {
+  font-size: 22px;
+}
+
+.portal-heading {
+  font-size: 13px;
+  font-weight: 700;
+  color: #e9d5ff;
+  margin: 0;
+}
+
+.portal-sub {
+  font-size: 10px;
+  color: #a855f7;
+}
+
+.btn-craft-portal-go {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #9333ea, #6366f1);
+  border: 1px solid rgba(192, 132, 252, 0.4);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+
+.btn-craft-portal-go:hover {
+  background: linear-gradient(135deg, #a855f7, #4f46e5);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+  transform: translateY(-1px);
+}
+
+.craft-recipes-preview {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.recipe-chip {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-sm);
-  border: 1px dashed var(--border-subtle);
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recipe-chip:hover {
+  border-color: rgba(168, 85, 247, 0.4);
+  background: rgba(30, 27, 75, 0.7);
+}
+
+.recipe-icons {
+  font-size: 12px;
+}
+
+.recipe-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.recipe-tag {
+  font-size: 9px;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+  padding: 1px 4px;
+  border-radius: 3px;
+  align-self: flex-start;
+}
+
+/* Backpack Tactical Tips Card */
+.backpack-tips-card {
+  background: rgba(15, 23, 42, 0.75);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tips-card-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+.tips-card-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tips-card-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
 }
 
 /* Backpack Quick Craft Badge */
@@ -295,17 +483,30 @@
 }
 
 /* Event Logs Feed */
+.log-count-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
 .log-container {
   background: rgba(11, 15, 25, 0.85);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 12px;
-  max-height: 160px;
+  padding: 12px 14px;
+  min-height: 320px;
+  max-height: calc(100vh - 280px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   font-size: 12px;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .log-entry {
@@ -1551,6 +1752,16 @@
 @keyframes pulseBadge {
   from { transform: scale(0.95); opacity: 0.85; }
   to { transform: scale(1.05); opacity: 1; }
+}
+
+.view-tab-panel {
+  padding: 0 12px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
 }
 
 .view-tab-panel.panel-hidden {
@@ -3476,7 +3687,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-md);
   padding: 6px 12px;
-  margin: 0 12px 6px;
+  margin: 0 0 8px;
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -4875,7 +5086,7 @@
   }
 
   .radar-bar-container {
-    margin: 0 10px 10px;
+    margin: 0 0 8px;
     padding: 8px 10px;
   }
 

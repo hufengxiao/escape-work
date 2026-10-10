@@ -258,16 +258,73 @@ export class UIRenderer {
               </div>
               <span class="section-hint">点击道具可主动使用或合成神装</span>
             </h3>
+
+            <!-- 2-Column Responsive Item Grid (No horizontal swiping) -->
             <div class="item-tray" id="item-tray">
               <!-- Dynamically populated items -->
+            </div>
+
+            <!-- Empty space utilization: Crafting Synthesis Showcase & Quick Workbench Portal -->
+            <div class="backpack-craft-portal" id="backpack-craft-portal">
+              <div class="craft-portal-header">
+                <div class="craft-portal-title">
+                  <span class="craft-portal-icon">🧪</span>
+                  <div>
+                    <h4 class="portal-heading">职场合成工坊 · 羁绊配方</h4>
+                    <span class="portal-sub">2件基础道具可融合为顶级破局神装</span>
+                  </div>
+                </div>
+                <button id="btn-backpack-go-craft" class="btn-craft-portal-go" title="前往工坊合成">
+                  进入工坊 ➔
+                </button>
+              </div>
+
+              <div class="craft-recipes-preview">
+                <div class="recipe-chip" title="风油精 + 咖啡 = 提神续命水">
+                  <span class="recipe-icons">🧪+☕</span>
+                  <span class="recipe-name">提神续命水</span>
+                  <span class="recipe-tag">体力+25</span>
+                </div>
+                <div class="recipe-chip" title="防风外套 + 降噪耳机 = 隐身摸鱼结界">
+                  <span class="recipe-icons">🧥+🎧</span>
+                  <span class="recipe-name">隐身摸鱼结界</span>
+                  <span class="recipe-tag">老板免察</span>
+                </div>
+                <div class="recipe-chip" title="劳动法 + 离职申请书 = 仲裁神剑">
+                  <span class="recipe-icons">⚖️+📄</span>
+                  <span class="recipe-name">仲裁神剑</span>
+                  <span class="recipe-tag">必定脱身</span>
+                </div>
+                <div class="recipe-chip" title="墨镜 + 录音笔 = 职场调查专员">
+                  <span class="recipe-icons">🕶️+🎙️</span>
+                  <span class="recipe-name">职场调查专员</span>
+                  <span class="recipe-tag">窥探雷达</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty space utilization: Tactical Backpack Tips -->
+            <div class="backpack-tips-card">
+              <div class="tips-card-head">
+                <span class="tips-card-icon">💡</span>
+                <span class="tips-card-title">摸鱼背包战术指引</span>
+              </div>
+              <ul class="tips-card-list">
+                <li><span>🎒</span> 使用道具即时生效，不消耗当前时刻与行动力。</li>
+                <li><span>🧪</span> 收集 2 件道具即可触发羁绊，合成威力强大的专属神装。</li>
+                <li><span>🔎</span> 在工位、茶水间、走廊各区域探索可搜寻更多职场破局神器。</li>
+              </ul>
             </div>
           </section>
 
           <!-- Tab Panel: Live Event Feed -->
           <section class="log-section view-tab-panel panel-hidden" data-panel="log">
             <h3 class="section-title">
-              <span>📜 实时动态通报</span>
-              <span class="section-hint">分秒必争</span>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span>📜 实时动态通报</span>
+                <span class="log-count-badge" id="log-count-badge">0 条动态</span>
+              </div>
+              <span class="section-hint">分秒必争 · 步步为营</span>
             </h3>
             <div class="log-container" id="log-container">
               <!-- Dynamic logs -->
@@ -958,6 +1015,16 @@ export class UIRenderer {
     document.getElementById('btn-quick-craft')?.addEventListener('click', () => {
       sound.playClick();
       this.craftModal?.show();
+    });
+    document.getElementById('btn-backpack-go-craft')?.addEventListener('click', () => {
+      sound.playClick();
+      this.craftModal?.show();
+    });
+    document.querySelectorAll('.recipe-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        sound.playClick();
+        this.craftModal?.show();
+      });
     });
 
     // Relation panel
@@ -1981,7 +2048,13 @@ export class UIRenderer {
     }
 
     if (this.state.inventory.length === 0) {
-      tray.innerHTML = '<div class="empty-tray">背包空空如也，可在工位和走廊寻找摸鱼神器……</div>';
+      tray.innerHTML = `
+        <div class="empty-tray-box">
+          <div class="empty-tray-icon">🎒</div>
+          <div class="empty-tray-title">背包暂无道具</div>
+          <div class="empty-tray-desc">在工位、走廊或茶水间进行战术抉择以搜集神器，下方合成工坊已就绪！</div>
+        </div>
+      `;
       return;
     }
 
@@ -2016,6 +2089,11 @@ export class UIRenderer {
 
   renderLogs() {
     const container = document.getElementById('log-container');
+    const badge = document.getElementById('log-count-badge');
+    if (badge) {
+      badge.textContent = `${this.state.logs ? this.state.logs.length : 0} 条动态`;
+    }
+    if (!container) return;
     container.innerHTML = this.state.logs.map((log) => {
       return `
         <div class="log-entry log-${log.type}">

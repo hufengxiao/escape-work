@@ -191,6 +191,25 @@ test('T5.10 Streamlined 4-tab zero-scroll layout, full tactical step text and To
   assert.ok(step4.selector.includes('#nav-tab-modes'), 'Step 4 selector must target nav-tab-modes');
 });
 
+test('T5.11 Backpack 2-column grid, synergy portal & Live log padding layout verification', async (t) => {
+  const fs = await import('node:fs');
+  const rendererCode = fs.readFileSync(new URL('../src/ui/renderer.js', import.meta.url), 'utf-8');
+  const cssCode = fs.readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf-8');
+
+  // 1. Verify backpack layout components in renderer.js
+  assert.ok(rendererCode.includes('id="backpack-craft-portal"'), 'Must have backpack-craft-portal');
+  assert.ok(rendererCode.includes('id="btn-backpack-go-craft"'), 'Must have btn-backpack-go-craft');
+  assert.ok(rendererCode.includes('class="backpack-tips-card"'), 'Must have backpack-tips-card');
+  assert.ok(rendererCode.includes('empty-tray-box'), 'Must render empty-tray-box when inventory is empty');
+  assert.ok(rendererCode.includes('id="log-count-badge"'), 'Must have log-count-badge in log section');
+
+  // 2. Verify CSS grid and scroll rules in components.css
+  assert.ok(cssCode.includes('grid-template-columns: repeat(2, 1fr)'), 'Item tray must use 2-column grid');
+  assert.ok(!cssCode.includes('.item-tray {\n  display: flex;\n  gap: 8px;\n  overflow-x: auto;'), 'Item tray must not have overflow-x auto');
+  assert.ok(cssCode.includes('.view-tab-panel {'), 'Must define base view-tab-panel class with padding');
+  assert.ok(cssCode.includes('min-height: 320px;'), 'Log container must have comfortable expanded height');
+});
+
 
 
 

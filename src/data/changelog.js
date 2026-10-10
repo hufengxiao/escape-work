@@ -4,10 +4,31 @@
 
 export const CHANGELOGS = [
   {
+    version: '3.3.2',
+    title: '背包空间利用与布局优化：2列响应式道具网格、快捷合成工坊与动态通报边距重构',
+    date: '2026-10-10',
+    isLatest: true,
+    badge: '体验深度优化 v3.3.2',
+    items: [
+      {
+        title: '🎒 摸鱼背包 2 列网格呈现（彻底告别左右滑动）',
+        desc: '重构道具陈列为双列响应式网格布局，移除横向滚动条；卡片全面积撑开，道具图标、效果标签与使用按钮一目了然，单手即可轻松操作。'
+      },
+      {
+        title: '🧪 背包下方空间深度利用：羁绊工坊快捷传送与战术指引',
+        desc: '在道具下方深度规划【职场合成工坊 · 羁绊配方】快捷看板与【摸鱼背包战术指引】卡片，热门合成配方即点即查、一键直通工坊，空背包时亦有温馨引导，彻底告别大面积留白。'
+      },
+      {
+        title: '📜 实时动态通报全端 Padding 边距与高度扩容',
+        desc: '统一多标签视图面板 12px 左右安全边距，彻底解决动态通报贴边失衡问题；动态容器高度扩容至舒适视距，并增加动态数量统计徽章，分秒战况尽收眼底。'
+      }
+    ]
+  },
+  {
     version: '3.3.1',
     title: '界面细节深度打磨：职场中心高亮修正、4列零滑动标签、向导提示全文与指引智能切页',
     date: '2026-10-10',
-    isLatest: true,
+    isLatest: false,
     badge: '体验深度优化 v3.3.1',
     items: [
       {
@@ -343,4 +364,4 @@ export const CHANGELOGS = [
   }
 ];
 
-export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.1';
+export const CURRENT_VERSION = CHANGELOGS[0]?.version || '3.3.2';
