@@ -223,8 +223,11 @@ test('T5.12 Stat delta highlight, encounter toast feedback & enlarged dynamic lo
   assert.ok(rendererCode.includes('id="time-delta"'), 'Must have time delta chip');
   assert.ok(rendererCode.includes('stat-flash-danger'), 'Must support stat-flash-danger animation');
 
-  // 2. Verify encounter choice toast feedback in engine
-  assert.ok(engineCode.includes('toast.show(result.msg, result.type || \'info\');'), 'Must toast encounter result');
+  // 2. Verify encounter choice toast feedback in engine (via event emission or direct toast)
+  assert.ok(
+    engineCode.includes("this.state.emit('ui:toast'") || engineCode.includes('toast.show'),
+    'Must toast encounter result'
+  );
 
   // 3. Verify enlarged log entries & stat highlight chips
   assert.ok(componentsCss.includes('.log-stat-chip'), 'Must have log stat highlight chip styles');

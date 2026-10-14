@@ -23,6 +23,7 @@ import { ReverseBossView } from './reverseBossView.js';
 import { OvertimeView } from './overtimeView.js';
 import { MapManager } from '../engine/mapManager.js';
 import { NODE_TYPES } from '../data/maps.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class UIRenderer {
   constructor(state, engine) {
@@ -72,6 +73,11 @@ export class UIRenderer {
     this.bindGlobalEvents();
     this.render();
     this.state.subscribe(() => this.render());
+    this.state.subscribe('ui:toast', (payload) => {
+      if (payload && payload.msg) {
+        toast.show(payload.msg, payload.type || 'info', payload.duration);
+      }
+    });
   }
 
   buildBaseLayout() {
@@ -2333,14 +2339,15 @@ export class UIRenderer {
     }
     if (!container) return;
     container.innerHTML = this.state.logs.map((log) => {
-      const textHtml = log.text
+      const safeText = escapeHtml(log.text);
+      const textHtml = safeText
         .replace(/(\(怀疑度\s*\+\d+%\))/g, '<span class="log-stat-chip chip-danger">$1</span>')
         .replace(/(\(怀疑度\s*-\d+%\))/g, '<span class="log-stat-chip chip-safe">$1</span>')
         .replace(/(\(体力\s*-\d+\))/g, '<span class="log-stat-chip chip-warn">$1</span>')
         .replace(/(\(体力\s*\+\d+\))/g, '<span class="log-stat-chip chip-energy">$1</span>');
       return `
-        <div class="log-entry log-${log.type}">
-          <span class="log-time">[${log.time}]</span>
+        <div class="log-entry log-${escapeHtml(log.type)}">
+          <span class="log-time">[${escapeHtml(log.time)}]</span>
           <span class="log-text">${textHtml}</span>
         </div>
       `;
@@ -2375,7 +2382,7 @@ export class UIRenderer {
 
         return `
           <button class="choice-btn ${disabled ? 'choice-disabled' : ''}" data-idx="${idx}" ${disabled}>
-            ${displayText}${reqHint}
+            ${escapeHtml(displayText)}${escapeHtml(reqHint)}
           </button>
         `;
       }).join('');

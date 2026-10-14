@@ -148,7 +148,7 @@ export const ACHIEVEMENTS = [
     title: '职场人脉通天',
     icon: '🤝',
     description: '与至少 2 位职场NPC的好感度达到【盟友(≥80)】状态！',
-    condition: (history, state) => state && state.npcRelations && Object.values(state.npcRelations).filter((r) => r.favor >= 80).length >= 2
+    condition: (history, state) => state && state.npcRelations && Object.values(state.npcRelations).filter((r) => r.favorability >= 80).length >= 2
   },
   {
     id: 'ach_buzzword_king',
@@ -219,6 +219,62 @@ export const ACHIEVEMENTS = [
     icon: '🧪',
     description: '成功合成神装【终极超频续命魔水】！',
     condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_energy_burst'))
+  },
+  {
+    id: 'ach_craft_master',
+    title: '生化超频骇客',
+    icon: '⚡',
+    description: '成功合成神装【赛博兴奋剂】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_cyber_stimulant'))
+  },
+  {
+    id: 'ach_craft_decoy',
+    title: '金蝉脱壳工匠',
+    icon: '🕴️',
+    description: '成功合成神装【究极替身傀儡】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_super_decoy_puppet'))
+  },
+  {
+    id: 'ach_craft_bomb',
+    title: '正道的光芒',
+    icon: '💣',
+    description: '成功合成神装【职场正道核弹】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_labor_bomb'))
+  },
+  {
+    id: 'ach_craft_delivery',
+    title: '闪送特权大师',
+    icon: '🛴',
+    description: '成功合成神装【顺丰闪送全家桶】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_delivery_suit_pro'))
+  },
+  {
+    id: 'ach_craft_aura',
+    title: '架构宗师气象',
+    icon: '☕',
+    description: '成功合成神装【架构师无敌气场】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_architect_aura'))
+  },
+  {
+    id: 'ach_craft_shield',
+    title: '赛博防窥结界',
+    icon: '🛡️',
+    description: '成功合成神装【绝对防窥屏障】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_privacy_shield'))
+  },
+  {
+    id: 'ach_craft_smoke',
+    title: '战术转场行家',
+    icon: '💨',
+    description: '成功合成神装【战术烟雾对讲机】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_tactical_smoke'))
+  },
+  {
+    id: 'ach_craft_p0',
+    title: '核聚变排障专家',
+    icon: '🚨',
+    description: '成功合成神装【P0级核聚变工单】！',
+    condition: (history) => Boolean(history.unlockedRecipes && history.unlockedRecipes.includes('recipe_p0_panic_overload'))
   }
 ];
 

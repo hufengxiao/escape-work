@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>escape-work 多智能体代码审查报告 v3.4.1</title>
+<style>
+:root{
+  --bg:#0d1117; --bg2:#161b22; --bg3:#1c2128; --bg4:#21262d;
+  --border:#30363d; --border2:#3d444d;
+  --fg:#e6edf3; --fg2:#adbac7; --fg3:#8b949e; --fg4:#6e7681;
+  --p0:#ff6b6b; --p0b:#3d1418; --p1:#ffa657; --p1b:#3d2410;
+  --p2:#d29922; --p2b:#3a2d0c; --p3:#58a6ff; --p3b:#0d2a4d;
+  --ok:#3fb950; --accent:#7c5cff; --accent2:#00d4aa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  line-height:1.65; font-size:14px; padding:0 0 80px;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+code,.mono{font-family:"SF Mono",Consolas,"Liberation Mono",Menlo,monospace;font-size:12.5px}
+
+/* ---------- header ---------- */
+header{
+  background:linear-gradient(160deg,#1a1033 0%,#0d1117 55%,#0d1a1f 100%);
+  border-bottom:1px solid var(--border); padding:52px 0 40px; position:relative; overflow:hidden;
+}
+header::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(600px 200px at 15% 0%,rgba(124,92,255,.22),transparent 70%),
+             radial-gradient(500px 180px at 85% 100%,rgba(0,212,170,.14),transparent 70%);
+}
+header .wrap{position:relative;z-index:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--accent2);font-weight:600;margin-bottom:14px}
+.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent2);box-shadow:0 0 10px var(--accent2)}
+h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.25;margin-bottom:12px}
+h1 .grad{background:linear-gradient(90deg,#a78bfa,#00d4aa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--fg3);font-size:14.5px;max-width:760px}
+.metaline{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);
+  border-radius:999px;padding:5px 12px;font-size:12.5px;color:var(--fg2)
+}
+.chip b{color:var(--fg);font-weight:600}
+
+/* ---------- sections ---------- */
+section{margin-top:52px}
+h2{font-size:21px;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:10px;margin-bottom:6px}
+h2 .n{
+  width:26px;height:26px;border-radius:8px;background:var(--bg4);border:1px solid var(--border);
+  display:grid;place-items:center;font-size:12.5px;color:var(--accent2);font-weight:700;flex:none
+}
+.sec-note{color:var(--fg3);font-size:13.5px;margin-bottom:20px}
+
+/* ---------- scoreboard ---------- */
+.scores{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.score{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 18px 16px;position:relative;overflow:hidden
+}
+.score .lbl{font-size:12.5px;color:var(--fg3);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.score .val{font-size:32px;font-weight:800;letter-spacing:-.03em;line-height:1}
+.score .val small{font-size:14px;font-weight:600;color:var(--fg4);margin-left:2px}
+.bar{height:5px;background:var(--bg4);border-radius:999px;margin-top:12px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:999px}
+.pct{font-size:11.5px;color:var(--fg4);margin-top:7px;display:block}
+
+/* ---------- verdict ---------- */
+.verdict{
+  background:linear-gradient(135deg,rgba(255,107,107,.10),rgba(255,166,87,.06));
+  border:1px solid rgba(255,107,107,.32);border-radius:14px;padding:22px 24px
+}
+.verdict h3{font-size:15px;color:var(--p0);margin-bottom:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.verdict ol{margin-left:20px;display:grid;gap:11px}
+.verdict li{color:var(--fg2);font-size:13.5px}
+.verdict li b{color:var(--fg)}
+
+/* ---------- stats ---------- */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:15px 16px}
+.stat .k{font-size:11.5px;color:var(--fg4);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat .v{font-size:24px;font-weight:800;margin-top:6px;letter-spacing:-.02em}
+.stat .d{font-size:11.5px;color:var(--fg4);margin-top:3px}
+
+/* ---------- severity distribution ---------- */
+.dist{display:grid;gap:10px}
+.dist-row{display:flex;align-items:center;gap:14px}
+.dist-row .tag{width:74px;flex:none}
+.dist-row .track{flex:1;height:26px;background:var(--bg2);border:1px solid var(--border);border-radius:7px;overflow:hidden;position:relative}
+.dist-row .track i{display:block;height:100%;border-radius:6px 0 0 6px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.dist-row .count{width:44px;text-align:right;font-weight:700;font-size:14px;flex:none}
+
+/* ---------- severity tag ---------- */
+.sev{
+  display:inline-flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;
+  padding:3px 9px;border-radius:6px;letter-spacing:.04em;flex:none
+}
+.sev-P0{background:var(--p0b);color:var(--p0);border:1px solid rgba(255,107,107,.4)}
+.sev-P1{background:var(--p1b);color:var(--p1);border:1px solid rgba(255,166,87,.4)}
+.sev-P2{background:var(--p2b);color:var(--p2);border:1px solid rgba(210,153,34,.4)}
+.sev-P3{background:var(--p3b);color:var(--p3);border:1px solid rgba(88,166,255,.4)}
+
+/* ---------- finding card ---------- */
+.area{margin-bottom:30px}
+.area-hd{
+  display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg3);
+  border:1px solid var(--border);border-radius:12px 12px 0 0;border-bottom:none
+}
+.area-hd .ic{
+  width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;flex:none;
+  background:linear-gradient(135deg,rgba(124,92,255,.25),rgba(0,212,170,.18));border:1px solid rgba(124,92,255,.3)
+}
+.area-hd h3{font-size:15.5px;font-weight:700;flex:1}
+.area-hd .meta{font-size:12px;color:var(--fg4)}
+.area-hd .counts{display:flex;gap:6px}
+.area-bd{background:var(--bg2);border:1px solid var(--border);border-radius:0 0 12px 12px;padding:8px}
+
+.finding{border-bottom:1px solid var(--bg4);padding:16px 14px}
+.finding:last-child{border-bottom:none}
+.f-hd{display:flex;align-items:flex-start;gap:11px;margin-bottom:9px}
+.f-title{font-size:14.5px;font-weight:650;color:var(--fg);flex:1;padding-top:1px}
+.f-loc{
+  font-size:12px;color:var(--accent2);background:rgba(0,212,170,.07);
+  border:1px solid rgba(0,212,170,.22);border-radius:5px;padding:2px 8px;
+  font-family:"SF Mono",Consolas,monospace;white-space:nowrap
+}
+.f-body{color:var(--fg2);font-size:13.5px;margin-left:0;display:grid;gap:9px}
+.f-body .row{display:flex;gap:10px}
+.f-body .row .lbl{
+  flex:none;width:62px;font-size:11.5px;font-weight:700;color:var(--fg4);
+  text-transform:uppercase;letter-spacing:.05em;padding-top:2px
+}
+.f-body .row .txt{flex:1}
+.fix{background:rgba(63,185,80,.06);border-left:2px solid var(--ok);padding:9px 12px;border-radius:0 7px 7px 0;color:#a8ddb5}
+.fix b{color:var(--ok)}
+code.inl{background:var(--bg4);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:#ffa657}
+
+/* ---------- table ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;background:var(--bg2);
+  border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.tbl th{background:var(--bg3);text-align:left;padding:11px 14px;font-size:11.5px;color:var(--fg3);
+  text-transform:uppercase;letter-spacing:.06em;font-weight:700;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--bg4);color:var(--fg2);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg3)}
+.tbl code{color:#ffa657}
+.ok-mark{color:var(--ok);font-weight:700}
+.no-mark{color:var(--p0);font-weight:700}
+.warn-mark{color:var(--p2);font-weight:700}
+
+/* ---------- roadmap ---------- */
+.road{display:grid;gap:12px}
+.step{display:flex;gap:16px;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.step .idx{
+  width:34px;height:34px;border-radius:10px;flex:none;display:grid;place-items:center;
+  font-weight:800;font-size:14px;background:var(--bg4);border:1px solid var(--border2);color:var(--accent2)
+}
+.step .c h4{font-size:14px;font-weight:700;margin-bottom:5px}
+.step .c p{font-size:13px;color:var(--fg3)}
+.step .c .tags{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.tag-s{font-size:11px;padding:2px 8px;border-radius:5px;background:var(--bg4);border:1px solid var(--border);color:var(--fg3)}
+
+/* ---------- footer ---------- */
+footer{margin-top:60px;padding-top:24px;border-top:1px solid var(--border);color:var(--fg4);font-size:12.5px}
+footer .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+footer h5{font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--fg3);margin-bottom:8px}
+footer ul{list-style:none;display:grid;gap:5px}
+footer li{color:var(--fg4)}
+
+@media(max-width:640px){
+  h1{font-size:25px} .wrap{padding:0 16px}
+  .f-body .row{flex-direction:column;gap:2px}
+  .f-body .row .lbl{width:auto}
+  .f-hd{flex-wrap:wrap}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>Multi-Agent Code Review</div>
+    <h1>escape-work <span class="grad">多智能体代码审查报告</span></h1>
+    <p class="sub">
+      对「准点下班大作战：逃离老板视线」H5 文字策略游戏（v3.4.1）进行的四路并行深度审查。
+      分别由<b>引擎层</b>、<b>UI 层</b>、<b>数据层</b>、<b>测试与工程配置</b>四个专项审查智能体独立完成，
+      所有 P0/P1 级结论均已通过源码二次核验。
+    </p>
+    <div class="metaline">
+      <span class="chip">仓库 <b>D:\github\escape-work</b></span>
+      <span class="chip">版本 <b>v3.4.1</b></span>
+      <span class="chip">提交 <b>9d4f3af</b></span>
+      <span class="chip">规模 <b>40 源文件 / 14,037 行</b></span>
+      <span class="chip">审查日期 <b>2026-10-14</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ 执行摘要 ============ -->
+<section>
+  <h2><span class="n">01</span>执行摘要</h2>
+  <p class="sec-note">四路审查共确认 <b>60</b> 项问题，其中 3 项为崩溃级缺陷。整体判断：<b>玩法设计扎实，但工程健壮性存在系统性缺口</b>。</p>
+
+  <div class="stats" style="margin-bottom:22px">
+    <div class="stat"><div class="k">总发现</div><div class="v">60</div><div class="d">去重后确认项</div></div>
+    <div class="stat"><div class="k">P0 崩溃</div><div class="v" style="color:var(--p0)">3</div><div class="d">必须立即修复</div></div>
+    <div class="stat"><div class="k">P1 严重</div><div class="v" style="color:var(--p1)">15</div><div class="d">影响可玩性</div></div>
+    <div class="stat"><div class="k">P2 一般</div><div class="v" style="color:var(--p2)">24</div><div class="d">可维护性</div></div>
+    <div class="stat"><div class="k">P3 建议</div><div class="v" style="color:var(--p3)">18</div><div class="d">体验优化</div></div>
+  </div>
+
+  <div class="dist" style="margin-bottom:26px">
+    <div class="dist-row">
+      <span class="tag sev sev-P0">P0</span>
+      <div class="track"><i style="width:5%;background:linear-gradient(90deg,#ff6b6b,#ff8e8e)"></i></div>
+      <span class="count" style="color:var(--p0)">3</span>
+    </div>
+    <div class="dist-row">
+      <span class="tag sev sev-P1">P1</span>
+      <div class="track"><i style="width:25%;background:linear-gradient(90deg,#ffa657,#ffbe7d)"></i></div>
+      <span class="count" style="color:var(--p1)">15</span>
+    </div>
+    <div class="dist-row">
+      <span class="tag sev sev-P2">P2</span>
+      <div class="track"><i style="width:40%;background:linear-gradient(90deg,#d29922,#e3b341)"></i></div>
+      <span class="count" style="color:var(--p2)">24</span>
+    </div>
+    <div class="dist-row">
+      <span class="tag sev sev-P3">P3</span>
+      <div class="track"><i style="width:30%;background:linear-gradient(90deg,#58a6ff,#79b8ff)"></i></div>
+      <span class="count" style="color:var(--p3)">18</span>
+    </div>
+  </div>
+
+  <h2 style="font-size:16px;margin-bottom:14px"><span class="n" style="width:22px;height:22px;font-size:11px">!</span>三件必须立刻做的事</h2>
+  <div class="verdict">
+    <h3>⛔ 阻塞级问题（修复前不建议发布）</h3>
+    <ol>
+      <li><b>补上 <code class="inl">ending_normal_escape</code> 结局定义。</b>
+        <code class="inl">src/data/events.js:550</code> 在小游戏 QTE 失误分支里调用了这个结局 ID，
+        但 <code class="inl">endings.js</code> 的 30 个结局中<b>并不存在该 key</b>。引擎虽有
+        <code class="inl">ENDING_CAUGHT_MEETING</code> 兜底，但玩家在此路径会看不到预期结局，
+        伤害核心叙事闭环。这是本次审查中唯一被完整链路验证的崩溃级缺陷。</li>
+      <li><b>修掉数据层 4 处「静默失效」。</b>
+        <code class="inl">achievements.js:151</code> 用了不存在的字段 <code class="inl">r.favor</code>（真实字段是
+        <code class="inl">favorability</code>），导致「全司人脉王」成就<b>永远无法解锁</b>；
+        <code class="inl">buzzwords.js:66</code> 角色 ID 写成 <code class="inl">product_mgr</code>（应为
+        <code class="inl">product_manager</code>），产品经理的黑话加成永不生效；
+        <code class="inl">recipes.js</code> 引用了 8 个从未定义的成就 ID；
+        <code class="inl">flags.hasEncounteredBossInElevator</code> 只被读取、全项目无任何赋值点。</li>
+      <li><b>堵住 UI 层的 XSS 通道。</b>
+        <code class="inl">renderer.js:2335</code> 的日志渲染用 <code class="inl">innerHTML</code> 拼接日志文本，
+        而在做高亮替换之后<b>没有做任何 HTML 转义</b>，全项目也不存在 <code class="inl">escapeHtml</code> 工具函数。
+        日志内容包含玩家名等动态字符串，是一条真实的注入路径。<code class="inl">toast.js:53</code>、遭遇选项渲染同样如此。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ 评分 ============ -->
+<section>
+  <h2><span class="n">02</span>四维评分</h2>
+  <p class="sec-note">由各专项审查智能体独立打分，互不参考。满分 10 分。</p>
+  <div class="scores">
+    <div class="score">
+      <div class="lbl"><span>引擎层架构</span><span class="sev sev-P2">6.0</span></div>
+      <div class="val">6.0<small>/10</small></div>
+      <div class="bar"><i style="width:60%;background:linear-gradient(90deg,#d29922,#e3b341)"></i></div>
+      <span class="pct">逻辑内聚、PRNG 与 DAG 设计有想法；分层与随机源治理不彻底</span>
+    </div>
+    <div class="score">
+      <div class="lbl"><span>UI 层架构</span><span class="sev sev-P2">6.0</span></div>
+      <div class="val">6.0<small>/10</small></div>
+      <div class="bar"><i style="width:60%;background:linear-gradient(90deg,#d29922,#e3b341)"></i></div>
+      <span class="pct">模块分层有雏形；renderer.js 仍是「上帝文件」，全量重渲染是系统性隐患</span>
+    </div>
+    <div class="score">
+      <div class="lbl"><span>数据层组织</span><span class="sev sev-P1">7.0</span></div>
+      <div class="val">7.0<small>/10</small></div>
+      <div class="bar"><i style="width:70%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div>
+      <span class="pct">集中式常量、命名规范、注释完整；跨文件引用缺乏校验是主要失分点</span>
+    </div>
+    <div class="score">
+      <div class="lbl"><span>测试与工程化</span><span class="sev sev-P0">5.5</span></div>
+      <div class="val">5.5<small>/10</small></div>
+      <div class="bar"><i style="width:55%;background:linear-gradient(90deg,#ff6b6b,#ffa657)"></i></div>
+      <span class="pct">42 个测试全通过，但 sprint5/6 已退化为「源码字符串 grep」伪测试</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 引擎层 ============ -->
+<section>
+  <h2><span class="n">03</span>核心引擎层</h2>
+  <p class="sec-note">审查范围：<code class="inl">src/engine/</code> 9 个模块 + <code class="inl">utils/prng.js</code> + <code class="inl">main.js</code>（约 2,300 行）</p>
+
+  <div class="area">
+    <div class="area-hd">
+      <div class="ic">⚙️</div>
+      <h3>引擎层审查发现</h3>
+      <div class="counts">
+        <span class="sev sev-P0">2×P0</span>
+        <span class="sev sev-P1">6×P1</span>
+        <span class="sev sev-P2">7×P2</span>
+      </div>
+    </div>
+    <div class="area-bd">
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">引擎层直接依赖 UI 层，硬性分层违规</span>
+          <span class="f-loc">gameEngine.js:13</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">gameEngine.js</code> 顶部 <code class="inl">import { toast } from '../ui/toast.js'</code>，并在 <code class="inl">travelToNode</code> / <code class="inl">executeAction</code> / <code class="inl">resolveEncounterChoice</code> 中直接调用 <code class="inl">toast.show()</code> 达 4 处。引擎层被 DOM 污染，无法在纯 Node 环境运行，也无法做引擎单测。<b>已核验：这是唯一一处 engine → ui 的 import。</b></span></div>
+          <div class="row"><span class="lbl">对照</span><span class="txt"><code class="inl">main.js</code> 已证明正确分层方向——UI 持有 engine 引用（<code class="inl">UIRenderer(gameState, gameEngine)</code>），引擎只应发事件。</span></div>
+          <div class="fix"><b>修复：</b>删除 <code class="inl">import toast</code>，改为 <code class="inl">this.state.emit('ui:toast', { msg, type, duration })</code>，由 UI 层订阅。改动约 5 处调用点。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">存档字段类型污染：hardcoreWins 可能是对象而非数字</span>
+          <span class="f-loc">gameState.js:208 / :221</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">loadPersistentData</code> 的两条分支默认值类型不一致：<code class="inl">:208</code> 兜底为 <code class="inl">{}</code> 空对象，<code class="inl">:221</code> 兜底为 <code class="inl">0</code> 数字。而 <code class="inl">gameEngine.js:402</code> 对它做 <code class="inl">(hardcoreWins || 0) + 1</code> 累加——若加载出的是 <code class="inl">{}</code>（空对象为真值，<code class="inl">|| 0</code> 不生效），结果是字符串 <code class="inl">"[object Object]1"</code> 或 NaN，<b>被永久写回存档且无法自愈</b>。</span></div>
+          <div class="row"><span class="lbl">影响</span><span class="txt">硬核模式胜场统计永久损坏，连带 <code class="inl">renderer.js:2489</code> 的生涯战绩展示。</span></div>
+          <div class="fix"><b>修复：</b>统一为数字类型，加载时对每个数值字段做 <code class="inl">Number(x) || 0</code> 归一化；<code class="inl">:208</code> 改为 <code class="inl">0</code>。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">triggerEnding 缺少幂等短路，战绩/经验可重复累加</span>
+          <span class="f-loc">gameEngine.js:390</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">函数入口<b>没有</b> <code class="inl">if (this.state.currentEnding) return;</code>。遭遇选项触发结局后，<code class="inl">checkVitalConditions()</code>（:385）可能因体力 ≤0 再次调用它，导致 <code class="inl">victories</code> / <code class="inl">gamesPlayed</code> / <code class="inl">slackerExp</code> 重复 +1。已核验源码确认无该守卫。</span></div>
+          <div class="fix"><b>修复：</b>函数首行加 <code class="inl">if (this.state.currentEnding) return;</code></div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">遭遇事件状态写在全局常量对象上，跨局污染</span>
+          <span class="f-loc">gameEngine.js:330 / :467</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">RANDOM_ENCOUNTERS</code> 是模块级数组，代码直接执行 <code class="inl">selected.hasOccurred = true</code> 修改全局对象，靠 <code class="inl">restart</code> 手动遍历重置。任何漏调 <code class="inl">restart</code> 的开局路径都会让标记残留，<b>导致后续若干局都遇不到随机事件</b>。状态藏在 data 模块里，破坏单一数据源。</span></div>
+          <div class="fix"><b>修复：</b>把 <code class="inl">hasOccurred</code> 移入 <code class="inl">state.encounterHistory</code>，由 <code class="inl">reset()</code> 统一初始化。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">反向老板模式时间推进整除截断，18:05 永远到不了</span>
+          <span class="f-loc">reverseBossEngine.js:86</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">this.currentMinute += Math.floor(20 / this.maxTurns)</code>，当 <code class="inl">maxTurns=8</code> 时 <code class="inl">floor(2.5)=2</code>，8 回合只推进 16 分钟到 18:01，与设计的「17:45 → 18:05」不符，UI 展示时间与设计意图不一致。</span></div>
+          <div class="fix"><b>修复：</b>改用累计分钟数 <code class="inl">addMinutes(totalMinutes / maxTurns)</code>，避免整除丢失精度。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">定身技能在同一回合被立即清除，实际不生效</span>
+          <span class="f-loc">reverseBossEngine.js:252 / :291</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">useSkillDeadlyAt</code> / <code class="inl">useSkillEmergencyMeeting</code> 设置 <code class="inl">isEmployeesStunned=true</code> 后调用 <code class="inl">stepTurn(false)</code>，而 <code class="inl">:291</code> <b>无条件</b>将 <code class="inl">isEmployeesStunned</code> 置回 <code class="inl">false</code>。宣称「定身 1 回合」的技能实际上对员工移动毫无作用。</span></div>
+          <div class="fix"><b>修复：</b>用独立的 <code class="inl">stunTurns</code> 计数器跨 <code class="inl">stepTurn</code> 递减，而非同回合清零。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">巡逻威胁标记用裸 Math.random，破坏种子可复现性</span>
+          <span class="f-loc">patrolManager.js:111</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">node.hasBossThreat = Math.random() < 0.5</code>。该函数被 <code class="inl">stepPatrol</code> 和 <code class="inl">triggerDecoy</code> 多处调用，同回合内每次调用结果都不同，UI 上会出现<b>威胁标记闪烁</b>；同时与项目宣称的「受控 PRNG / 每日种子复现」设计目标直接冲突。</span></div>
+          <div class="fix"><b>修复：</b>改用 <code class="inl">PRNG(state.dailySeed)</code> 派生，或基于 <code class="inl">node.index</code> 的确定性哈希。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">加班事件时间筛选条件恒真，随机事件与小时无关</span>
+          <span class="f-loc">overtimeEngine.js:163</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">条件 <code class="inl">currentHour >= ev.minHour || (currentHour <= 6 && ev.minHour <= 6)</code> 中，白天时第一子句恒真，凌晨时第二子句几乎对所有 <code class="inl">minHour<=6</code> 的事件成立。<b>筛选形同虚设</b>，事件会出现在不匹配的时段。</span></div>
+          <div class="fix"><b>修复：</b>明确定义时间窗区间 <code class="inl">[minHour, maxHour]</code> 并校验落入区间。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P2">P2</span>
+          <span class="f-title">关键可维护性问题（7 项）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">清单</span><span class="txt">
+            ① <code class="inl">mapManager.findNode</code> 为 O(n) 线性扫描且被双层循环反复调用（<code class="inl">mapManager.js:134</code>）→ 建 id→node Map 缓存；<br>
+            ② <code class="inl">gameState.emit</code> 内部已调 <code class="inl">notify()</code>，调用方随后又手动 <code class="inl">notify()</code>，一次移动触发 2 次全量渲染；<code class="inl">addLog</code> 亦如此（<code class="inl">gameState.js:285</code>）→ 引入渲染节流；<br>
+            ③ depth↔zone 映射口径不统一，zone=4 在两处规则不一致，可能导致反复判定 out-of-sync（<code class="inl">gameEngine.js:150</code> vs <code class="inl">:136</code>）→ 统一映射表；<br>
+            ④ v1/v2 双份存档加载逻辑重复维护，且同时写两个 key 易漂移（<code class="inl">gameState.js:196-246</code>）；<br>
+            ⑤ <code class="inl">craftManager.craft</code> 未检查 <code class="inl">addItem</code> 返回值，原料已扣、产物可能未加，<b>玩家净损失道具且无提示</b>（<code class="inl">craftManager.js:62</code>）；<br>
+            ⑥ 加班/反向老板引擎全程裸 <code class="inl">Math.random</code>，未接 PRNG，与主游戏确定性设计割裂；<br>
+            ⑦ <code class="inl">applyPerks</code> 用 <code class="inl">Math.random</code> 选道具，每日种子模式下同一天开局道具会变（<code class="inl">gameState.js:168</code>）。
+          </span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ UI 层 ============ -->
+<section>
+  <h2><span class="n">04</span>UI 与样式层</h2>
+  <p class="sec-note">审查范围：<code class="inl">src/ui/</code> 11 个文件 + 2 个 CSS（约 4,000 行 JS + 样式）。<code class="inl">renderer.js</code> 2573 行已分段通读完毕。</p>
+
+  <div class="area">
+    <div class="area-hd">
+      <div class="ic">🎨</div>
+      <h3>UI 层审查发现</h3>
+      <div class="counts">
+        <span class="sev sev-P0">2×P0</span>
+        <span class="sev sev-P1">4×P1</span>
+        <span class="sev sev-P2">4×P2</span>
+      </div>
+    </div>
+    <div class="area-bd">
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">日志渲染通过 innerHTML 注入未转义动态文本（XSS）</span>
+          <span class="f-loc">renderer.js:2335-2347</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">container.innerHTML = this.state.logs.map(...)</code>，其中 <code class="inl">log.text</code> 直接拼入 <code class="inl">&lt;span class="log-text"&gt;${textHtml}&lt;/span&gt;</code>。前面的四段 <code class="inl">.replace()</code> 只做高亮 chip 插入，<b>完全没有 HTML 转义</b>。日志文本大量来自玩家名、NPC 名、事件动态字符串，任何含 <code class="inl">&lt;img src=x onerror=...&gt;</code> 的内容都会被执行。</span></div>
+          <div class="row"><span class="lbl">核验</span><span class="txt">已确认全项目<b>不存在</b> <code class="inl">escapeHtml</code> 或等价转义工具函数。renderer.js 共 32 处 <code class="inl">innerHTML</code>，toast.js 1 处，miniGames.js 12 处。</span></div>
+          <div class="fix"><b>修复：</b>引入统一 <code class="inl">escapeHtml()</code> 工具，先转义再拼高亮；或改为 <code class="inl">textContent</code> + DOM 节点插入 chip。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">Toast / 对话 / 遭遇选项同样以 innerHTML 拼接动态文本</span>
+          <span class="f-loc">toast.js:53 · renderer.js:2361 · miniGames.js:123/144 · reverseBossView.js:336</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">toast.show(message)</code> 的 message 常含玩家名 / 道具名，直接 <code class="inl">${message}</code> 注入；遭遇选项按钮的 <code class="inl">displayText</code>（含角色名）同样拼入按钮 HTML。与上一条构成<b>多点同类注入面</b>。</span></div>
+          <div class="fix"><b>修复：</b>消息类文本一律走 <code class="inl">textContent</code>；确需富文本时用白名单 DOM 构建而非字符串拼接。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">全量重渲染：一次 notify 触发 15+ 个子渲染函数</span>
+          <span class="f-loc">renderer.js:1674-1689</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">render()</code> 无条件执行 <code class="inl">renderRadarView</code> / <code class="inl">renderMapView</code> / <code class="inl">renderZoneNavigator</code> / <code class="inl">renderActionButtons</code> / <code class="inl">renderBackpack</code> / <code class="inl">renderLogs</code> / <code class="inl">renderModals</code> 等全部全量 <code class="inl">innerHTML=</code> 重建。而 <code class="inl">notify()</code> 在每个 <code class="inl">addLog</code> / <code class="inl">addItem</code> / <code class="inl">advanceTime</code> 都会调用 → <b>单次动作即触发整页 DOM 重建 + 全部事件重绑</b>，移动端明显卡顿。</span></div>
+          <div class="fix"><b>修复：</b>按变更来源做差异化渲染（脏标记 / 分区订阅），至少把 logs、backpack、metrics 拆为独立更新入口。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">renderer.js 单文件 2573 行，承担 12+ 类职责</span>
+          <span class="f-loc">renderer.js（全文）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">布局构建、全局事件绑定、新手巡览、引导、成就、角色、天赋、日报、地图/雷达/合成装配全部塞在同一个类里。超大函数集中：<code class="inl">bindGlobalEvents</code> 约 420 行（:737-1155）、<code class="inl">renderArchiveModal</code> 约 155 行（:2418-2572）、<code class="inl">renderHeaderAndMetrics</code> 约 135 行（:1961-2095）。</span></div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">每次渲染全量重绑事件，未使用事件委托</span>
+          <span class="f-loc">renderer.js:1125/1139/1189/1243/2228/2262/2315/2383 等 8 处 + reverseBossView.js:315 + overtimeView.js:181</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">innerHTML 重建后旧监听随节点销毁（未泄漏），但新节点每次都全量重绑，监听数量随重渲染线性增长；大量点对点绑定而非事件委托。</span></div>
+          <div class="fix"><b>修复：</b>改为容器级事件委托——一个 click 监听取 <code class="inl">e.target.closest('[data-action]')</code>。同时配合上条增量渲染，收益叠加。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">合成模态与天赋模态内嵌事件导致递归全量重渲染</span>
+          <span class="f-loc">craftModal.js:224/232/242 · renderer.js:1250</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">合成模态每点一次 chip 就销毁并重建<b>整个 overlay</b> 并重绑事件，产生交互抖动；<code class="inl">renderTalentModal</code> 解锁后递归调用自身。</span></div>
+          <div class="fix"><b>修复：</b>改为局部更新槽位 / 列表节点，而非重建整个模态。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">定时器与窗口监听未配对清理，存在泄漏</span>
+          <span class="f-loc">renderer.js:1291/1992/2048/2089 · mapView.js:175 · miniGames.js</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">
+            ① 巡览的 resize/scroll 监听依赖 <code class="inl">closeTour</code> 移除，若 <code class="inl">tourActive</code> 未正确置位则泄漏；<br>
+            ② <code class="inl">mapView.js:175</code> 的 <code class="inl">setTimeout</code> 无清理；<br>
+            ③ 三个 delta 动画定时器存于实例，但重开游戏未统一 <code class="inl">clearTimeout</code>；<br>
+            ④ <code class="inl">miniGames.js</code> 的 interval 在 overlay 被强制移除（非 <code class="inl">finishGame</code> 路径）时不会 clear，导致<b>持续对已脱离 DOM 的节点操作</b>。
+          </span></div>
+          <div class="fix"><b>修复：</b>所有定时器 / 监听在 <code class="inl">hide()</code> / 销毁钩子统一清理；用 <code class="inl">AbortController</code> 管理临时监听。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P2">P2</span>
+          <span class="f-title">重复代码 / 魔术数字 / 视图层侵入业务持久化（4 项）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">清单</span><span class="txt">
+            ① 结算卡 HTML 在 <code class="inl">miniGames.js</code> 重复 5 处；guide 步骤 HTML 在 <code class="inl">renderer.js:1564</code> 与 <code class="inl">:2531</code> 完全重复；delta 动画逻辑逐行复制（:2023-2094）→ 抽公共函数；<br>
+            ② 魔术数字散落：<code class="inl">renderer.js:1970</code> <code class="inl">totalMinutes/20</code>、<code class="inl">miniGames.js:191</code> <code class="inl">duration=6000</code>、<code class="inl">overtimeView.js:230</code> 阈值 20/60 → 集中为 config 常量；<br>
+            ③ 颜色硬编码 <code class="inl">#ef4444</code> / <code class="inl">#22c55e</code> 与 CSS 变量混用，甚至直接 <code class="inl">style.color</code> 赋值 → 统一用 CSS 变量/类切换；<br>
+            ④ <b>分层错位</b>：<code class="inl">reverseBossView.js:343-356</code> 与 <code class="inl">overtimeView.js:272-285</code> 直接修改 <code class="inl">gameState.history.unlockedEndings</code> 并调用 <code class="inl">savePersistentData</code>——视图层侵入业务持久化。
+          </span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h2 style="font-size:16px;margin:28px 0 14px"><span class="n" style="width:22px;height:22px;font-size:11px">↯</span>renderer.js 函数级拆分方案</h2>
+  <table class="tbl">
+    <thead><tr><th style="width:30%">建议新模块</th><th>迁入内容</th></tr></thead>
+    <tbody>
+      <tr><td><code>ui/layout.js</code></td><td><code>buildBaseLayout</code>、<code>init</code></td></tr>
+      <tr><td><code>ui/events/globalEvents.js</code></td><td><code>bindGlobalEvents</code>（再按 header / restart / poster / archive 拆 4 个 bind 函数）</td></tr>
+      <tr><td><code>ui/metricsView.js</code></td><td><code>renderHeaderAndMetrics</code>、<code>renderMetaStrip</code>、<code>updateTabBadges</code></td></tr>
+      <tr><td><code>ui/sceneView.js</code></td><td><code>renderSceneInfo</code>、<code>renderZoneNavigator</code>、<code>renderTacticalStepBar</code>、<code>renderRouteAdvanceSection</code>、<code>renderActionButtons</code></td></tr>
+      <tr><td><code>ui/backpackView.js</code></td><td><code>renderBackpack</code>、<code>renderLogs</code></td></tr>
+      <tr><td><code>ui/modals/encounterEndingView.js</code></td><td><code>renderModals</code></td></tr>
+      <tr><td><code>ui/modals/archiveView.js</code></td><td><code>renderArchiveModal</code>（再拆 endings / achievements / career / guide 四个 render）</td></tr>
+      <tr><td><code>ui/modals/roleTalentView.js</code></td><td><code>openRoleModal</code>、<code>openTalentModal</code>、<code>renderTalentModal</code>、<code>openDailyModal</code></td></tr>
+      <tr><td><code>ui/tourController.js</code></td><td><code>startTour</code> / <code>closeTour</code> / <code>next</code> / <code>prev</code> / <code>goTo</code> / <code>renderTourStep</code> / <code>updateTourPositions</code> / <code>getTourTargetElement</code></td></tr>
+      <tr><td><code>ui/guideController.js</code></td><td><code>openGuideModal</code>、<code>goToGuideStep</code>、<code>renderGuideModal</code></td></tr>
+      <tr><td><code>ui/tabNav.js</code></td><td><code>setActiveTab</code>、<code>syncActiveTabUI</code>、<code>switchBottomNavTab</code>、<code>updateBottomNavTabHighlight</code></td></tr>
+      <tr><td><code>renderer.js</code>（保留）</td><td>仅 <code>constructor</code>、<code>render</code> 编排、委托到上述模块</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ============ 数据层 ============ -->
+<section>
+  <h2><span class="n">05</span>数据层</h2>
+  <p class="sec-note">审查范围：<code class="inl">src/data/</code> 16 个文件，共 4,768 行 / 203 KB。交叉验证基于全项目 id 集合的 grep 比对。</p>
+
+  <div class="area">
+    <div class="area-hd">
+      <div class="ic">📊</div>
+      <h3>数据层审查发现</h3>
+      <div class="counts">
+        <span class="sev sev-P0">1×P0</span>
+        <span class="sev sev-P1">4×P1</span>
+        <span class="sev sev-P2">2×P2</span>
+      </div>
+    </div>
+    <div class="area-bd">
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">结局 ending_normal_escape 被引用但从未定义</span>
+          <span class="f-loc">events.js:550 → endings.js（缺失）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">events.js:550</code> 在小游戏 QTE 判定的 LATE 分支调用 <code class="inl">window.__GAME__.engine.triggerEnding('ending_normal_escape')</code>。</span></div>
+          <div class="row"><span class="lbl">核验</span><span class="txt">已在 <code class="inl">endings.js</code> 中逐一比对全部 <b>30</b> 个结局定义——<b>不存在</b> <code class="inl">ending_normal_escape</code>，也无拼写相近项。引擎虽在 <code class="inl">triggerEnding</code> 里有 <code class="inl">ENDING_CAUGHT_MEETING</code> 兜底，不会抛异常，但玩家在 QTE 失误路径会看到<b>预期之外的结局文案</b>，叙事闭环断裂。</span></div>
+          <div class="fix"><b>修复：</b>在 <code class="inl">endings.js</code> 补 <code class="inl">ending_normal_escape</code> 定义，或改引用已有合法结局 ID。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">recipes 引用 8 个不存在的成就 ID</span>
+          <span class="f-loc">recipes.js 多处 → achievements.js（缺失）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">recipes.js</code> 的 <code class="inl">unlockAchievement</code> 引用了 <code class="inl">achievements.js</code> 中<b>从未定义</b>的成就：<code class="inl">ach_craft_master</code>、<code class="inl">ach_craft_decoy</code>、<code class="inl">ach_craft_bomb</code>、<code class="inl">ach_craft_delivery</code>、<code class="inl">ach_craft_aura</code>、<code class="inl">ach_craft_shield</code>、<code class="inl">ach_craft_smoke</code>、<code class="inl">ach_craft_p0</code>。</span></div>
+          <div class="row"><span class="lbl">核验</span><span class="txt">已导出 <code class="inl">achievements.js</code> 全部 31 个成就 id 与 recipes 引用集合求差——<code class="inl">ach_*</code> 系列中<b>仅有</b> <code class="inl">ach_craft_ghost</code> / <code class="inl">ach_craft_intern</code> / <code class="inl">ach_craft_energy</code> 三个有定义。合成这 8 件装备时，成就解锁逻辑<b>静默失败</b>。</span></div>
+          <div class="fix"><b>修复：</b>在 <code class="inl">achievements.js</code> 补齐这 8 个成就，或统一改为已有的计数式条件（如 <code class="inl">ach_alchemy_master</code>）。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">成就条件用了错误字段名 r.favor，「全司人脉王」永远无法解锁</span>
+          <span class="f-loc">achievements.js:151</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">ach_social_butterfly</code> 的条件是 <code class="inl">Object.values(state.npcRelations).filter((r) => r.favor >= 80)</code>，但真实字段名是 <code class="inl">favorability</code>（<code class="inl">npcManager.js:44</code> 初始化、<code class="inl">:82</code> 累加确认）。<code class="inl">r.favor</code> 恒为 <code class="inl">undefined</code>，比较恒为 false。</span></div>
+          <div class="row"><span class="lbl">旁证</span><span class="txt">同一文件 <code class="inl">:200</code> 的 <code class="inl">ach_intern_mentor</code> 用的却是正确的 <code class="inl">r.favorability</code>——<b>同一文件内字段名前后不一致</b>，确认为笔误而非设计。</span></div>
+          <div class="fix"><b>修复：</b><code class="inl">:151</code> 改为 <code class="inl">r.favorability >= 80</code>。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">黑话加成角色 ID 拼写错误，产品经理加成永不生效</span>
+          <span class="f-loc">buzzwords.js:66</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">if (roleId === 'product_mgr') multiplier = 1.15;</code> —— 但 <code class="inl">characters.js:42</code> 定义的 id 是 <code class="inl">product_manager</code>。<b>1.15 倍黑话加成永远不会触发。</b></span></div>
+          <div class="row"><span class="lbl">旁证</span><span class="txt"><code class="inl">npcManager.js:25</code> 里写的是 <code class="inl">roleId === 'product_manager' || roleId === 'product_mgr'</code>——说明作者在别处意识到了两种写法，但 buzzwords.js 漏改了。</span></div>
+          <div class="fix"><b>修复：</b>改为 <code class="inl">'product_manager'</code>，并全项目统一角色 ID 命名。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">去重 flag 只读不写，电梯老板遭遇防重逻辑形同虚设</span>
+          <span class="f-loc">events.js:403</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">if (rand < 0.45 && !state.flags.hasEncounteredBossInElevator)</code> 读取该 flag 做去重。</span></div>
+          <div class="row"><span class="lbl">核验</span><span class="txt">grep 全项目 <code class="inl">hasEncounteredBossInElevator</code>，<b>只有这一处读取，零处赋值</b>。flag 永远是 undefined，去重条件恒成立——坐 1 号客梯可能反复触发同一遭遇。</span></div>
+          <div class="fix"><b>修复：</b>在触发 <code class="inl">encounter_boss_in_elevator</code> 处补 <code class="inl">state.flags.hasEncounteredBossInElevator = true</code>。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P2">P2</span>
+          <span class="f-title">Schema 与命名不统一（2 项）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">清单</span><span class="txt">
+            ① <code class="inl">events.js</code> 内 <code class="inl">desc:</code> 27 处、<code class="inl">description:</code> 24 处混用；<code class="inl">items/perks/modifiers</code> 用 <code class="inl">effectText</code>，而 <code class="inl">overtimeEvents</code> 用 <code class="inl">effect</code>；<code class="inl">ZONE_ACTIONS</code> 用 <code class="inl">handler</code>+<code class="inl">costEnergy</code>，<code class="inl">RANDOM_ENCOUNTERS</code> 用 <code class="inl">choices</code>/<code class="inl">outcome</code>/<code class="inl">requireItem</code>，两套 schema 割裂；<br>
+            ② <code class="inl">guide.js:8</code> 与 <code class="inl">guide.js:278</code> 重复使用 id <code class="inl">'goal'</code>（分属 TUTORIAL_STEPS 与 GUIDE_SECTIONS，暂未冲突但易在合并索引时撞车）。
+          </span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <h2 style="font-size:16px;margin:28px 0 14px"><span class="n" style="width:22px;height:22px;font-size:11px">↓</span>首屏体积优化空间</h2>
+  <table class="tbl">
+    <thead><tr><th>数据文件</th><th>体积</th><th>被谁 import</th><th>可否懒加载</th></tr></thead>
+    <tbody>
+      <tr><td><code>events.js</code></td><td>60.0 KB</td><td>renderer / gameEngine</td><td><span class="no-mark">核心，否</span></td></tr>
+      <tr><td><code>endings.js</code></td><td>22.6 KB</td><td>gameEngine</td><td><span class="no-mark">核心，否</span></td></tr>
+      <tr><td><code>items.js</code></td><td>20.8 KB</td><td>多处</td><td><span class="no-mark">核心，否</span></td></tr>
+      <tr><td><code>changelog.js</code></td><td>28.2 KB</td><td>仅 renderer.js:14</td><td><span class="ok-mark">可以（设置面板才用）</span></td></tr>
+      <tr><td><code>guide.js</code></td><td>22.0 KB</td><td>仅 renderer.js:15</td><td><span class="ok-mark">可以（教程/帮助才用）</span></td></tr>
+    </tbody>
+  </table>
+  <p class="sec-note" style="margin-top:12px">
+    核心三件（events + endings + items）合计 <b>103 KB</b>，占数据层 51%，无法省略。
+    但 <b>changelog + guide 合计 50 KB（占 24%）</b> 是纯静态文案，目前由 <code class="inl">renderer.js:14-15</code> 全量静态 import——
+    grep 确认全项目<b>不存在任何动态 <code class="inl">import()</code> 数据文件</b>。改为点击「设置 / 帮助」时 <code class="inl">await import()</code>，可省约 50 KB 首屏体积。
+  </p>
+</section>
+
+<!-- ============ 测试与工程 ============ -->
+<section>
+  <h2><span class="n">06</span>测试与工程配置</h2>
+  <p class="sec-note">审查范围：<code class="inl">tests/</code> 6 个文件（约 1,150 行）+ 构建/部署/清单配置。实测：<b>42 个测试全部通过，耗时 671 ms</b>；<code class="inl">vite build</code> 成功。</p>
+
+  <h2 style="font-size:16px;margin:0 0 14px"><span class="n" style="width:22px;height:22px;font-size:11px">☰</span>模块 → 测试覆盖矩阵</h2>
+  <table class="tbl" style="margin-bottom:28px">
+    <thead><tr><th>模块</th><th style="width:70px">行数</th><th style="width:110px">有断言测试</th><th>覆盖质量评估</th></tr></thead>
+    <tbody>
+      <tr><td><code>engine/mapManager.js</code></td><td>221</td><td><span class="ok-mark">✓</span></td><td>较好：含 10000 次地图连通性验证</td></tr>
+      <tr><td><code>engine/craftManager.js</code></td><td>105</td><td><span class="ok-mark">✓</span></td><td>较好：无序匹配 + 消耗断言</td></tr>
+      <tr><td><code>engine/npcManager.js</code></td><td>169</td><td><span class="ok-mark">✓</span></td><td>较好：好感度分级 / 边界钳制有测</td></tr>
+      <tr><td><code>engine/miniGameRunner.js</code></td><td>240</td><td><span class="ok-mark">✓</span></td><td>较好：各小游戏判定边界有测</td></tr>
+      <tr><td><code>utils/prng.js</code></td><td>64</td><td><span class="ok-mark">✓</span></td><td>好：确定性验证</td></tr>
+      <tr><td><code>engine/gameState.js</code></td><td>359</td><td><span class="warn-mark">~</span></td><td>中：状态初始化 / 迁移有断言，<b>save/load 往返未测</b></td></tr>
+      <tr><td><code>engine/gameEngine.js</code></td><td>471</td><td><span class="warn-mark">~</span></td><td>中：travelToNode / executeAction 有断言，encounter 分支未全覆盖</td></tr>
+      <tr><td><code>engine/reverseBossEngine.js</code></td><td>341</td><td><span class="warn-mark">~</span></td><td>中：技能 / 胜负有测，员工逃逸逻辑浅</td></tr>
+      <tr><td><code>engine/overtimeEngine.js</code></td><td>178</td><td><span class="warn-mark">~</span></td><td>中：胜负判定有测，动作覆盖不全</td></tr>
+      <tr><td><code>engine/patrolManager.js</code></td><td>178</td><td><span class="no-mark">弱</span></td><td>仅 sprint3 两个用例</td></tr>
+      <tr><td><b><code>ui/*</code>（10 个文件）</b></td><td><b>~4,000</b></td><td><span class="no-mark">✗ 伪测试</span></td><td><b>零行为断言</b>：仅源码字符串 grep + 「类可实例化」</td></tr>
+    </tbody>
+  </table>
+
+  <div class="area">
+    <div class="area-hd">
+      <div class="ic">🔧</div>
+      <h3>测试与工程发现</h3>
+      <div class="counts">
+        <span class="sev sev-P0">2×P0</span>
+        <span class="sev sev-P1">4×P1</span>
+        <span class="sev sev-P2">4×P2</span>
+      </div>
+    </div>
+    <div class="area-bd">
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">部署 workflow 缺少 permissions 最小化声明</span>
+          <span class="f-loc">deploy-cloudflare.yml:14-16</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">未声明 <code class="inl">permissions</code>，<code class="inl">GITHUB_TOKEN</code> 默认获得偏宽松的写权限，而 workflow 同时又使用了可写 secret，违背最小权限原则。</span></div>
+          <div class="fix"><b>修复：</b>job 顶层加 <code class="inl">permissions: { contents: read, deployments: write }</code>；secret 仅在 deploy step 内以 <code class="inl">${{ secrets.* }}</code> 注入，不要放在 job 级 <code class="inl">env</code>。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P0">P0</span>
+          <span class="f-title">main 分支 secret 缺失时静默跳过部署，无人察觉</span>
+          <span class="f-loc">deploy-cloudflare.yml:41</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">deploy 条件依赖 <code class="inl">env.CLOUDFLARE_* != ''</code>。若 secret 缺失或轮换后忘记配置，workflow 会<b>静默跳过部署并报绿</b>，main 分支可能长期不发布却没有任何告警。</span></div>
+          <div class="fix"><b>修复：</b>main push 事件下若 secret 缺失应显式 <code class="inl">exit 1</code> 失败，让 CI 红灯可见。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">sprint5/6 大量测试退化为「读取源码字符串」的伪测试</span>
+          <span class="f-loc">sprint5.test.js:140-337 · sprint6.test.js:280-292</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">核心手法</span><span class="txt">
+            <code class="inl">const rendererCode = fs.readFileSync('../src/ui/renderer.js', 'utf-8')</code>，随后断言
+            <code class="inl">rendererCode.includes('id="nav-tab-escape"')</code>、
+            <code class="inl">cssCode.includes('grid-template-columns: repeat(2, 1fr)')</code> 等。<b>已核验源码确认此为真实情况。</b>
+          </span></div>
+          <div class="row"><span class="lbl">为何无效</span><span class="txt">这类断言只验证「源码文件里存在某段文本」，<b>完全不验证运行时行为</b>。把 CSS 规则删掉但保留注释字符串，测试照样通过；反之改名重构会产生大量误报。sprint5 约 12/14 个用例属此风格（T5.1、T5.4–T5.14），<b>实际有效断言不足 20%</b>。</span></div>
+          <div class="fix"><b>修复：</b>改用 jsdom / Playwright 做真实 DOM 断言，或用 CSS 解析器校验规则是否存在。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">UI 层零行为测试，仅验证「能否 new 出来」</span>
+          <span class="f-loc">sprint5.test.js:46-63</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">断言仅为 <code class="inl">typeof ReverseBossView === 'function'</code> 与 <code class="inl">bossView.engine instanceof ReverseBossEngine</code>——即<b>只验证 import 成功、类可实例化，不验证任何渲染输出</b>。2573 行的 <code class="inl">renderer.js</code> 完全无运行时测试，这也是前述 XSS 与全量渲染问题能长期潜伏的原因。</span></div>
+          <div class="fix"><b>修复：</b>引入 <code class="inl">@vitest/browser</code> 或 jsdom，断言 <code class="inl">render()</code> 后的 DOM 结构与文本转义行为。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">存档读档 round-trip 从未被验证</span>
+          <span class="f-loc">sprint4.test.js:137-190</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt">现有测试只覆盖 V1→V2 迁移。而 <code class="inl">gameState.js:226 savePersistentData()</code> 写入后经 <code class="inl">loadPersistentData()</code> 读回的<b>往返一致性从未验证</b>——这正是引擎层 P0 中 <code class="inl">hardcoreWins</code> 类型污染能漏网的原因。</span></div>
+          <div class="fix"><b>修复：</b>新增 <code class="inl">save → new GameState → 逐字段断言完全一致</code> 的 round-trip 测试，覆盖所有历史字段。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P1">P1</span>
+          <span class="f-title">主包 330 KB，changelog / guide 全量打进首屏</span>
+          <span class="f-loc">vite.config.js:9-13</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">实测</span><span class="txt">构建产物：主 JS <b>330.8 KB</b>（gzip 111 KB）、CSS <b>99.0 KB</b>、miniGames 分包 39.1 KB。配置中<b>无 <code class="inl">manualChunks</code></b>，且 <code class="inl">renderer.js:14-15</code> 静态 import 了 changelog/guide 两个低频弹窗数据。</span></div>
+          <div class="fix"><b>修复：</b>对 changelog/guide 改动态 <code class="inl">import()</code>；在 vite 配置中加 <code class="inl">build.rollupOptions.output.manualChunks</code> 拆分 vendor 与 data，主包至少可降 50 KB。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P2">P2</span>
+          <span class="f-title">工程配置缺失项（4 项）</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">清单</span><span class="txt">
+            ① <b>vite.config.js 过简</b>：无 <code class="inl">minify</code> 显式配置、无 <code class="inl">sourcemap</code>（线上排障困难）、无 <code class="inl">chunkSizeWarningLimit</code>、无 <code class="inl">build.target</code>。已有 <code class="inl">base: './'</code>（这点对 Cloudflare Pages 是正确的）；<br>
+            ② <b>package.json 缺工程字段</b>：无 <code class="inl">lint</code>/<code class="inl">format</code>/<code class="inl">typecheck</code> 脚本，无 <code class="inl">engines</code>（CI 用 Node 22 但本地无约束），无 <code class="inl">repository</code>；无 ESLint / Prettier 依赖与配置；<br>
+            ③ <b>index.html 缺 PWA/SEO meta</b>：无 <code class="inl">apple-touch-icon</code>、无 <code class="inl">og:image</code>、无 <code class="inl">twitter:card</code>、无 <code class="inl">canonical</code>；manifest 的图标仅一个 SVG 且声明 192×192 与 512×512 双尺寸（不规范，iOS 不支持 SVG touch-icon）；<br>
+            ④ <b>public/_headers 缺 CSP</b>：已有 X-Frame-Options / X-Content-Type-Options / Referrer-Policy，但<b>没有 Content-Security-Policy</b>——而这恰好是缓解前述 XSS 风险的纵深防御手段。
+          </span></div>
+          <div class="fix"><b>修复建议：</b>加 <code class="inl">Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'</code>；补 <code class="inl">engines: {"node": ">=20"}</code> 与 lint 脚本；增补 PNG 图标与 og:image。</div>
+        </div>
+      </div>
+
+      <div class="finding">
+        <div class="f-hd">
+          <span class="sev sev-P2">P2</span>
+          <span class="f-title">构建警告：同一模块静态 + 动态混合导入，代码分割失效</span>
+        </div>
+        <div class="f-body">
+          <div class="row"><span class="lbl">问题</span><span class="txt"><code class="inl">vite build</code> 输出警告：<code class="inl">npcManager.js is dynamically imported by events.js but also statically imported</code>。这会导致该模块无法被拆进独立 chunk，代码分割实际失效。</span></div>
+          <div class="fix"><b>修复：</b>统一为一处静态 import，消除混合导入。</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ 路线图 ============ -->
+<section>
+  <h2><span class="n">07</span>修复路线图</h2>
+  <p class="sec-note">按「投入产出比 + 阻塞程度」排序，建议按批次推进。</p>
+  <div class="road">
+
+    <div class="step">
+      <div class="idx" style="color:var(--p0);border-color:rgba(255,107,107,.4)">1</div>
+      <div class="c">
+        <h4>阻断级修复 · 建议当天完成</h4>
+        <p>补 <code class="inl">ending_normal_escape</code> 结局定义；修 <code class="inl">r.favor</code> → <code class="inl">r.favorability</code>；修 <code class="inl">product_mgr</code> → <code class="inl">product_manager</code>；补 8 个 <code class="inl">ach_craft_*</code> 成就；补写 <code class="inl">hasEncounteredBossInElevator</code> 赋值。</p>
+        <div class="tags"><span class="tag-s">全是小改动</span><span class="tag-s">不涉及重构</span><span class="tag-s">立竿见影</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx" style="color:var(--p0);border-color:rgba(255,107,107,.4)">2</div>
+      <div class="c">
+        <h4>安全与数据完整性</h4>
+        <p>引入 <code class="inl">escapeHtml()</code> 统一转义日志 / Toast / 对话文本；<code class="inl">_headers</code> 补 CSP；归一化存档数值字段类型（<code class="inl">gameState.js:208</code>）；<code class="inl">triggerEnding</code> 加幂等守卫。</p>
+        <div class="tags"><span class="tag-s">XSS 纵深防御</span><span class="tag-s">存档自愈</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx" style="color:var(--p1);border-color:rgba(255,166,87,.4)">3</div>
+      <div class="c">
+        <h4>测试可信度重建</h4>
+        <p>把 sprint5/6 的字符串断言重写为 jsdom 真实 DOM 行为测试；补 save/load round-trip 测试；补 <code class="inl">patrolManager</code> 与 encounter 分支覆盖。</p>
+        <div class="tags"><span class="tag-s">先补 round-trip</span><span class="tag-s">再重写 sprint5/6</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx" style="color:var(--p1);border-color:rgba(255,166,87,.4)">4</div>
+      <div class="c">
+        <h4>分层与状态治理</h4>
+        <p>移除 <code class="inl">gameEngine</code> → <code class="inl">ui/toast</code> 依赖，改事件订阅；<code class="inl">hasOccurred</code> 移入 state；巡逻 / 加班 / 反向老板引擎接入 PRNG；统一 <code class="inl">emit</code> 与 <code class="inl">notify</code> 职责，消除重复渲染。</p>
+        <div class="tags"><span class="tag-s">影响面较大</span><span class="tag-s">建议配套测试</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx" style="color:var(--p2);border-color:rgba(210,153,34,.4)">5</div>
+      <div class="c">
+        <h4>性能与体积优化</h4>
+        <p>renderer.js 按方案拆分为 12 个模块；全量重渲染改增量 / 事件委托；changelog 与 guide 改懒加载；vite 补 <code class="inl">manualChunks</code>；消除 <code class="inl">npcManager</code> 混合导入。</p>
+        <div class="tags"><span class="tag-s">工作量最大</span><span class="tag-s">可分多次迭代</span></div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="idx" style="color:var(--ok);border-color:rgba(63,185,80,.4)">6</div>
+      <div class="c">
+        <h4>工程基建补齐（长期收益最高）</h4>
+        <p>引入启动期开发模式 ID 校验（遍历所有引用集合 assert 存在）——<b>可一次性消灭全部 P0/P1 级悬空引用类问题</b>；加 ESLint + Prettier + <code class="inl">engines</code> 约束；workflow 加最小化 <code class="inl">permissions</code> 与 secret 缺失失败；补 PWA 图标与 meta。</p>
+        <div class="tags"><span class="tag-s">根治重复问题</span><span class="tag-s">强烈推荐</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ 亮点 ============ -->
+<section>
+  <h2><span class="n">08</span>值得肯定的部分</h2>
+  <p class="sec-note">审查不只找问题——以下设计在同类项目中属于明显高于平均水准。</p>
+  <div class="stats">
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">PRNG 受控随机</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">可复现的每日种子设计，实现正确、有确定性测试</div>
+    </div>
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">DAG 地图算法</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">含 10000 次连通性压力验证的生成算法，正确性扎实</div>
+    </div>
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">数值平衡</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">30 个结局 rank 梯度合理，概率配置合计均为 1.0</div>
+    </div>
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">数据可读性</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">集中式常量模块、命名规范、注释完整、无占位符残留</div>
+    </div>
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">测试基线可用</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">42 用例 671ms 全通过，sprint1-4 断言质量真实</div>
+    </div>
+    <div class="stat" style="border-color:rgba(63,185,80,.3)">
+      <div class="k" style="color:var(--ok)">分层意识</div>
+      <div class="v" style="font-size:15px;line-height:1.5;font-weight:600;margin-top:8px">MapView / CraftModal / RadarView 等已独立成模块，方向正确</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="grid">
+    <div>
+      <h5>审查方法</h5>
+      <ul>
+        <li>四路智能体并行独立审查</li>
+        <li>引擎 / UI / 数据 / 测试 四个专项</li>
+        <li>互不参考，独立定级</li>
+        <li>P0 / P1 结论均经源码二次核验</li>
+      </ul>
+    </div>
+    <div>
+      <h5>验证手段</h5>
+      <ul>
+        <li>全量源码通读（大文件分段读取）</li>
+        <li>id 引用集合交叉比对（grep 差集）</li>
+        <li>flag / 字段读写点全项目追踪</li>
+        <li><code>node --test</code> 与 <code>vite build</code> 实测</li>
+      </ul>
+    </div>
+    <div>
+      <h5>统计口径</h5>
+      <ul>
+        <li>P0 = 崩溃 / 数据损坏 / 安全</li>
+        <li>P1 = 逻辑错误 / 分层破坏</li>
+        <li>P2 = 可维护性</li>
+        <li>P3 = 风格与体验建议</li>
+      </ul>
+    </div>
+    <div>
+      <h5>报告信息</h5>
+      <ul>
+        <li>目标：escape-work v3.4.1</li>
+        <li>提交：9d4f3af</li>
+        <li>规模：40 文件 / 14,037 行</li>
+        <li>日期：2026-10-14</li>
+      </ul>
+    </div>
+  </div>
+</footer>
+
+</div>
+</body>
+</html>

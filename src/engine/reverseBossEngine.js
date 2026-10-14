@@ -33,6 +33,7 @@ export class ReverseBossEngine {
     this.isFinished = false;
     this.result = null; // 'victory' | 'defeat'
     this.resultEnding = null;
+    this.stunTurns = 0;
     this.isEmployeesStunned = false;
 
     this.employees = [
@@ -68,6 +69,7 @@ export class ReverseBossEngine {
       escapedCount: this.escapedEmployees.length,
       targetCaught: this.targetCaught,
       isFinished: this.isFinished,
+      isEmployeesStunned: this.stunTurns > 0 || this.isEmployeesStunned,
       result: this.result,
       resultEnding: this.resultEnding,
       employees: this.employees.map((e) => ({ ...e })),
@@ -83,11 +85,11 @@ export class ReverseBossEngine {
 
   advanceTime() {
     this.turn++;
-    this.currentMinute += Math.floor(20 / this.maxTurns);
-    if (this.currentMinute >= 60) {
-      this.currentHour++;
-      this.currentMinute -= 60;
-    }
+    const totalElapsed = Math.round((20 * this.turn) / this.maxTurns);
+    const startTotalMinutes = 17 * 60 + 45;
+    const currentTotal = startTotalMinutes + totalElapsed;
+    this.currentHour = Math.floor(currentTotal / 60);
+    this.currentMinute = currentTotal % 60;
   }
 
   /**
@@ -123,6 +125,7 @@ export class ReverseBossEngine {
     if (this.majesty < 20) return { success: false, message: '威严值不足 20 点！' };
 
     this.majesty -= 20;
+    this.stunTurns = 1;
     this.isEmployeesStunned = true;
 
     this.logs.push({
@@ -229,6 +232,7 @@ export class ReverseBossEngine {
     if (this.majesty < 25) return { success: false, message: '威严值不足 25 点！' };
 
     this.majesty -= 25;
+    this.stunTurns = 1;
     this.isEmployeesStunned = true;
 
     this.logs.push({
@@ -249,46 +253,55 @@ export class ReverseBossEngine {
     this.advanceTime();
 
     // 1. Employees advance towards exit unless stunned
-    if (allowEmployeeMove && !this.isEmployeesStunned) {
-      this.employees.forEach((emp) => {
-        // Skip already resolved
-        if (this.caughtEmployees.some((c) => c.id === emp.id)) return;
-        if (this.escapedEmployees.some((esc) => esc.id === emp.id)) return;
+    if (allowEmployeeMove) {
+      if (this.stunTurns > 0) {
+        this.stunTurns--;
+        this.isEmployeesStunned = (this.stunTurns > 0);
+        this.logs.push({
+          time: this.getTimeString(),
+          type: 'info',
+          text: '【全员定身生效】受阎总全员威慑影响，全体员工本回合被迫停滞无法移动！'
+        });
+      } else {
+        this.isEmployeesStunned = false;
+        this.employees.forEach((emp) => {
+          // Skip already resolved
+          if (this.caughtEmployees.some((c) => c.id === emp.id)) return;
+          if (this.escapedEmployees.some((esc) => esc.id === emp.id)) return;
 
-        // Path: 18F 工位/茶水 -> 18F 走廊 -> 18F 电梯厅 -> 1F 大堂 -> 逃脱
-        if (emp.area === '18楼工位区' || emp.area === '18楼茶水间') {
-          emp.area = '18楼走廊通道';
-          emp.status = 'sneaking';
-        } else if (emp.area === '18楼走廊通道') {
-          emp.area = '18楼电梯厅';
-          emp.status = 'waiting_lift';
-        } else if (emp.area === '18楼电梯厅') {
-          emp.area = '1楼大堂中央';
-          emp.floor = 1;
-          emp.status = 'approaching_gate';
-        } else if (emp.area === '1楼大堂中央') {
-          // If boss is at lobby, intercept!
-          if (this.currentArea === '1楼大堂中央') {
-            this.caughtEmployees.push(emp);
-            this.logs.push({
-              time: this.getTimeString(),
-              type: 'catch',
-              text: `【撞个满怀】${emp.name}冲向旋转门，正好撞进阎总怀里！当场被拎小鸡般扣押！（抓捕 +1）`
-            });
-          } else {
-            // Otherwise, escaped!
-            this.escapedEmployees.push(emp);
-            this.logs.push({
-              time: this.getTimeString(),
-              type: 'escape',
-              text: `【员工逃脱】${emp.name}（${emp.role}）趁着一楼无老板，刷卡冲出旋转门顺利下班！（逃离 +1）`
-            });
+          // Path: 18F 工位/茶水 -> 18F 走廊 -> 18F 电梯厅 -> 1F 大堂 -> 逃脱
+          if (emp.area === '18楼工位区' || emp.area === '18楼茶水间') {
+            emp.area = '18楼走廊通道';
+            emp.status = 'sneaking';
+          } else if (emp.area === '18楼走廊通道') {
+            emp.area = '18楼电梯厅';
+            emp.status = 'waiting_lift';
+          } else if (emp.area === '18楼电梯厅') {
+            emp.area = '1楼大堂中央';
+            emp.floor = 1;
+            emp.status = 'approaching_gate';
+          } else if (emp.area === '1楼大堂中央') {
+            // If boss is at lobby, intercept!
+            if (this.currentArea === '1楼大堂中央') {
+              this.caughtEmployees.push(emp);
+              this.logs.push({
+                time: this.getTimeString(),
+                type: 'catch',
+                text: `【撞个满怀】${emp.name}冲向旋转门，正好撞进阎总怀里！当场被拎小鸡般扣押！（抓捕 +1）`
+              });
+            } else {
+              // Otherwise, escaped!
+              this.escapedEmployees.push(emp);
+              this.logs.push({
+                time: this.getTimeString(),
+                type: 'escape',
+                text: `【员工逃脱】${emp.name}（${emp.role}）趁着一楼无老板，刷卡冲出旋转门顺利下班！（逃离 +1）`
+              });
+            }
           }
-        }
-      });
+        });
+      }
     }
-
-    this.isEmployeesStunned = false;
 
     // 2. Check Victory / Defeat conditions
     if (this.caughtEmployees.length >= this.targetCaught) {

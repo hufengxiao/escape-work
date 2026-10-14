@@ -108,7 +108,10 @@ export class PatrolManager {
         if (ps.threatLevel === 'danger' && depth === state.zone - 1) {
           node.hasBossThreat = true;
         } else if (ps.threatLevel === 'warning' && depth === state.zone - 1) {
-          node.hasBossThreat = Math.random() < 0.5;
+          // Deterministic pseudo-random based on node index, depth, turn and seed
+          const seedBase = (typeof state.dailySeed === 'number' ? state.dailySeed : 1337) + (state.turns || 0);
+          const nodeHash = ((node.index || 0) * 17 + depth * 31 + seedBase * 13) % 100;
+          node.hasBossThreat = Math.abs(nodeHash) < 50;
         } else {
           node.hasBossThreat = false;
         }

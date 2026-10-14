@@ -4,10 +4,35 @@
 
 export const CHANGELOGS = [
   {
+    version: '3.4.2',
+    title: '系统级代码审查全面治理：消灭悬空引用与崩溃缺陷、补齐安全XSS防护、重构状态分层与工程基建',
+    date: '2026-10-14',
+    isLatest: true,
+    badge: '工程健壮性跃升 v3.4.2',
+    items: [
+      {
+        title: '🛡️ 数据完整性与阻断级缺陷清零 (Zero Orphaned References & Blocker Fixes)',
+        desc: '补齐 QTE 打卡失误缺失的 ending_normal_escape（大部队随波逐流）胜利结局，闭环核心逃脱叙事；补齐合成配方引用的 8 项 ach_craft_* 专属装备成就；修复 ach_social_butterfly 好感度字段笔误（r.favorability）；修复黑话对决产品经理角色加成；修复客梯老板遭遇防重状态赋值。'
+      },
+      {
+        title: '🔒 XSS 注入防护与安全纵深加固 (Security Hardening & Safe Sanitization)',
+        desc: '引入安全工具库 escapeHtml，对控制台日志、Toast 提示、遭遇战抉择文案及黑话发言实录全面进行安全转义与结构化挂载；public/_headers 增加完整 Content-Security-Policy 策略，提供底层纵深防御。'
+      },
+      {
+        title: '⚙️ 引擎分层治理与状态幂等保障 (Architecture Layering & Determinism)',
+        desc: '移除 gameEngine 对 UI 层 toast.js 的越级反向依赖，改由事件总线通道 ui:toast 解耦发布；triggerEnding 增加幂等短路守卫，杜绝重复累加；修复反向老板模式时间整除截断（精确抵达 18:05）与定身跨回合震慑；修复深夜加班模式跨夜时钟偏移筛选；巡逻威胁与开局特质道具全面接入确定性哈希，保障受控 PRNG 可复现。'
+      },
+      {
+        title: '📦 首屏构建性能优化与 CI/CD 自动化校验 (Bundling & CI/CD)',
+        desc: '消除 npcManager 模块静态与动态混合导入警告；Vite 打包引入 manualChunks 细粒度分包，主 JS 瘦身至 298 KB（gzip 96.9 KB）；引入 tests/integrity.test.js 全链路交叉引用与安全回归测试，测试套件扩充至 50 项全绿；GitHub Actions 完善最小化 permissions 并增强生产发布安全校验。'
+      }
+    ]
+  },
+  {
     version: '3.4.1',
     title: '现场抉择与逃脱路线双向联动闭环：彻底修复区域拓扑脱节，现场直选突围分支与全景沉浸场景同步',
     date: '2026-10-10',
-    isLatest: true,
+    isLatest: false,
     badge: '路线同步闭环 v3.4.1',
     items: [
       {

@@ -5,6 +5,7 @@
 import { OvertimeEngine } from '../engine/overtimeEngine.js';
 import { OVERTIME_ACTIONS } from '../data/overtimeEvents.js';
 import { sound } from '../audio/sound.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class OvertimeView {
   constructor(gameState, onFinishCallback = null) {
@@ -262,7 +263,7 @@ export class OvertimeView {
           if (log.type === 'event') cls = 'log-event';
           if (log.type === 'victory') cls = 'log-win';
           if (log.type === 'defeat') cls = 'log-lose';
-          return `<div class="ot-log-row ${cls}"><span class="log-time">[${log.time}]</span> <span class="log-msg">${log.text}</span></div>`;
+          return `<div class="ot-log-row ${cls}"><span class="log-time">[${escapeHtml(log.time)}]</span> <span class="log-msg">${escapeHtml(log.text)}</span></div>`;
         })
         .join('');
       logBox.scrollTop = logBox.scrollHeight;
@@ -272,16 +273,10 @@ export class OvertimeView {
     if (s.isFinished && !this.outcomeShown) {
       this.outcomeShown = true;
       if (this.gameState && s.resultEnding) {
-        if (!this.gameState.history.unlockedEndings.includes(s.resultEnding.id)) {
-          this.gameState.history.unlockedEndings.push(s.resultEnding.id);
-        }
+        this.gameState.unlockEnding(s.resultEnding.id);
         if (s.result === 'victory') {
-          if (!this.gameState.history.unlockedAchievements.includes('ach_overtime_god')) {
-            this.gameState.history.unlockedAchievements.push('ach_overtime_god');
-          }
+          this.gameState.unlockAchievement('ach_overtime_god');
         }
-        this.gameState.savePersistentData();
-        this.gameState.notify();
       }
 
       const isWin = s.result === 'victory';

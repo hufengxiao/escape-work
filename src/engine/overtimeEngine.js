@@ -158,9 +158,17 @@ export class OvertimeEngine {
   }
 
   checkRandomEvent() {
-    // 30% chance each turn to trigger a narrative event matching hour
+    // 35% chance each turn to trigger a narrative event matching hour
     if (Math.random() < 0.35) {
-      const candidates = OVERTIME_EVENTS.filter((ev) => this.currentHour >= ev.minHour || (this.currentHour <= 6 && ev.minHour <= 6));
+      const getHourOffset = (h) => (h >= 20 ? h - 20 : h + 4);
+      const currOffset = getHourOffset(this.currentHour);
+
+      const candidates = OVERTIME_EVENTS.filter((ev) => {
+        const minOffset = getHourOffset(ev.minHour);
+        const maxOffset = ev.maxHour !== undefined ? getHourOffset(ev.maxHour) : minOffset + 3;
+        return currOffset >= minOffset && currOffset <= maxOffset;
+      });
+
       if (candidates.length > 0) {
         const ev = candidates[Math.floor(Math.random() * candidates.length)];
         if (ev.effect.sanity) this.sanity = Math.max(0, Math.min(100, this.sanity + ev.effect.sanity));

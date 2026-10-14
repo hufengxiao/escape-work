@@ -5,6 +5,7 @@
 import { ReverseBossEngine, BOSS_AREAS } from '../engine/reverseBossEngine.js';
 import { toast } from './toast.js';
 import { sound } from '../audio/sound.js';
+import { escapeHtml } from '../utils/security.js';
 
 const AREA_CONFIG = {
   'area_19_office': { icon: '👑', shortDesc: '监控大屏与专梯' },
@@ -333,7 +334,7 @@ export class ReverseBossView {
           if (log.type === 'skill') cls = 'log-skill';
           if (log.type === 'victory') cls = 'log-win';
           if (log.type === 'defeat') cls = 'log-lose';
-          return `<div class="boss-log-row ${cls}"><span class="log-time">[${log.time}]</span> <span class="log-msg">${log.text}</span></div>`;
+          return `<div class="boss-log-row ${cls}"><span class="log-time">[${escapeHtml(log.time)}]</span> <span class="log-msg">${escapeHtml(log.text)}</span></div>`;
         })
         .join('');
       logBox.scrollTop = logBox.scrollHeight;
@@ -343,16 +344,10 @@ export class ReverseBossView {
     if (s.isFinished && !this.outcomeShown) {
       this.outcomeShown = true;
       if (this.gameState && s.resultEnding) {
-        if (!this.gameState.history.unlockedEndings.includes(s.resultEnding.id)) {
-          this.gameState.history.unlockedEndings.push(s.resultEnding.id);
-        }
+        this.gameState.unlockEnding(s.resultEnding.id);
         if (s.result === 'victory') {
-          if (!this.gameState.history.unlockedAchievements.includes('ach_reverse_boss_win')) {
-            this.gameState.history.unlockedAchievements.push('ach_reverse_boss_win');
-          }
+          this.gameState.unlockAchievement('ach_reverse_boss_win');
         }
-        this.gameState.savePersistentData();
-        this.gameState.notify();
       }
 
       const isWin = s.result === 'victory';

@@ -53,10 +53,13 @@ class ToastManager {
     toast.innerHTML = `
       <div class="toast-content">
         <span class="toast-icon">${icon}</span>
-        <span class="toast-text">${message}</span>
+        <span class="toast-text"></span>
       </div>
       <button class="toast-close" aria-label="关闭">&times;</button>
     `;
+    const textNode = toast.querySelector('.toast-text');
+    if (textNode) textNode.textContent = String(message || '');
+
 
     const closeBtn = toast.querySelector('.toast-close');
     const dismiss = () => {

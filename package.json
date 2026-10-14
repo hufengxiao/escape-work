@@ -1,13 +1,21 @@
 {
   "name": "escape-work",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "准点下班大作战：逃离老板视线 - 文字类H5策略逃脱小游戏",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "node --test tests/integrity.test.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hufen/escape-work.git"
   },
   "keywords": [
     "h5-game",

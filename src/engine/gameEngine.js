@@ -10,7 +10,6 @@ import { sound } from '../audio/sound.js';
 import { MapManager } from './mapManager.js';
 import { PatrolManager } from './patrolManager.js';
 import { DailySystem } from '../data/daily.js';
-import { toast } from '../ui/toast.js';
 
 export class GameEngine {
   constructor(state) {
@@ -103,10 +102,18 @@ export class GameEngine {
     } else if (targetNode.type === 'boss') {
       if (this.state.currentHour >= 18) {
         this.state.addLog(`🎉 抵达闸机：前面就是一楼大堂终点闸机，且已到 18:00 下班时刻！立即切换至【现场抉择】打卡突围！`, 'alert');
-        toast.show('🎉 已抵达一楼大堂闸机且已满 18:00！请在【现场抉择】中打卡突围！', 'success', 4000);
+        this.state.emit('ui:toast', {
+          msg: '🎉 已抵达一楼大堂闸机且已满 18:00！请在【现场抉择】中打卡突围！',
+          type: 'success',
+          duration: 4000
+        });
       } else {
         this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
-        toast.show('🚪 已抵达一楼大堂闸机！未满 18:00 请先掐表读秒，切勿早退冲卡！', 'info', 3500);
+        this.state.emit('ui:toast', {
+          msg: '🚪 已抵达一楼大堂闸机！未满 18:00 请先掐表读秒，切勿早退冲卡！',
+          type: 'info',
+          duration: 3500
+        });
       }
     }
 
@@ -252,7 +259,7 @@ export class GameEngine {
     if (result) {
       if (result.msg) {
         this.state.addLog(result.msg, result.type || 'info');
-        toast.show(result.msg, result.type || 'info');
+        this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
       }
 
       if (result.triggerEnding) {
@@ -311,8 +318,12 @@ export class GameEngine {
   evaluateRandomEncounter() {
     if (this.state.activeEncounter || this.state.currentEnding) return;
 
+    if (!Array.isArray(this.state.occurredEncounters)) {
+      this.state.occurredEncounters = [];
+    }
+
     const possibleEncounters = RANDOM_ENCOUNTERS.filter(
-      (enc) => enc.zones.includes(this.state.zone) && !enc.hasOccurred
+      (enc) => enc.zones.includes(this.state.zone) && !enc.hasOccurred && !this.state.occurredEncounters.includes(enc.id)
     );
 
     let chance = 0.38;
@@ -328,6 +339,7 @@ export class GameEngine {
     if (possibleEncounters.length > 0 && Math.random() < chance) {
       const selected = possibleEncounters[Math.floor(Math.random() * possibleEncounters.length)];
       selected.hasOccurred = true;
+      this.state.occurredEncounters.push(selected.id);
       this.triggerEncounter(selected);
     }
   }
@@ -368,7 +380,7 @@ export class GameEngine {
     if (result) {
       if (result.msg) {
         this.state.addLog(result.msg, result.type || 'info');
-        toast.show(result.msg, result.type || 'info');
+        this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
       }
       if (result.triggerEnding) {
         this.triggerEnding(result.triggerEnding);
@@ -388,6 +400,7 @@ export class GameEngine {
   }
 
   triggerEnding(endingId) {
+    if (this.state.currentEnding) return;
     const ending = ENDINGS[endingId] || ENDINGS.ending_caught_meeting;
     this.state.currentEnding = ending;
 

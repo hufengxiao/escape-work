@@ -10,6 +10,7 @@ import { getRandomTaiChiScenario } from '../data/taichi.js';
 import { MiniGameRunner } from '../engine/miniGameRunner.js';
 import { sound } from '../audio/sound.js';
 import { toast } from './toast.js';
+import { escapeHtml } from '../utils/security.js';
 
 export class MiniGameUI {
   /**
@@ -119,8 +120,9 @@ export class MiniGameUI {
       }
 
       const words = selectedIds.map((id) => options.find((o) => o.id === id)?.text).filter(Boolean);
-      const quoteText = words.length > 0
-        ? `“我们通过 <strong>${words.join('</strong>，打通 <strong>')}</strong>，形成全矩阵赋能！”`
+      const safeWords = words.map((w) => escapeHtml(w));
+      const quoteText = safeWords.length > 0
+        ? `“我们通过 <strong>${safeWords.join('</strong>，打通 <strong>')}</strong>，形成全矩阵赋能！”`
         : '“……（对线超时，支支吾吾未能成句）”';
 
       // Dedicated Settlement Card Overlay (Compact, fit without scrolling)

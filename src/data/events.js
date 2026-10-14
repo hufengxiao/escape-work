@@ -2,6 +2,8 @@
  * All Workplace Zones, Encounters, Dialogues, and Interactive Choices
  */
 
+import { NPCManager } from '../engine/npcManager.js';
+
 export const ZONES = [
   {
     id: 1,
@@ -401,6 +403,7 @@ export const ZONE_ACTIONS = {
         state.flags.elevatorTarget = 'main';
         const rand = Math.random();
         if (rand < 0.45 && !state.flags.hasEncounteredBossInElevator) {
+          state.flags.hasEncounteredBossInElevator = true;
           return {
             triggerEncounter: 'encounter_boss_in_elevator',
             msg: '叮的一声！电梯门开了，里面竟然站着……！'
@@ -1338,9 +1341,7 @@ export const RANDOM_ENCOUNTERS = [
         outcome: (state) => {
           state.suspicion = Math.max(0, state.suspicion - 15);
           if (state.npcRelations?.intern_chen) {
-            import('../engine/npcManager.js').then(({ NPCManager }) => {
-              NPCManager.adjustFavorability(state, 'intern_chen', 35, '支援整顿职场');
-            });
+            NPCManager.adjustFavorability(state, 'intern_chen', 35, '支援整顿职场');
           }
           return { msg: '小陈心领神会，朗声背诵反PUA金句！刘姐瞠目结舌落荒而逃！小陈好感度飙升！', type: 'success' };
         }

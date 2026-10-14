@@ -53,13 +53,28 @@ export class CraftManager {
       };
     }
 
+    if (state.hasItem(recipe.resultItemId)) {
+      return {
+        success: false,
+        message: `背包中已有【${ITEMS[recipe.resultItemId]?.name || recipe.resultItemId}】，无需重复合成（原料已安全留在背包）。`
+      };
+    }
+
     // Consume ingredients
     selectedItemIds.forEach((itemId) => {
       state.removeItem(itemId);
     });
 
     // Add crafted result item
-    state.addItem(recipe.resultItemId);
+    const added = state.addItem(recipe.resultItemId);
+    if (!added) {
+      // Rollback ingredients
+      selectedItemIds.forEach((itemId) => state.addItem(itemId));
+      return {
+        success: false,
+        message: '产物放入背包失败，原料已安全退回背包。'
+      };
+    }
 
     // Track unlocked recipe in history
     if (!state.history.unlockedRecipes) {
@@ -70,6 +85,9 @@ export class CraftManager {
       state.history.unlockedRecipes.push(recipe.id);
       // Give slacker exp bonus for new discovery
       state.history.slackerExp = (state.history.slackerExp || 0) + 30;
+    }
+    if (recipe.unlockAchievement && typeof state.unlockAchievement === 'function') {
+      state.unlockAchievement(recipe.unlockAchievement);
     }
     state.savePersistentData();
 

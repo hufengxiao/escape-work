@@ -9,6 +9,19 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: false
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('src/data/changelog.js')) {
+            return 'changelog-data';
+          }
+          if (id.includes('src/data/guide.js')) {
+            return 'guide-data';
+          }
+        }
+      }
+    }
   }
 });

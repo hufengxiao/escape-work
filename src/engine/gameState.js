@@ -142,6 +142,7 @@ export class GameState {
     this.activeEncounter = null;
     this.currentEnding = null;
     this.earnedExp = 0;
+    this.occurredEncounters = [];
 
     const hardcoreText = this.isHardcore ? '【🔥地狱修罗场模式】' : '';
     this.logs = [
@@ -162,10 +163,16 @@ export class GameState {
       }
     });
 
-    // If extra pocket perk unlocked, randomly give 1 extra item
+    // If extra pocket perk unlocked, give 1 extra item (deterministic when dailySeed exists)
     if (this.flags.hasExtraPocketPerk) {
       const candidates = ['sunglasses', 'wind_oil', 'fake_call'];
-      const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+      let idx;
+      if (typeof this.dailySeed === 'number') {
+        idx = Math.abs(this.dailySeed) % candidates.length;
+      } else {
+        idx = Math.floor(Math.random() * candidates.length);
+      }
+      const chosen = candidates[idx];
       if (!this.hasItem(chosen)) {
         this.addItem(chosen);
       }
@@ -178,16 +185,16 @@ export class GameState {
       if (v2Data && v2Data.meta) {
         const m = v2Data.meta;
         this.history = {
-          gamesPlayed: m.totalRuns || 0,
-          victories: m.escapedRuns || 0,
-          unlockedEndings: m.unlockedEndings || [],
-          unlockedAchievements: m.unlockedAchievements || [],
+          gamesPlayed: Number(m.totalRuns) || 0,
+          victories: Number(m.escapedRuns) || 0,
+          unlockedEndings: Array.isArray(m.unlockedEndings) ? m.unlockedEndings : [],
+          unlockedAchievements: Array.isArray(m.unlockedAchievements) ? m.unlockedAchievements : [],
           slackerExp: typeof m.totalExp === 'number' ? m.totalExp : 50,
-          unlockedPerks: m.unlockedPerks || [],
-          unlockedRecipes: m.unlockedRecipes || [],
-          dailyHighScores: m.dailyHighScores || {},
-          roleWins: m.roleWins || {},
-          hardcoreWins: m.hardcoreWins || 0
+          unlockedPerks: Array.isArray(m.unlockedPerks) ? m.unlockedPerks : [],
+          unlockedRecipes: Array.isArray(m.unlockedRecipes) ? m.unlockedRecipes : [],
+          dailyHighScores: (m.dailyHighScores && typeof m.dailyHighScores === 'object' && !Array.isArray(m.dailyHighScores)) ? m.dailyHighScores : {},
+          roleWins: (m.roleWins && typeof m.roleWins === 'object' && !Array.isArray(m.roleWins)) ? m.roleWins : {},
+          hardcoreWins: Number(m.hardcoreWins) || 0
         };
         this.settings = v2Data.settings || { soundEnabled: true, hapticsEnabled: true, fastText: false };
         return;
@@ -196,16 +203,16 @@ export class GameState {
       const raw = typeof localStorage !== 'undefined' ? (localStorage.getItem(STORAGE_KEY_V1) || localStorage.getItem('ESCAPE_WORK_SAVE')) : null;
       const data = raw ? JSON.parse(raw) : {};
       this.history = {
-        gamesPlayed: data.gamesPlayed || 0,
-        victories: data.victories || 0,
-        unlockedEndings: data.unlockedEndings || [],
-        unlockedAchievements: data.unlockedAchievements || [],
+        gamesPlayed: Number(data.gamesPlayed) || 0,
+        victories: Number(data.victories) || 0,
+        unlockedEndings: Array.isArray(data.unlockedEndings) ? data.unlockedEndings : [],
+        unlockedAchievements: Array.isArray(data.unlockedAchievements) ? data.unlockedAchievements : [],
         slackerExp: typeof data.slackerExp === 'number' ? data.slackerExp : 50,
-        unlockedPerks: data.unlockedPerks || [],
-        unlockedRecipes: data.unlockedRecipes || [],
-        dailyHighScores: data.dailyHighScores || {},
-        roleWins: data.roleWins || {},
-        hardcoreWins: data.hardcoreWins || {}
+        unlockedPerks: Array.isArray(data.unlockedPerks) ? data.unlockedPerks : [],
+        unlockedRecipes: Array.isArray(data.unlockedRecipes) ? data.unlockedRecipes : [],
+        dailyHighScores: (data.dailyHighScores && typeof data.dailyHighScores === 'object' && !Array.isArray(data.dailyHighScores)) ? data.dailyHighScores : {},
+        roleWins: (data.roleWins && typeof data.roleWins === 'object' && !Array.isArray(data.roleWins)) ? data.roleWins : {},
+        hardcoreWins: Number(data.hardcoreWins) || 0
       };
     } catch {
       this.history = {
@@ -221,6 +228,34 @@ export class GameState {
         hardcoreWins: 0
       };
     }
+  }
+
+  unlockEnding(endingId) {
+    if (!endingId) return false;
+    if (!Array.isArray(this.history.unlockedEndings)) {
+      this.history.unlockedEndings = [];
+    }
+    if (!this.history.unlockedEndings.includes(endingId)) {
+      this.history.unlockedEndings.push(endingId);
+      this.savePersistentData();
+      this.notify();
+      return true;
+    }
+    return false;
+  }
+
+  unlockAchievement(achievementId) {
+    if (!achievementId) return false;
+    if (!Array.isArray(this.history.unlockedAchievements)) {
+      this.history.unlockedAchievements = [];
+    }
+    if (!this.history.unlockedAchievements.includes(achievementId)) {
+      this.history.unlockedAchievements.push(achievementId);
+      this.savePersistentData();
+      this.notify();
+      return true;
+    }
+    return false;
   }
 
   savePersistentData() {

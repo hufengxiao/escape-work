@@ -63,7 +63,7 @@ export function calculateBuzzwordScore(chosenIds, roleId = 'backend_dev') {
 
   // Role synergy bonus
   let multiplier = 1.0;
-  if (roleId === 'product_mgr') multiplier = 1.15;
+  if (roleId === 'product_manager' || roleId === 'product_mgr') multiplier = 1.15;
   if (roleId === 'backend_dev') multiplier = 1.05;
 
   return Math.round(totalWeight * multiplier);
