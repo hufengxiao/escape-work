@@ -275,7 +275,7 @@ export const ZONE_STEP_TIPS = {
 
 export const GUIDE_SECTIONS = [
   {
-    id: 'goal',
+    id: 'guide_section_goal',
     title: '🎯 核心目标与胜败判定',
     icon: '🎯',
     summary: '周五 17:45 ~ 18:00，在老板发现前准点出逃！',

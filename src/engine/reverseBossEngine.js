@@ -4,6 +4,7 @@
  */
 
 import { ENDINGS } from '../data/endings.js';
+import { PRNG } from '../utils/prng.js';
 
 export const BOSS_AREAS = [
   { id: 'area_19_office', name: '19楼总裁办', floor: 19, desc: '俯瞰全公司的高管中枢，拥有专属监控大屏与专梯' },
@@ -15,11 +16,37 @@ export const BOSS_AREAS = [
 ];
 
 export class ReverseBossEngine {
-  constructor() {
+  constructor(seedOrPrng = null) {
+    this.initPrng(seedOrPrng);
     this.reset();
   }
 
-  reset() {
+  initPrng(seedOrPrng = null) {
+    if (typeof seedOrPrng === 'function') {
+      this.prng = { random: seedOrPrng };
+      this.seed = null;
+    } else if (seedOrPrng && typeof seedOrPrng.random === 'function') {
+      this.prng = seedOrPrng;
+      this.seed = seedOrPrng.seed || null;
+    } else if (seedOrPrng !== null && seedOrPrng !== undefined) {
+      this.seed = seedOrPrng;
+      this.prng = new PRNG(seedOrPrng);
+    } else {
+      this.seed = null;
+      this.prng = null;
+    }
+  }
+
+  random() {
+    return this.prng ? this.prng.random() : Math.random();
+  }
+
+  reset(seedOrPrng = null) {
+    if (seedOrPrng !== null && seedOrPrng !== undefined) {
+      this.initPrng(seedOrPrng);
+    } else if (this.seed !== null && this.seed !== undefined) {
+      this.initPrng(this.seed);
+    }
     this.currentHour = 17;
     this.currentMinute = 45;
     this.turn = 0;
@@ -137,7 +164,8 @@ export class ReverseBossEngine {
     // Check if anyone caught distracted
     const inArea = this.employees.filter((e) => e.area === this.currentArea && !this.caughtEmployees.some((c) => c.id === e.id) && !this.escapedEmployees.some((esc) => esc.id === e.id));
     if (inArea.length > 0) {
-      const caughtTarget = inArea[0];
+      const targetIdx = Math.floor(this.random() * inArea.length);
+      const caughtTarget = inArea[targetIdx];
       this.caughtEmployees.push(caughtTarget);
       this.logs.push({
         time: this.getTimeString(),
@@ -269,6 +297,10 @@ export class ReverseBossEngine {
           if (this.caughtEmployees.some((c) => c.id === emp.id)) return;
           if (this.escapedEmployees.some((esc) => esc.id === emp.id)) return;
 
+          // Deterministic employee tactical choice (e.g. sneak vs rush)
+          const roll = this.random();
+          emp.tactic = roll < 0.5 ? 'sneak' : 'rush';
+
           // Path: 18F 工位/茶水 -> 18F 走廊 -> 18F 电梯厅 -> 1F 大堂 -> 逃脱
           if (emp.area === '18楼工位区' || emp.area === '18楼茶水间') {
             emp.area = '18楼走廊通道';
@@ -300,6 +332,7 @@ export class ReverseBossEngine {
             }
           }
         });
+        this.checkRandomOfficeEvent();
       }
     }
 
@@ -348,6 +381,24 @@ export class ReverseBossEngine {
         time: this.getTimeString(),
         type: 'defeat',
         text: '💔【威信扫地】阎总威严耗尽，员工们对查岗视若无睹，堂而皇之从身边走过！'
+      });
+    }
+  }
+
+  checkRandomOfficeEvent() {
+    if (this.isFinished) return;
+    if (this.random() < 0.25) {
+      const officeEvents = [
+        '走廊里传来急促的高跟鞋声，有人正快步朝电梯小跑！',
+        '前台电话打来：“阎总，旋转门感应器有点异常，好像有员工刚打卡！”',
+        '全员大群里匿名消息闪烁：“阎总在巡楼！各部门进入静音伪装状态！”',
+        '微波炉叮的一声响，某个员工丢下热好的饭盒直接战略撤退！'
+      ];
+      const ev = officeEvents[Math.floor(this.random() * officeEvents.length)];
+      this.logs.push({
+        time: this.getTimeString(),
+        type: 'info',
+        text: `👀【风吹草动】${ev}`
       });
     }
   }

@@ -57,6 +57,10 @@ export class GameState {
   constructor() {
     this.listeners = [];
     this.channels = {};
+    this._notifiedThisTick = false;
+    this._pendingTrailingNotify = false;
+    this._batchDepth = 0;
+    this._pendingBatchNotify = false;
     this.loadPersistentData();
     this.selectedRoleId = 'backend_dev';
     this.isHardcore = false;
@@ -66,6 +70,10 @@ export class GameState {
   }
 
   reset(roleId = null, modifierId = null, isHardcore = null) {
+    this._notifiedThisTick = false;
+    this._pendingTrailingNotify = false;
+    this._batchDepth = 0;
+    this._pendingBatchNotify = false;
     if (roleId && CHARACTERS[roleId]) {
       this.selectedRoleId = roleId;
     }
@@ -319,13 +327,88 @@ export class GameState {
 
   emit(channel, payload) {
     if (this.channels && this.channels[channel]) {
-      this.channels[channel].forEach((cb) => cb(payload));
+      this.channels[channel].forEach((cb) => {
+        try {
+          cb(payload);
+        } catch (err) {
+          console.error(`[GameState] Error in channel [${channel}] listener:`, err);
+        }
+      });
     }
     this.notify();
   }
 
-  notify() {
-    this.listeners.forEach((cb) => cb(this));
+  notify(options = {}) {
+    const immediate = typeof options === 'boolean' ? options : Boolean(options?.immediate || options?.sync);
+
+    // If inside an active batch(), queue the notification unless immediate is requested
+    if (this._batchDepth > 0) {
+      this._pendingBatchNotify = true;
+      if (immediate) {
+        this._dispatchNotify();
+      }
+      return;
+    }
+
+    if (immediate) {
+      this._pendingTrailingNotify = false;
+      this._dispatchNotify();
+      return;
+    }
+
+    // Microtask coalescing & deduplication:
+    // 1. Dispatch synchronously on the first notify in the current turn/tick so synchronous tests pass.
+    // 2. Coalesce any rapid-fire duplicate calls into a single trailing-edge microtask notification.
+    if (!this._notifiedThisTick) {
+      this._notifiedThisTick = true;
+      this._pendingTrailingNotify = false;
+      this._dispatchNotify();
+
+      const scheduleMicrotask = typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : (cb) => Promise.resolve().then(cb);
+
+      scheduleMicrotask(() => {
+        this._notifiedThisTick = false;
+        if (this._pendingTrailingNotify) {
+          this._pendingTrailingNotify = false;
+          this._dispatchNotify();
+        }
+      });
+    } else {
+      this._pendingTrailingNotify = true;
+    }
+  }
+
+  _dispatchNotify() {
+    for (let i = 0; i < this.listeners.length; i++) {
+      try {
+        this.listeners[i](this);
+      } catch (err) {
+        console.error('[GameState] Error in notify listener:', err);
+      }
+    }
+  }
+
+  flushNotify() {
+    if (this._pendingTrailingNotify || this._pendingBatchNotify) {
+      this._pendingTrailingNotify = false;
+      this._pendingBatchNotify = false;
+      this._dispatchNotify();
+    }
+  }
+
+  batch(fn) {
+    this._batchDepth = (this._batchDepth || 0) + 1;
+    try {
+      return fn();
+    } finally {
+      this._batchDepth--;
+      if (this._batchDepth === 0 && this._pendingBatchNotify) {
+        this._pendingBatchNotify = false;
+        this._dispatchNotify();
+      }
+    }
   }
 
   getTimeString() {

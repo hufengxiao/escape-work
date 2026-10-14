@@ -5,6 +5,8 @@
 import { PRNG } from '../utils/prng.js';
 import { LAYER_NODE_TEMPLATES, MAP_LAYERS, NODE_TYPES } from '../data/maps.js';
 
+const nodeLookupCache = new WeakMap();
+
 export class MapManager {
   /**
    * Generates a 5-layer DAG map guaranteed to be connected with no orphan nodes
@@ -126,19 +128,55 @@ export class MapManager {
   }
 
   /**
-   * Find a node by ID in the 2D layered map
+   * Find a node by ID in the 2D layered map (O(1) cached lookup with dynamic fallback)
    * @param {Array<Array<Object>>} mapGraph
    * @param {string} nodeId
    * @returns {Object|null}
    */
   static findNode(mapGraph, nodeId) {
-    if (!mapGraph) return null;
+    if (!mapGraph || !Array.isArray(mapGraph)) return null;
+
+    let index = nodeLookupCache.get(mapGraph);
+    if (!index) {
+      index = new Map();
+      for (const layer of mapGraph) {
+        if (Array.isArray(layer)) {
+          for (const node of layer) {
+            if (node && node.id != null) {
+              index.set(node.id, node);
+            }
+          }
+        }
+      }
+      nodeLookupCache.set(mapGraph, index);
+    }
+
+    const cached = index.get(nodeId);
+    if (cached) return cached;
+
+    // Fallback: in case mapGraph was mutated dynamically after indexing
     for (const layer of mapGraph) {
-      for (const node of layer) {
-        if (node.id === nodeId) return node;
+      if (Array.isArray(layer)) {
+        for (const node of layer) {
+          if (node && node.id === nodeId) {
+            index.set(nodeId, node);
+            return node;
+          }
+        }
       }
     }
+
     return null;
+  }
+
+  /**
+   * Clears cached node lookup index for a specific mapGraph
+   * @param {Array<Array<Object>>} mapGraph
+   */
+  static clearNodeCache(mapGraph) {
+    if (mapGraph && typeof mapGraph === 'object') {
+      nodeLookupCache.delete(mapGraph);
+    }
   }
 
   /**

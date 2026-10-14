@@ -33,7 +33,10 @@ export class CraftModal {
   }
 
   render() {
-    this.close();
+    if (this.modalEl && this.modalEl.parentNode) {
+      this.updateView();
+      return;
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'modal-backdrop fade-in';
@@ -63,7 +66,7 @@ export class CraftModal {
           ⚗️ 合成工作台
         </button>
         <button class="craft-tab-btn ${this.activeTab === 'book' ? 'active' : ''}" id="craft-tab-book">
-          📖 羁绊图鉴 (${unlockedCount}/${recipeBook.length})
+          📖 羁绊图鉴 (<span id="craft-unlocked-count">${unlockedCount}</span>/${recipeBook.length})
         </button>
       </div>
 
@@ -77,6 +80,24 @@ export class CraftModal {
     this.modalEl = overlay;
 
     this.bindEvents(overlay);
+  }
+
+  updateView() {
+    if (!this.modalEl) return;
+    const recipeBook = CraftManager.getRecipeBook(this.state);
+    const unlockedCount = recipeBook.filter((r) => r.isUnlocked).length;
+
+    const forgeTab = this.modalEl.querySelector('#craft-tab-forge');
+    const bookTab = this.modalEl.querySelector('#craft-tab-book');
+    const countEl = this.modalEl.querySelector('#craft-unlocked-count');
+    if (forgeTab) forgeTab.className = `craft-tab-btn ${this.activeTab === 'craft' ? 'active' : ''}`;
+    if (bookTab) bookTab.className = `craft-tab-btn ${this.activeTab === 'book' ? 'active' : ''}`;
+    if (countEl) countEl.textContent = unlockedCount;
+
+    const contentEl = this.modalEl.querySelector('#craft-tab-content');
+    if (contentEl) {
+      contentEl.innerHTML = this.activeTab === 'craft' ? this.renderForgeContent() : this.renderBookContent(recipeBook);
+    }
   }
 
   renderForgeContent() {
@@ -210,77 +231,76 @@ export class CraftModal {
 
   bindEvents(overlay) {
     overlay.addEventListener('click', (e) => {
-      if (e.target.id === 'craft-modal-overlay' || e.target.id === 'craft-modal-close') {
+      // Close button or backdrop click
+      if (e.target.id === 'craft-modal-overlay' || e.target.closest('#craft-modal-close')) {
         this.close();
+        return;
       }
-    });
 
-    const forgeTab = overlay.querySelector('#craft-tab-forge');
-    const bookTab = overlay.querySelector('#craft-tab-book');
+      // Tab switching
+      if (e.target.closest('#craft-tab-forge')) {
+        if (this.activeTab !== 'craft') {
+          sound.playClick();
+          this.activeTab = 'craft';
+          this.updateView();
+        }
+        return;
+      }
+      if (e.target.closest('#craft-tab-book')) {
+        if (this.activeTab !== 'book') {
+          sound.playClick();
+          this.activeTab = 'book';
+          this.updateView();
+        }
+        return;
+      }
 
-    if (forgeTab) {
-      forgeTab.addEventListener('click', () => {
-        this.activeTab = 'craft';
-        this.render();
-      });
-    }
+      // Remove button in slot
+      const removeBtn = e.target.closest('.craft-slot-remove');
+      if (removeBtn) {
+        e.stopPropagation();
+        const slotIdx = parseInt(removeBtn.dataset.remove, 10);
+        this.selectedItemIds.splice(slotIdx, 1);
+        sound.playClick();
+        this.updateView();
+        return;
+      }
 
-    if (bookTab) {
-      bookTab.addEventListener('click', () => {
-        this.activeTab = 'book';
-        this.render();
-      });
-    }
-
-    // Material picker chips
-    overlay.querySelectorAll('.craft-picker-chip:not([disabled])').forEach((chip) => {
-      chip.addEventListener('click', () => {
+      // Material picker chip click
+      const chip = e.target.closest('.craft-picker-chip:not([disabled])');
+      if (chip) {
         const itemId = chip.dataset.itemId;
         if (this.selectedItemIds.length < 2 && !this.selectedItemIds.includes(itemId)) {
           this.selectedItemIds.push(itemId);
           sound.playClick();
-          this.render();
+          this.updateView();
         }
-      });
-    });
+        return;
+      }
 
-    // Remove buttons in slots
-    overlay.querySelectorAll('.craft-slot-remove').forEach((btn) => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const slotIdx = parseInt(btn.dataset.remove, 10);
-        this.selectedItemIds.splice(slotIdx, 1);
-        sound.playClick();
-        this.render();
-      });
-    });
-
-    // Clear button
-    const clearBtn = overlay.querySelector('#btn-clear-craft');
-    if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
+      // Clear button
+      if (e.target.closest('#btn-clear-craft')) {
         this.selectedItemIds = [];
         sound.playClick();
-        this.render();
-      });
-    }
+        this.updateView();
+        return;
+      }
 
-    // Trigger craft
-    const doCraftBtn = overlay.querySelector('#btn-do-craft');
-    if (doCraftBtn) {
-      doCraftBtn.addEventListener('click', () => {
+      // Trigger craft
+      if (e.target.closest('#btn-do-craft')) {
         const result = CraftManager.craft(this.state, this.selectedItemIds);
         if (result.success) {
           sound.playItem();
           toast.show(result.message, 'success', 3500);
           this.selectedItemIds = [];
           if (this.onUpdate) this.onUpdate();
-          this.render();
+          this.updateView();
         } else {
           sound.playFail();
           toast.show(result.message, 'alert', 3500);
         }
-      });
-    }
+        return;
+      }
+    });
   }
 }

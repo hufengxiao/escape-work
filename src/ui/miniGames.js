@@ -14,6 +14,111 @@ import { escapeHtml } from '../utils/security.js';
 
 export class MiniGameUI {
   /**
+   * Helper: Build standardized receipt-paper settlement HTML (Tai-Chi / Keyboard / QTE)
+   */
+  static renderReceiptSettlement({
+    badge,
+    sub,
+    gradeLabel,
+    gradeText,
+    gradeCls,
+    msg,
+    stats = [],
+    btnId,
+    btnText,
+    topCloseBtnId = null
+  }) {
+    const topCloseBtnHtml = topCloseBtnId
+      ? `<button class="modal-close-btn" id="${topCloseBtnId}" aria-label="关闭">&times;</button>`
+      : '';
+    return `
+      <div class="settlement-card-inner">
+        <div class="qte-settle-head">
+          <div class="qte-settle-titles">
+            <span class="qte-settle-badge">${badge}</span>
+            <span class="qte-settle-sub">${sub}</span>
+          </div>
+          ${topCloseBtnHtml}
+        </div>
+
+        <div class="qte-receipt-paper" style="margin-top: 10px;">
+          <div class="receipt-header-row">
+            <span>${gradeLabel}</span>
+            <strong class="${gradeCls}">${gradeText}</strong>
+          </div>
+
+          <div class="rcpt-footer-dashed" style="margin: 12px 0; font-size: 0.95rem; line-height: 1.5;">
+            ${msg}
+          </div>
+
+          <div class="receipt-header-row receipt-meta-row">
+            ${stats.map((s) => `<span>${s.label}: <strong class="${s.cls}">${s.val}</strong></span>`).join('')}
+          </div>
+        </div>
+
+        <div class="settle-actions-row" style="margin-top: 14px;">
+          <button id="${btnId}" class="btn btn-primary" style="width:100%;">
+            ${btnText}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Helper: Build standardized compact settlement HTML (Buzzword / RedPacket)
+   */
+  static renderCompactSettlement({
+    icon,
+    title,
+    stampText,
+    stampCls,
+    quoteHtml = '',
+    amountHtml = '',
+    stats = [],
+    msg,
+    btnId,
+    btnText,
+    extraInnerCls = ''
+  }) {
+    return `
+      <div class="settlement-card-inner ${extraInnerCls}">
+        <div class="settle-compact-head">
+          <span class="settle-compact-icon">${icon}</span>
+          <div class="settle-compact-titles">
+            <h3 class="settlement-title">${title}</h3>
+            <span class="settlement-stamp-badge ${stampCls}">${stampText}</span>
+          </div>
+        </div>
+
+        ${amountHtml}
+        ${quoteHtml}
+
+        <div class="settle-stats-bar" ${stats.length === 2 ? 'style="grid-template-columns: repeat(2, 1fr);"' : ''}>
+          ${stats
+            .map(
+              (s) => `
+            <div class="settle-stat-compact">
+              <span class="settle-stat-label">${s.label}</span>
+              <strong class="settle-stat-val ${s.cls}">${s.val}</strong>
+            </div>
+          `
+            )
+            .join('')}
+        </div>
+
+        <div class="res-msg-box">${msg}</div>
+
+        <div class="settle-actions-row">
+          <button id="${btnId}" class="btn btn-primary btn-block">
+            ${btnText}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
    * 1. Buzzword Battle (职场黑话大乱斗)
    */
   static showBuzzwordBattle(state, engine, onComplete) {
@@ -29,6 +134,15 @@ export class MiniGameUI {
     const selectedIds = [];
     let timeLeft = 6;
     let timerId = null;
+    let isFinished = false;
+
+    const cleanup = () => {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
 
     overlay.innerHTML = `
       <div class="modal-card minigame-card slide-up">
@@ -41,6 +155,7 @@ export class MiniGameUI {
             </div>
           </div>
           <div class="minigame-timer-badge" id="bw-timer">⏳ 6s</div>
+          <button class="modal-close-btn" id="btn-close-bw-top" aria-label="关闭">&times;</button>
         </div>
 
         <div class="minigame-timer-bar-track">
@@ -81,6 +196,18 @@ export class MiniGameUI {
     const timerFill = overlay.querySelector('#bw-timer-fill');
     const sentenceBox = overlay.querySelector('#bw-sentence');
     const submitBtn = overlay.querySelector('#btn-submit-buzzword');
+    const closeTopBtn = overlay.querySelector('#btn-close-bw-top');
+
+    closeTopBtn?.addEventListener('click', () => {
+      sound.playClick();
+      if (!isFinished) {
+        isFinished = true;
+        cleanup();
+        if (onComplete) onComplete({ grade: 'FAIL', score: 0, msg: '对线已中断' });
+      } else {
+        cleanup();
+      }
+    });
 
     const updateSentence = () => {
       if (selectedIds.length === 0) {
@@ -98,7 +225,12 @@ export class MiniGameUI {
     };
 
     const finishGame = () => {
-      clearInterval(timerId);
+      if (isFinished) return;
+      isFinished = true;
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
       const evalResult = MiniGameRunner.evaluateBuzzwordBattle(selectedIds, state.selectedRoleId);
 
       if (evalResult.suspicionDelta) {
@@ -129,60 +261,42 @@ export class MiniGameUI {
       const card = overlay.querySelector('.minigame-card');
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay minigame-settlement-overlay slide-up';
-      settleEl.innerHTML = `
-        <div class="settlement-card-inner buzzword-settlement-inner">
-          <div class="settle-compact-head">
-            <span class="settle-compact-icon">${isWin ? '🗣️' : '😵'}</span>
-            <div class="settle-compact-titles">
-              <h3 class="settlement-title">${isWin ? '气场全开 · 震撼全场！' : '词锋不逮 · 考核失利'}</h3>
-              <span class="settlement-stamp-badge ${isWin ? 'stamp-win' : 'stamp-lose'}">
-                ${isWin ? '🏆 降维打击达成 (VICTORY)' : '⚠️ 逻辑露怯崩塌 (FAIL)'}
-              </span>
-            </div>
-          </div>
-
-          <div class="res-quote-box">
-            <span class="res-quote-label" style="font-size:10px;color:#94a3b8;font-weight:700;">🗣️ 发言实录：</span>
-            <div class="res-quote-text" style="margin-top:2px;font-size:11px;line-height:1.4;">${quoteText}</div>
-          </div>
-
-          <div class="settle-stats-bar">
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">对线评分</span>
-              <strong class="settle-stat-val ${isWin ? 'text-success' : 'text-danger'}">${evalResult.score} 分</strong>
-            </div>
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">考核判定</span>
-              <strong class="settle-stat-val">${evalResult.grade}</strong>
-            </div>
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">摸鱼嫌疑</span>
-              <strong class="settle-stat-val ${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
-                ${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta || 0}%
-              </strong>
-            </div>
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">剩余体能</span>
-              <strong class="settle-stat-val ${evalResult.energyDelta < 0 ? 'text-danger' : 'text-success'}">
-                ${evalResult.energyDelta > 0 ? '+' : ''}${evalResult.energyDelta || 0}
-              </strong>
-            </div>
-          </div>
-
-          <div class="res-msg-box">${evalResult.msg}</div>
-
-          <div class="settle-actions-row">
-            <button id="btn-close-buzzword-settle" class="btn btn-primary btn-block">
-              ✨ 确认对线战果 · 继续逃跑
-            </button>
-          </div>
+      const quoteHtml = `
+        <div class="res-quote-box">
+          <span class="res-quote-label" style="font-size:10px;color:#94a3b8;font-weight:700;">🗣️ 发言实录：</span>
+          <div class="res-quote-text" style="margin-top:2px;font-size:11px;line-height:1.4;">${quoteText}</div>
         </div>
       `;
+      settleEl.innerHTML = MiniGameUI.renderCompactSettlement({
+        icon: isWin ? '🗣️' : '😵',
+        title: isWin ? '气场全开 · 震撼全场！' : '词锋不逮 · 考核失利',
+        stampText: isWin ? '🏆 降维打击达成 (VICTORY)' : '⚠️ 逻辑露怯崩塌 (FAIL)',
+        stampCls: isWin ? 'stamp-win' : 'stamp-lose',
+        quoteHtml,
+        stats: [
+          { label: '对线评分', val: `${evalResult.score} 分`, cls: isWin ? 'text-success' : 'text-danger' },
+          { label: '考核判定', val: evalResult.grade, cls: '' },
+          {
+            label: '摸鱼嫌疑',
+            val: `${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta || 0}%`,
+            cls: evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'
+          },
+          {
+            label: '剩余体能',
+            val: `${evalResult.energyDelta > 0 ? '+' : ''}${evalResult.energyDelta || 0}`,
+            cls: evalResult.energyDelta < 0 ? 'text-danger' : 'text-success'
+          }
+        ],
+        msg: evalResult.msg,
+        btnId: 'btn-close-buzzword-settle',
+        btnText: '✨ 确认对线战果 · 继续逃跑',
+        extraInnerCls: 'buzzword-settlement-inner'
+      });
       card.appendChild(settleEl);
 
       settleEl.querySelector('#btn-close-buzzword-settle')?.addEventListener('click', () => {
         sound.playClick();
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        cleanup();
         if (onComplete) onComplete(evalResult);
       });
     };
@@ -191,6 +305,10 @@ export class MiniGameUI {
     const startTime = Date.now();
     const duration = 6000;
     timerId = setInterval(() => {
+      if (!overlay.isConnected) {
+        cleanup();
+        return;
+      }
       const elapsed = Date.now() - startTime;
       const remainingMs = Math.max(0, duration - elapsed);
       const sec = (remainingMs / 1000).toFixed(1);
@@ -244,6 +362,7 @@ export class MiniGameUI {
               <span class="minigame-sub">大Boss阎总 在大群发送了拼手气红包！</span>
             </div>
           </div>
+          <button class="modal-close-btn" id="btn-close-rp-top" aria-label="关闭">&times;</button>
         </div>
 
         <p class="redpacket-prompt-text">
@@ -337,46 +456,34 @@ export class MiniGameUI {
       const card = overlay.querySelector('.modal-card');
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay redpacket-settlement-overlay slide-up';
-      settleEl.innerHTML = `
-        <div class="settlement-card-inner redpacket-settlement-inner">
-          <div class="settle-compact-head">
-            <span class="settle-compact-icon">${icon}</span>
-            <div class="settle-compact-titles">
-              <h3 class="settlement-title">${title}</h3>
-              <span class="settlement-stamp-badge ${stampCls}">
-                ${stampText}
-              </span>
-            </div>
-          </div>
-
-          <div class="rp-amount-display" style="font-size:22px;font-weight:900;color:#fbbf24;margin:4px 0;">
-            ${result.amount > 0 ? `¥${result.amount.toFixed(2)}` : '¥0.00'}
-          </div>
-
-          <div class="settle-stats-bar" style="grid-template-columns: repeat(2, 1fr);">
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">摸鱼嫌疑变动</span>
-              <strong class="settle-stat-val ${result.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">
-                ${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%
-              </strong>
-            </div>
-            <div class="settle-stat-compact">
-              <span class="settle-stat-label">体能恢复变动</span>
-              <strong class="settle-stat-val ${result.energyDelta < 0 ? 'text-danger' : 'text-success'}">
-                ${result.energyDelta > 0 ? '+' : ''}${result.energyDelta || 0}
-              </strong>
-            </div>
-          </div>
-
-          <div class="res-msg-box">${result.msg}</div>
-
-          <div class="settle-actions-row">
-            <button id="btn-close-rp-settle" class="btn btn-primary btn-block">
-              👌 收下战果 · 继续溜走
-            </button>
-          </div>
+      const amountHtml = `
+        <div class="rp-amount-display" style="font-size:22px;font-weight:900;color:#fbbf24;margin:4px 0;">
+          ${result.amount > 0 ? `¥${result.amount.toFixed(2)}` : '¥0.00'}
         </div>
       `;
+      settleEl.innerHTML = MiniGameUI.renderCompactSettlement({
+        icon,
+        title,
+        stampText,
+        stampCls,
+        amountHtml,
+        stats: [
+          {
+            label: '摸鱼嫌疑变动',
+            val: `${result.suspicionDelta > 0 ? '+' : ''}${result.suspicionDelta || 0}%`,
+            cls: result.suspicionDelta > 0 ? 'text-danger' : 'text-success'
+          },
+          {
+            label: '体能恢复变动',
+            val: `${result.energyDelta > 0 ? '+' : ''}${result.energyDelta || 0}`,
+            cls: result.energyDelta < 0 ? 'text-danger' : 'text-success'
+          }
+        ],
+        msg: result.msg,
+        btnId: 'btn-close-rp-settle',
+        btnText: '👌 收下战果 · 继续溜走',
+        extraInnerCls: 'redpacket-settlement-inner'
+      });
       card.appendChild(settleEl);
 
       settleEl.querySelector('#btn-close-rp-settle')?.addEventListener('click', () => {
@@ -385,6 +492,15 @@ export class MiniGameUI {
         if (onComplete) onComplete(result);
       });
     };
+
+    overlay.querySelector('#btn-close-rp-top')?.addEventListener('click', () => {
+      sound.playClick();
+      if (!resolved) {
+        resolveChoice('skip');
+      } else if (overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
+    });
 
     overlay.querySelectorAll('.packet-item').forEach((item) => {
       item.addEventListener('click', () => {
@@ -448,9 +564,19 @@ export class MiniGameUI {
     let isStopped = false;
     let finalResult = null;
 
+    const onOverlayClick = (e) => {
+      if (e.target === overlay && isStopped) {
+        closeOverlay();
+      }
+    };
+
     const closeOverlay = (res) => {
       sound.playClick();
-      if (animId) cancelAnimationFrame(animId);
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
+      overlay.removeEventListener('click', onOverlayClick);
       if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
       if (onComplete) onComplete(res || finalResult || { grade: 'LATE', diffMs: 3000, msg: '打卡已结束' });
     };
@@ -461,7 +587,10 @@ export class MiniGameUI {
         const elapsedReal = performance.now() - startRealTime;
         const currentVirtualMs = startVirtualMs + elapsedReal * 1.35;
         isStopped = true;
-        cancelAnimationFrame(animId);
+        if (animId) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
         const res = MiniGameRunner.evaluateClockOutQTE(targetVirtualMs, currentVirtualMs);
         closeOverlay(res);
       } else {
@@ -469,11 +598,7 @@ export class MiniGameUI {
       }
     });
 
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay && isStopped) {
-        closeOverlay();
-      }
-    });
+    overlay.addEventListener('click', onOverlayClick);
 
     const formatMsTime = (totalMs) => {
       const h = Math.floor(totalMs / 3600000);
@@ -489,7 +614,10 @@ export class MiniGameUI {
     const onPunch = (capturedVirtualMs) => {
       if (isStopped) return;
       isStopped = true;
-      cancelAnimationFrame(animId);
+      if (animId) {
+        cancelAnimationFrame(animId);
+        animId = null;
+      }
 
       const result = MiniGameRunner.evaluateClockOutQTE(targetVirtualMs, capturedVirtualMs);
       finalResult = result;
@@ -587,7 +715,13 @@ export class MiniGameUI {
     };
 
     const updateLoop = () => {
-      if (isStopped) return;
+      if (isStopped || !overlay.isConnected) {
+        if (animId) {
+          cancelAnimationFrame(animId);
+          animId = null;
+        }
+        return;
+      }
       const elapsedReal = performance.now() - startRealTime;
       // 1 real ms advances 1.35 virtual ms
       const currentVirtualMs = startVirtualMs + elapsedReal * 1.35;
@@ -624,6 +758,14 @@ export class MiniGameUI {
     let timerId = null;
     let isFinished = false;
 
+    const cleanup = () => {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
+
     overlay.innerHTML = `
       <div class="modal-card minigame-card slide-up taichi-modal-card">
         <div class="minigame-header">
@@ -635,6 +777,7 @@ export class MiniGameUI {
             </div>
           </div>
           <div class="minigame-timer-badge" id="tc-timer">⏳ 8s</div>
+          <button class="modal-close-btn" id="btn-close-taichi-top" aria-label="关闭">&times;</button>
         </div>
 
         <div class="minigame-timer-bar-track">
@@ -668,11 +811,26 @@ export class MiniGameUI {
     const timerBadge = overlay.querySelector('#tc-timer');
     const timerFill = overlay.querySelector('#tc-timer-fill');
     const cardEl = overlay.querySelector('.modal-card');
+    const closeTopBtn = overlay.querySelector('#btn-close-taichi-top');
+
+    closeTopBtn?.addEventListener('click', () => {
+      sound.playClick();
+      if (!isFinished) {
+        isFinished = true;
+        cleanup();
+        if (typeof onComplete === 'function') onComplete({ grade: 'FAIL', suspicionDelta: 10, energyDelta: -5, msg: '职场太极推诿已放弃' });
+      } else {
+        cleanup();
+      }
+    });
 
     const finishGame = (cardId = null) => {
       if (isFinished) return;
       isFinished = true;
-      clearInterval(timerId);
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
 
       const evalResult = MiniGameRunner.evaluateTaiChiBattle(scenario.id, cardId);
 
@@ -708,44 +866,33 @@ export class MiniGameUI {
 
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay taichi-settlement-overlay slide-up';
-      settleEl.innerHTML = `
-        <div class="settlement-card-inner">
-          <div class="qte-settle-head">
-            <div class="qte-settle-titles">
-              <span class="qte-settle-badge">☯️ 职场太极推诿结算</span>
-              <span class="qte-settle-sub">${scenario.opponent} 面对你的回应</span>
-            </div>
-          </div>
-
-          <div class="qte-receipt-paper" style="margin-top: 10px;">
-            <div class="receipt-header-row">
-              <span>推诿心法评级</span>
-              <strong class="${isPerf ? 'text-success' : isPass ? 'text-warning' : 'text-danger'}">
-                ${isPerf ? '🌟 完美推诿 (PERFECT)' : isPass ? '👌 合格化解 (PASS)' : '💥 惨遭甩锅 (FAIL)'}
-              </strong>
-            </div>
-
-            <div class="rcpt-footer-dashed" style="margin: 12px 0; font-size: 0.95rem; line-height: 1.5;">
-              ${evalResult.msg}
-            </div>
-
-            <div class="receipt-header-row receipt-meta-row">
-              <span>老板怀疑度: <strong class="${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%</strong></span>
-              <span>身心体能: <strong class="${evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'}">${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}</strong></span>
-            </div>
-          </div>
-
-          <div class="settle-actions-row" style="margin-top: 14px;">
-            <button id="btn-close-taichi-settle" class="btn btn-primary" style="width:100%;">
-              💨 乘胜追击 · 继续逃脱！
-            </button>
-          </div>
-        </div>
-      `;
+      settleEl.innerHTML = MiniGameUI.renderReceiptSettlement({
+        badge: '☯️ 职场太极推诿结算',
+        sub: `${scenario.opponent} 面对你的回应`,
+        gradeLabel: '推诿心法评级',
+        gradeText: isPerf ? '🌟 完美推诿 (PERFECT)' : isPass ? '👌 合格化解 (PASS)' : '💥 惨遭甩锅 (FAIL)',
+        gradeCls: isPerf ? 'text-success' : isPass ? 'text-warning' : 'text-danger',
+        msg: evalResult.msg,
+        stats: [
+          {
+            label: '老板怀疑度',
+            val: `${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%`,
+            cls: evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'
+          },
+          {
+            label: '身心体能',
+            val: `${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}`,
+            cls: evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'
+          }
+        ],
+        btnId: 'btn-close-taichi-settle',
+        btnText: '💨 乘胜追击 · 继续逃脱！'
+      });
       cardEl.appendChild(settleEl);
 
       settleEl.querySelector('#btn-close-taichi-settle')?.addEventListener('click', () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        sound.playClick();
+        cleanup();
         if (typeof onComplete === 'function') onComplete(evalResult);
         if (engine && engine.checkVictoryConditions) engine.checkVictoryConditions();
       });
@@ -753,6 +900,10 @@ export class MiniGameUI {
 
     // Timer loop
     timerId = setInterval(() => {
+      if (!overlay.isConnected) {
+        cleanup();
+        return;
+      }
       timeLeft -= 0.1;
       if (timeLeft <= 0) {
         timeLeft = 0;
@@ -813,6 +964,7 @@ export class MiniGameUI {
             </div>
           </div>
           <div class="minigame-timer-badge" id="kb-timer">⏳ 5.0s</div>
+          <button class="modal-close-btn" id="btn-close-kb-top" aria-label="关闭">&times;</button>
         </div>
 
         <div class="minigame-timer-bar-track">
@@ -857,6 +1009,7 @@ export class MiniGameUI {
     const terminalScreen = overlay.querySelector('#kb-terminal-screen');
     const mashBtn = overlay.querySelector('#btn-mash-keyboard');
     const cardEl = overlay.querySelector('.modal-card');
+    const closeTopBtn = overlay.querySelector('#btn-close-kb-top');
 
     const registerHit = () => {
       if (isFinished) return;
@@ -892,13 +1045,36 @@ export class MiniGameUI {
       registerHit();
     };
 
+    const cleanup = () => {
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
+      window.removeEventListener('keydown', onKeyDown);
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    };
+
     window.addEventListener('keydown', onKeyDown);
     mashBtn.addEventListener('click', registerHit);
+
+    closeTopBtn?.addEventListener('click', () => {
+      sound.playClick();
+      if (!isFinished) {
+        isFinished = true;
+        cleanup();
+        if (typeof onComplete === 'function') onComplete({ grade: 'SLACK', cps: 0, hits, msg: '工位敲击已中断' });
+      } else {
+        cleanup();
+      }
+    });
 
     const finishGame = () => {
       if (isFinished) return;
       isFinished = true;
-      clearInterval(timerId);
+      if (timerId) {
+        clearInterval(timerId);
+        timerId = null;
+      }
       window.removeEventListener('keydown', onKeyDown);
 
       const evalResult = MiniGameRunner.evaluateKeyboardFrenzy(hits, 5);
@@ -935,44 +1111,33 @@ export class MiniGameUI {
 
       const settleEl = document.createElement('div');
       settleEl.className = 'settlement-overlay keyboard-settlement-overlay slide-up';
-      settleEl.innerHTML = `
-        <div class="settlement-card-inner">
-          <div class="qte-settle-head">
-            <div class="qte-settle-titles">
-              <span class="qte-settle-badge">⌨️ 工位敲击装忙战报</span>
-              <span class="qte-settle-sub">总敲击 ${hits} 次 · 频率 ${evalResult.cps} CPS</span>
-            </div>
-          </div>
-
-          <div class="qte-receipt-paper" style="margin-top: 10px;">
-            <div class="receipt-header-row">
-              <span>装忙气场评级</span>
-              <strong class="${isFire ? 'text-success' : isSteady ? 'text-warning' : 'text-danger'}">
-                ${isFire ? '🔥 满负荷救火大仙 (100%)' : isSteady ? '⚡ 沉浸式救火专家' : '💤 手速疲软摸鱼露馅'}
-              </strong>
-            </div>
-
-            <div class="rcpt-footer-dashed" style="margin: 12px 0; font-size: 0.95rem; line-height: 1.5;">
-              ${evalResult.msg}
-            </div>
-
-            <div class="receipt-header-row receipt-meta-row">
-              <span>老板怀疑度: <strong class="${evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'}">${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%</strong></span>
-              <span>身心体能: <strong class="${evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'}">${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}</strong></span>
-            </div>
-          </div>
-
-          <div class="settle-actions-row" style="margin-top: 14px;">
-            <button id="btn-close-keyboard-settle" class="btn btn-primary" style="width:100%;">
-              🏃 带着救火光环 · 趁机撤退！
-            </button>
-          </div>
-        </div>
-      `;
+      settleEl.innerHTML = MiniGameUI.renderReceiptSettlement({
+        badge: '⌨️ 工位敲击装忙战报',
+        sub: `总敲击 ${hits} 次 · 频率 ${evalResult.cps} CPS`,
+        gradeLabel: '装忙气场评级',
+        gradeText: isFire ? '🔥 满负荷救火大仙 (100%)' : isSteady ? '⚡ 沉浸式救火专家' : '💤 手速疲软摸鱼露馅',
+        gradeCls: isFire ? 'text-success' : isSteady ? 'text-warning' : 'text-danger',
+        msg: evalResult.msg,
+        stats: [
+          {
+            label: '老板怀疑度',
+            val: `${evalResult.suspicionDelta > 0 ? '+' : ''}${evalResult.suspicionDelta}%`,
+            cls: evalResult.suspicionDelta > 0 ? 'text-danger' : 'text-success'
+          },
+          {
+            label: '身心体能',
+            val: `${evalResult.energyDelta >= 0 ? '+' : ''}${evalResult.energyDelta}`,
+            cls: evalResult.energyDelta >= 0 ? 'text-success' : 'text-danger'
+          }
+        ],
+        btnId: 'btn-close-keyboard-settle',
+        btnText: '🏃 带着救火光环 · 趁机撤退！'
+      });
       cardEl.appendChild(settleEl);
 
       settleEl.querySelector('#btn-close-keyboard-settle')?.addEventListener('click', () => {
-        if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+        sound.playClick();
+        cleanup();
         if (typeof onComplete === 'function') onComplete(evalResult);
         if (engine && engine.checkVictoryConditions) engine.checkVictoryConditions();
       });
@@ -980,6 +1145,10 @@ export class MiniGameUI {
 
     // Timer loop
     timerId = setInterval(() => {
+      if (!overlay.isConnected) {
+        cleanup();
+        return;
+      }
       timeLeft -= 0.1;
       if (timeLeft <= 0) {
         timeLeft = 0;

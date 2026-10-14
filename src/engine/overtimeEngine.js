@@ -5,13 +5,40 @@
 
 import { OVERTIME_EVENTS, OVERTIME_ACTIONS } from '../data/overtimeEvents.js';
 import { ENDINGS } from '../data/endings.js';
+import { PRNG } from '../utils/prng.js';
 
 export class OvertimeEngine {
-  constructor() {
+  constructor(seedOrPrng = null) {
+    this.initPrng(seedOrPrng);
     this.reset();
   }
 
-  reset() {
+  initPrng(seedOrPrng = null) {
+    if (typeof seedOrPrng === 'function') {
+      this.prng = { random: seedOrPrng };
+      this.seed = null;
+    } else if (seedOrPrng && typeof seedOrPrng.random === 'function') {
+      this.prng = seedOrPrng;
+      this.seed = seedOrPrng.seed || null;
+    } else if (seedOrPrng !== null && seedOrPrng !== undefined) {
+      this.seed = seedOrPrng;
+      this.prng = new PRNG(seedOrPrng);
+    } else {
+      this.seed = null;
+      this.prng = null;
+    }
+  }
+
+  random() {
+    return this.prng ? this.prng.random() : Math.random();
+  }
+
+  reset(seedOrPrng = null) {
+    if (seedOrPrng !== null && seedOrPrng !== undefined) {
+      this.initPrng(seedOrPrng);
+    } else if (this.seed !== null && this.seed !== undefined) {
+      this.initPrng(this.seed);
+    }
     this.currentHour = 20;
     this.currentMinute = 0;
     this.turn = 0;
@@ -159,7 +186,7 @@ export class OvertimeEngine {
 
   checkRandomEvent() {
     // 35% chance each turn to trigger a narrative event matching hour
-    if (Math.random() < 0.35) {
+    if (this.random() < 0.35) {
       const getHourOffset = (h) => (h >= 20 ? h - 20 : h + 4);
       const currOffset = getHourOffset(this.currentHour);
 
@@ -170,7 +197,7 @@ export class OvertimeEngine {
       });
 
       if (candidates.length > 0) {
-        const ev = candidates[Math.floor(Math.random() * candidates.length)];
+        const ev = candidates[Math.floor(this.random() * candidates.length)];
         if (ev.effect.sanity) this.sanity = Math.max(0, Math.min(100, this.sanity + ev.effect.sanity));
         if (ev.effect.energy) this.energy = Math.max(0, Math.min(100, this.energy + ev.effect.energy));
         if (ev.effect.presenceMod) this.presence = Math.max(0, Math.min(100, this.presence + ev.effect.presenceMod));

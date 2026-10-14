@@ -57,6 +57,12 @@ export class UIRenderer {
     this.guideCurrentStep = 0;
     this.tourActive = false;
     this.currentTourStep = 0;
+    this.timeDeltaTimeout = null;
+    this.suspicionDeltaTimeout = null;
+    this.energyDeltaTimeout = null;
+    this.timeDeltaTimer = null;
+    this.suspDeltaTimer = null;
+    this.energyDeltaTimer = null;
     this.onTourWindowUpdate = () => {
       if (this.tourActive) {
         this.updateTourPositions();
@@ -64,6 +70,33 @@ export class UIRenderer {
     };
     this.appEl = document.getElementById('app');
     this.init();
+  }
+
+  clearDeltaTimeouts() {
+    if (this.timeDeltaTimeout) {
+      clearTimeout(this.timeDeltaTimeout);
+      this.timeDeltaTimeout = null;
+    }
+    if (this.timeDeltaTimer) {
+      clearTimeout(this.timeDeltaTimer);
+      this.timeDeltaTimer = null;
+    }
+    if (this.suspicionDeltaTimeout) {
+      clearTimeout(this.suspicionDeltaTimeout);
+      this.suspicionDeltaTimeout = null;
+    }
+    if (this.suspDeltaTimer) {
+      clearTimeout(this.suspDeltaTimer);
+      this.suspDeltaTimer = null;
+    }
+    if (this.energyDeltaTimeout) {
+      clearTimeout(this.energyDeltaTimeout);
+      this.energyDeltaTimeout = null;
+    }
+    if (this.energyDeltaTimer) {
+      clearTimeout(this.energyDeltaTimer);
+      this.energyDeltaTimer = null;
+    }
   }
 
   init() {
@@ -909,9 +942,16 @@ export class UIRenderer {
       document.getElementById('ending-modal')?.classList.add('hidden');
       document.getElementById('poster-modal')?.classList.add('hidden');
       document.getElementById('encounter-modal')?.classList.add('hidden');
+      this.clearDeltaTimeouts();
       this.prevSusp = undefined;
       this.prevEnergy = undefined;
       this.prevTimeMinutes = undefined;
+      document.getElementById('time-delta')?.classList.add('hidden');
+      document.getElementById('suspicion-delta')?.classList.add('hidden');
+      document.getElementById('energy-delta')?.classList.add('hidden');
+      if (this.mapView && typeof this.mapView.destroy === 'function') {
+        this.mapView.destroy();
+      }
       this.engine.restart();
       toast.show('时间已重置为 17:45，新的一局开始！', 'info');
     };
@@ -931,9 +971,16 @@ export class UIRenderer {
       document.getElementById('ending-modal')?.classList.add('hidden');
       document.getElementById('poster-modal')?.classList.add('hidden');
       document.getElementById('encounter-modal')?.classList.add('hidden');
+      this.clearDeltaTimeouts();
       this.prevSusp = undefined;
       this.prevEnergy = undefined;
       this.prevTimeMinutes = undefined;
+      document.getElementById('time-delta')?.classList.add('hidden');
+      document.getElementById('suspicion-delta')?.classList.add('hidden');
+      document.getElementById('energy-delta')?.classList.add('hidden');
+      if (this.mapView && typeof this.mapView.destroy === 'function') {
+        this.mapView.destroy();
+      }
       this.engine.restart();
       toast.show('时间已重置为 17:45，新的一局开始！', 'info');
     });
@@ -1127,27 +1174,48 @@ export class UIRenderer {
       };
     });
 
-    // View Tab Navigation events
-    document.querySelectorAll('.view-tab-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
+    // View Tab Navigation events (robust delegation)
+    const viewTabNav = document.querySelector('.view-tab-nav');
+    if (viewTabNav) {
+      viewTabNav.addEventListener('click', (e) => {
+        const btn = e.target.closest('.view-tab-btn');
+        if (!btn) return;
         sound.playClick();
         const tab = btn.getAttribute('data-tab');
-        this.setActiveTab(tab);
+        if (tab) this.setActiveTab(tab);
       });
-    });
+    } else {
+      document.querySelectorAll('.view-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          sound.playClick();
+          const tab = btn.getAttribute('data-tab');
+          if (tab) this.setActiveTab(tab);
+        });
+      });
+    }
 
     document.getElementById('action-log-ticker')?.addEventListener('click', () => {
       sound.playClick();
       this.setActiveTab('log');
     });
 
-    // Cyber Bottom Tab Navigation events
-    document.querySelectorAll('.bottom-tab-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
+    // Cyber Bottom Tab Navigation events (robust delegation)
+    const bottomTabBar = document.querySelector('.bottom-tab-bar');
+    if (bottomTabBar) {
+      bottomTabBar.addEventListener('click', (e) => {
+        const btn = e.target.closest('.bottom-tab-btn');
+        if (!btn) return;
         const tab = btn.getAttribute('data-tab');
-        this.switchBottomNavTab(tab);
+        if (tab) this.switchBottomNavTab(tab);
       });
-    });
+    } else {
+      document.querySelectorAll('.bottom-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const tab = btn.getAttribute('data-tab');
+          if (tab) this.switchBottomNavTab(tab);
+        });
+      });
+    }
 
     // Meta strip relation & weather chips
     document.getElementById('strip-relation-chip')?.addEventListener('click', () => {
@@ -1301,13 +1369,13 @@ export class UIRenderer {
   }
 
   closeTour() {
+    window.removeEventListener('resize', this.onTourWindowUpdate);
+    window.removeEventListener('scroll', this.onTourWindowUpdate);
+
     if (!this.tourActive) return;
     this.tourActive = false;
     const overlay = document.getElementById('tour-overlay');
     if (overlay) overlay.classList.add('hidden');
-
-    window.removeEventListener('resize', this.onTourWindowUpdate);
-    window.removeEventListener('scroll', this.onTourWindowUpdate);
 
     this.switchBottomNavTab('escape', false);
     this.setActiveTab('action');
@@ -1994,8 +2062,11 @@ export class UIRenderer {
         timeDisplayEl.classList.remove('stat-flash-time');
         void timeDisplayEl.offsetWidth;
         timeDisplayEl.classList.add('stat-flash-time');
-        clearTimeout(this.timeDeltaTimer);
-        this.timeDeltaTimer = setTimeout(() => {
+        if (this.timeDeltaTimeout) clearTimeout(this.timeDeltaTimeout);
+        if (this.timeDeltaTimer) clearTimeout(this.timeDeltaTimer);
+        this.timeDeltaTimeout = this.timeDeltaTimer = setTimeout(() => {
+          this.timeDeltaTimeout = null;
+          this.timeDeltaTimer = null;
           timeDeltaEl?.classList.add('hidden');
         }, 2200);
       }
@@ -2050,8 +2121,11 @@ export class UIRenderer {
           void suspItemEl?.offsetWidth;
           suspItemEl?.classList.add('box-pulse-safe');
         }
-        clearTimeout(this.suspDeltaTimer);
-        this.suspDeltaTimer = setTimeout(() => {
+        if (this.suspicionDeltaTimeout) clearTimeout(this.suspicionDeltaTimeout);
+        if (this.suspDeltaTimer) clearTimeout(this.suspDeltaTimer);
+        this.suspicionDeltaTimeout = this.suspDeltaTimer = setTimeout(() => {
+          this.suspicionDeltaTimeout = null;
+          this.suspDeltaTimer = null;
           suspDeltaEl?.classList.add('hidden');
         }, 2500);
       }
@@ -2091,8 +2165,11 @@ export class UIRenderer {
           void energyItemEl?.offsetWidth;
           energyItemEl?.classList.add('box-pulse-danger');
         }
-        clearTimeout(this.energyDeltaTimer);
-        this.energyDeltaTimer = setTimeout(() => {
+        if (this.energyDeltaTimeout) clearTimeout(this.energyDeltaTimeout);
+        if (this.energyDeltaTimer) clearTimeout(this.energyDeltaTimer);
+        this.energyDeltaTimeout = this.energyDeltaTimer = setTimeout(() => {
+          this.energyDeltaTimeout = null;
+          this.energyDeltaTimer = null;
           energyDeltaEl?.classList.add('hidden');
         }, 2500);
       }
@@ -2265,12 +2342,17 @@ export class UIRenderer {
       `;
     }).join('');
 
-    grid.querySelectorAll('.action-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
+    if (!grid._hasActionDelegation) {
+      grid.addEventListener('click', (e) => {
+        const btn = e.target.closest('.action-btn');
+        if (!btn || btn.disabled) return;
         const actionId = btn.getAttribute('data-action');
-        this.engine.executeAction(actionId);
+        if (actionId) {
+          this.engine.executeAction(actionId);
+        }
       });
-    });
+      grid._hasActionDelegation = true;
+    }
   }
 
   renderBackpack() {

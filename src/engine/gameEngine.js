@@ -11,6 +11,28 @@ import { MapManager } from './mapManager.js';
 import { PatrolManager } from './patrolManager.js';
 import { DailySystem } from '../data/daily.js';
 
+export const DEPTH_TO_ZONE = {
+  0: 1,
+  1: 2,
+  2: 3,
+  3: 4,
+  4: 4
+};
+
+export const ZONE_TO_DEPTH = {
+  1: 0,
+  2: 1,
+  3: 2,
+  4: 4
+};
+
+export const ZONE_ALLOWED_DEPTHS = {
+  1: [0],
+  2: [1],
+  3: [2],
+  4: [3, 4]
+};
+
 export class GameEngine {
   constructor(state) {
     this.state = state;
@@ -30,100 +52,101 @@ export class GameEngine {
 
     sound.playClick();
 
-    // Energy and time costs
-    let timeCost = 2;
-    let energyCost = 8;
+    this.state.batch(() => {
+      // Energy and time costs
+      let timeCost = 2;
+      let energyCost = 8;
 
-    if (this.state.flags.cyberStimulantActive > 0) {
-      this.state.flags.cyberStimulantActive--;
-      timeCost = 0;
-      energyCost = 0;
-      this.state.addLog(
-        `⚡【赛博超频】神速移动！耗时与体能消耗为 0（超频剩余 ${this.state.flags.cyberStimulantActive} 次）。`,
-        'item'
-      );
-    } else {
-      if (this.state.flags.hasSneakersPerk) {
-        energyCost = Math.max(3, Math.round(energyCost * 0.75));
+      if (this.state.flags.cyberStimulantActive > 0) {
+        this.state.flags.cyberStimulantActive--;
+        timeCost = 0;
+        energyCost = 0;
+        this.state.addLog(
+          `⚡【赛博超频】神速移动！耗时与体能消耗为 0（超频剩余 ${this.state.flags.cyberStimulantActive} 次）。`,
+          'item'
+        );
+      } else {
+        if (this.state.flags.hasSneakersPerk) {
+          energyCost = Math.max(3, Math.round(energyCost * 0.75));
+        }
+        if (this.state.isHardcore) {
+          energyCost = Math.round(energyCost * 1.3);
+        }
       }
-      if (this.state.isHardcore) {
-        energyCost = Math.round(energyCost * 1.3);
+
+      if (timeCost > 0) this.state.advanceTime(timeCost);
+      this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
+      this.state.turns++;
+
+      // Natural suspicion decay from architect aura
+      if (this.state.flags.hasArchitectAura) {
+        this.state.suspicion = Math.max(0, Math.round(this.state.suspicion * 0.97));
       }
-    }
 
-    if (timeCost > 0) this.state.advanceTime(timeCost);
-    this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
-    this.state.turns++;
+      // Update node states in graph
+      targetNode.isVisited = true;
+      this.state.currentMapNodeId = targetNode.id;
+      this.state.zone = DEPTH_TO_ZONE[targetNode.depth] ?? targetNode.zone ?? 1;
 
-    // Natural suspicion decay from architect aura
-    if (this.state.flags.hasArchitectAura) {
-      this.state.suspicion = Math.max(0, Math.round(this.state.suspicion * 0.97));
-    }
-
-    // Update node states in graph
-    targetNode.isVisited = true;
-    this.state.currentMapNodeId = targetNode.id;
-    this.state.zone = Math.min(4, Math.max(1, targetNode.zone || targetNode.depth + 1));
-
-    // Reset all nodes availability, then activate target's children
-    mapGraph.forEach((layer) => {
-      layer.forEach((node) => {
-        node.isAvailable = false;
+      // Reset all nodes availability, then activate target's children
+      mapGraph.forEach((layer) => {
+        layer.forEach((node) => {
+          node.isAvailable = false;
+        });
       });
-    });
-    targetNode.nextNodeIds.forEach((childId) => {
-      const child = MapManager.findNode(mapGraph, childId);
-      if (child) child.isAvailable = true;
-    });
+      targetNode.nextNodeIds.forEach((childId) => {
+        const child = MapManager.findNode(mapGraph, childId);
+        if (child) child.isAvailable = true;
+      });
 
-    this.state.addLog(`🗺️【路线推进】你穿行抵达了【${targetNode.title}】(${targetNode.zoneName})。`, 'info');
+      this.state.addLog(`🗺️【路线推进】你穿行抵达了【${targetNode.title}】(${targetNode.zoneName})。`, 'info');
 
-    // Handle node type bonus/events
-    if (targetNode.type === 'rest') {
-      const recovery = 20;
-      this.state.energy = Math.min(100, this.state.energy + recovery);
-      this.state.suspicion = Math.max(0, this.state.suspicion - 10);
-      this.state.addLog(`☕ 补充能量：喝了杯热饮小憩片刻，体力 +${recovery}，怀疑度 -10%！`, 'item');
-    } else if (targetNode.type === 'loot') {
-      const lootCandidates = ['warm_coffee', 'bag_snack', 'wind_oil', 'yellow_vest', 'stomach_pill', 'noise_headphones'];
-      const lootItem = lootCandidates[Math.floor(Math.random() * lootCandidates.length)];
-      if (!this.state.hasItem(lootItem)) {
-        this.state.addItem(lootItem);
-        this.state.addLog(`📦 翻找收获：在角落搜刮到了关键物资【${ITEMS[lootItem]?.name || lootItem}】！`, 'item');
-      } else {
-        this.state.energy = Math.min(100, this.state.energy + 10);
-        this.state.addLog(`📦 翻找收获：物资已被其他人取走，但你顺手捞到了一颗薄荷糖，体力 +10！`, 'info');
+      // Handle node type bonus/events
+      if (targetNode.type === 'rest') {
+        const recovery = 20;
+        this.state.energy = Math.min(100, this.state.energy + recovery);
+        this.state.suspicion = Math.max(0, this.state.suspicion - 10);
+        this.state.addLog(`☕ 补充能量：喝了杯热饮小憩片刻，体力 +${recovery}，怀疑度 -10%！`, 'item');
+      } else if (targetNode.type === 'loot') {
+        const lootCandidates = ['warm_coffee', 'bag_snack', 'wind_oil', 'yellow_vest', 'stomach_pill', 'noise_headphones'];
+        const lootItem = lootCandidates[Math.floor(Math.random() * lootCandidates.length)];
+        if (!this.state.hasItem(lootItem)) {
+          this.state.addItem(lootItem);
+          this.state.addLog(`📦 翻找收获：在角落搜刮到了关键物资【${ITEMS[lootItem]?.name || lootItem}】！`, 'item');
+        } else {
+          this.state.energy = Math.min(100, this.state.energy + 10);
+          this.state.addLog(`📦 翻找收获：物资已被其他人取走，但你顺手捞到了一颗薄荷糖，体力 +10！`, 'info');
+        }
+      } else if (targetNode.type === 'secret') {
+        this.state.suspicion = Math.max(0, this.state.suspicion - 15);
+        this.state.addLog(`🗝️ 隐秘通道：走专用捷径避开了监控与管理层视线，怀疑度 -15%！`, 'item');
+      } else if (targetNode.type === 'event') {
+        this.evaluateRandomEncounter();
+      } else if (targetNode.type === 'boss') {
+        if (this.state.currentHour >= 18) {
+          this.state.addLog(`🎉 抵达闸机：前面就是一楼大堂终点闸机，且已到 18:00 下班时刻！立即切换至【现场抉择】打卡突围！`, 'alert');
+          this.state.emit('ui:toast', {
+            msg: '🎉 已抵达一楼大堂闸机且已满 18:00！请在【现场抉择】中打卡突围！',
+            type: 'success',
+            duration: 4000
+          });
+        } else {
+          this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
+          this.state.emit('ui:toast', {
+            msg: '🚪 已抵达一楼大堂闸机！未满 18:00 请先掐表读秒，切勿早退冲卡！',
+            type: 'info',
+            duration: 3500
+          });
+        }
       }
-    } else if (targetNode.type === 'secret') {
-      this.state.suspicion = Math.max(0, this.state.suspicion - 15);
-      this.state.addLog(`🗝️ 隐秘通道：走专用捷径避开了监控与管理层视线，怀疑度 -15%！`, 'item');
-    } else if (targetNode.type === 'event') {
-      this.evaluateRandomEncounter();
-    } else if (targetNode.type === 'boss') {
-      if (this.state.currentHour >= 18) {
-        this.state.addLog(`🎉 抵达闸机：前面就是一楼大堂终点闸机，且已到 18:00 下班时刻！立即切换至【现场抉择】打卡突围！`, 'alert');
-        this.state.emit('ui:toast', {
-          msg: '🎉 已抵达一楼大堂闸机且已满 18:00！请在【现场抉择】中打卡突围！',
-          type: 'success',
-          duration: 4000
-        });
-      } else {
-        this.state.addLog(`🚪 抵达闸机：前面就是一楼大堂终点闸机！等待 18:00 准点打卡脱身！`, 'alert');
-        this.state.emit('ui:toast', {
-          msg: '🚪 已抵达一楼大堂闸机！未满 18:00 请先掐表读秒，切勿早退冲卡！',
-          type: 'info',
-          duration: 3500
-        });
-      }
-    }
 
-    // Step Boss patrol surveillance
-    PatrolManager.stepPatrol(this.state);
+      // Step Boss patrol surveillance
+      PatrolManager.stepPatrol(this.state);
 
-    if (this.checkVitalConditions()) return;
+      if (this.checkVitalConditions()) return;
 
-    this.state.emit('map:update', targetNode);
-    this.state.notify();
+      this.state.emit('map:update', targetNode);
+    });
   }
 
   isMapOutOfSync() {
@@ -132,16 +155,10 @@ export class GameEngine {
     const currNode = MapManager.findNode(mapGraph, this.state.currentMapNodeId);
     if (!currNode) return true;
 
-    // Check if map depth matches workplace zone
-    // Depth 0 -> Zone 1
-    // Depth 1 -> Zone 2
-    // Depth 2 -> Zone 3
-    // Depth 3, 4 -> Zone 4
-    if (this.state.zone === 1) return currNode.depth !== 0;
-    if (this.state.zone === 2) return currNode.depth !== 1;
-    if (this.state.zone === 3) return currNode.depth !== 2;
-    if (this.state.zone === 4) return currNode.depth < 3;
-    return false;
+    // Check if map depth matches workplace zone via unified lookup table
+    const allowedDepths = ZONE_ALLOWED_DEPTHS[this.state.zone];
+    if (!allowedDepths) return true;
+    return !allowedDepths.includes(currNode.depth);
   }
 
   syncMapToZone(targetZone, hintId = null) {
@@ -151,10 +168,7 @@ export class GameEngine {
     let currNode = MapManager.findNode(mapGraph, this.state.currentMapNodeId) || mapGraph[0][0];
     let currentDepth = currNode ? currNode.depth : 0;
 
-    let targetDepth = 0;
-    if (targetZone === 2) targetDepth = 1;
-    else if (targetZone === 3) targetDepth = 2;
-    else if (targetZone === 4) targetDepth = 4;
+    const targetDepth = ZONE_TO_DEPTH[targetZone] ?? 0;
 
     if (currentDepth >= targetDepth) return;
 
@@ -201,7 +215,7 @@ export class GameEngine {
     }
 
     this.state.currentMapNodeId = currNode.id;
-    this.state.zone = Math.min(4, Math.max(1, currNode.zone || currNode.depth + 1));
+    this.state.zone = DEPTH_TO_ZONE[currNode.depth] ?? currNode.zone ?? 1;
 
     mapGraph.forEach((layer) => {
       layer.forEach((node) => {
@@ -232,63 +246,65 @@ export class GameEngine {
 
     if (!action) return;
 
-    const prevZone = this.state.zone;
+    return this.state.batch(() => {
+      const prevZone = this.state.zone;
 
-    // Calculate energy cost with perks and difficulty
-    let energyCost = action.costEnergy || 0;
-    if (energyCost > 0) {
-      if (this.state.flags.hasSneakersPerk) {
-        energyCost = Math.max(1, Math.round(energyCost * 0.85));
-      }
-      if (this.state.isHardcore) {
-        energyCost = Math.round(energyCost * 1.25);
-      }
-      if (this.state.flags.modQuarterlySprint) {
-        energyCost = Math.round(energyCost * 1.2);
-      }
-    }
-
-    // Advance time and cost energy
-    this.state.advanceTime(action.costTime || 1);
-    this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
-    this.state.turns++;
-
-    // Execute custom action handler
-    const result = action.handler(this.state);
-
-    if (result) {
-      if (result.msg) {
-        this.state.addLog(result.msg, result.type || 'info');
-        this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
+      // Calculate energy cost with perks and difficulty
+      let energyCost = action.costEnergy || 0;
+      if (energyCost > 0) {
+        if (this.state.flags.hasSneakersPerk) {
+          energyCost = Math.max(1, Math.round(energyCost * 0.85));
+        }
+        if (this.state.isHardcore) {
+          energyCost = Math.round(energyCost * 1.25);
+        }
+        if (this.state.flags.modQuarterlySprint) {
+          energyCost = Math.round(energyCost * 1.2);
+        }
       }
 
-      if (result.triggerEnding) {
-        this.triggerEnding(result.triggerEnding);
-        return;
+      // Advance time and cost energy
+      this.state.advanceTime(action.costTime || 1);
+      this.state.energy = Math.max(0, Math.min(100, this.state.energy - energyCost));
+      this.state.turns++;
+
+      // Execute custom action handler
+      const result = action.handler(this.state);
+
+      if (result) {
+        if (result.msg) {
+          this.state.addLog(result.msg, result.type || 'info');
+          this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
+        }
+
+        if (result.triggerEnding) {
+          this.triggerEnding(result.triggerEnding);
+          return result;
+        }
+
+        if (result.triggerEncounter) {
+          this.triggerEncounterById(result.triggerEncounter);
+          return result;
+        }
       }
 
-      if (result.triggerEncounter) {
-        this.triggerEncounterById(result.triggerEncounter);
-        return;
+      // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
+      if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
+        this.syncMapToZone(this.state.zone, action.id);
       }
-    }
 
-    // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
-    if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
-      this.syncMapToZone(this.state.zone, action.id);
-    }
+      // Step Boss patrol surveillance
+      PatrolManager.stepPatrol(this.state);
 
-    // Step Boss patrol surveillance
-    PatrolManager.stepPatrol(this.state);
+      // Check life / suspicion thresholds
+      if (this.checkVitalConditions()) {
+        return result;
+      }
 
-    // Check life / suspicion thresholds
-    if (this.checkVitalConditions()) {
-      return;
-    }
-
-    // Roll for possible random encounters
-    this.evaluateRandomEncounter();
-    this.state.notify();
+      // Roll for possible random encounters
+      this.evaluateRandomEncounter();
+      return result;
+    });
   }
 
   checkVitalConditions() {
@@ -373,30 +389,31 @@ export class GameEngine {
       return;
     }
 
-    const prevZone = this.state.zone;
-    const result = choice.outcome(this.state);
-    this.state.activeEncounter = null;
+    return this.state.batch(() => {
+      const prevZone = this.state.zone;
+      const result = choice.outcome(this.state);
+      this.state.activeEncounter = null;
 
-    if (result) {
-      if (result.msg) {
-        this.state.addLog(result.msg, result.type || 'info');
-        this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
+      if (result) {
+        if (result.msg) {
+          this.state.addLog(result.msg, result.type || 'info');
+          this.state.emit('ui:toast', { msg: result.msg, type: result.type || 'info' });
+        }
+        if (result.triggerEnding) {
+          this.triggerEnding(result.triggerEnding);
+          return result;
+        }
       }
-      if (result.triggerEnding) {
-        this.triggerEnding(result.triggerEnding);
-        return result;
+
+      // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
+      if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
+        this.syncMapToZone(this.state.zone);
       }
-    }
 
-    // Bidirectional sync: Ensure DAG escape route matches workplace zone advancement
-    if (this.state.zone !== prevZone || this.isMapOutOfSync()) {
-      this.syncMapToZone(this.state.zone);
-    }
-
-    // Check vitals again
-    this.checkVitalConditions();
-    this.state.notify();
-    return result;
+      // Check vitals again
+      this.checkVitalConditions();
+      return result;
+    });
   }
 
   triggerEnding(endingId) {

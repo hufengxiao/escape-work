@@ -16,6 +16,7 @@ export class MapView {
     this.state = state;
     this.onSelectNode = onSelectNode;
     this.onSwitchTab = onSwitchTab;
+    this.scrollTimeout = null;
   }
 
   /**
@@ -169,12 +170,31 @@ export class MapView {
       });
     }
 
+    // Clear previous pending scroll timeout if any
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = null;
+    }
+
     // Auto-scroll to current active node column
     const currentCard = containerEl.querySelector('.map-node-card.current');
     if (currentCard) {
-      setTimeout(() => {
-        currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      this.scrollTimeout = setTimeout(() => {
+        this.scrollTimeout = null;
+        if (currentCard.isConnected) {
+          currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
       }, 50);
+    }
+  }
+
+  /**
+   * Clean up pending timers and async callbacks
+   */
+  destroy() {
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+      this.scrollTimeout = null;
     }
   }
 }
